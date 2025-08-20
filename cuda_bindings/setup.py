@@ -345,7 +345,7 @@ sources_list = [
     (["cuda/bindings/_lib/cyruntime/utils.pyx"], None),
     (["cuda/bindings/utils/*.pyx"], None),
     # public
-    *(([f], None) for f in cuda_bindings_files),
+    *(([f, "cuda/bindings/_lib/param_packer.cpp"], None) for f in cuda_bindings_files),
     # internal files used by generated bindings
     (["cuda/bindings/_internal/utils.pyx"], None),
     *(([f], None) for f in dst_files if f.endswith(".pyx")),

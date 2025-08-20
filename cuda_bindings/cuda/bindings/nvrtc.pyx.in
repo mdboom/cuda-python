@@ -14,6 +14,7 @@ from libc.limits cimport CHAR_MIN
 from libcpp.vector cimport vector
 from cpython.buffer cimport PyObject_CheckBuffer, PyObject_GetBuffer, PyBuffer_Release, PyBUF_SIMPLE, PyBUF_ANY_CONTIGUOUS
 from cpython.bytes cimport PyBytes_FromStringAndSize
+from cuda.bindings cimport driver 
 
 ctypedef unsigned long long signed_char_ptr
 ctypedef unsigned long long unsigned_char_ptr
@@ -30,7 +31,7 @@ ctypedef unsigned long long uint32_t_ptr
 ctypedef unsigned long long uint64_t_ptr
 ctypedef unsigned long long int32_t_ptr
 ctypedef unsigned long long int64_t_ptr
-ctypedef unsigned long long unsigned_ptr
+ctypedef unsigned long long unsigned_ptr 
 ctypedef unsigned long long unsigned_long_long_ptr
 ctypedef unsigned long long long_long_ptr
 ctypedef unsigned long long size_t_ptr
@@ -39,6 +40,7 @@ ctypedef unsigned long long float_ptr
 ctypedef unsigned long long double_ptr
 ctypedef unsigned long long void_ptr
 
+include "_lib/utils.pxi"
 
 {{if 'nvrtcResult' in found_types}}
 
@@ -1026,9 +1028,9 @@ def nvrtcSetFlowCallback(prog, callback, payload):
     else:
         pprog = int(nvrtcProgram(prog))
     cyprog = <cynvrtc.nvrtcProgram><void_ptr>pprog
-    cycallback = utils.HelperInputVoidPtr(callback)
+    cycallback = HelperInputVoidPtr(callback)
     cdef void* cycallback_ptr = <void*><void_ptr>cycallback.cptr
-    cypayload = utils.HelperInputVoidPtr(payload)
+    cypayload = HelperInputVoidPtr(payload)
     cdef void* cypayload_ptr = <void*><void_ptr>cypayload.cptr
     with nogil:
         err = cynvrtc.nvrtcSetFlowCallback(cyprog, cycallback_ptr, cypayload_ptr)
