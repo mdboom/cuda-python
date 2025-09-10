@@ -8,6 +8,7 @@ import os
 import pathlib
 import platform
 import shutil
+import subprocess  # nosec: B404
 import sys
 import sysconfig
 import tempfile
@@ -16,10 +17,10 @@ from warnings import warn
 from Cython import Tempita
 from Cython.Build import cythonize
 from pyclibrary import CParser
-from setuptools import find_packages, setup
+from setuptools import Command, find_packages, setup
 from setuptools.command.bdist_wheel import bdist_wheel
+from setuptools.command.build import build
 from setuptools.command.build_ext import build_ext
-from setuptools.command.build_py import build_py
 from setuptools.command.editable_wheel import _TopLevelFinder, editable_wheel
 from setuptools.extension import Extension
 
@@ -380,9 +381,41 @@ class ParallelBuildExtensions(build_ext):
         super().build_extension(ext)
 
 
+class BuildStubs(Command):
+    def initialize_options(self) -> None:
+        self.build_lib = None
+
+    def finalize_options(self) -> None:
+        self.build_lib = self.get_finalized_command("build").build_lib
+
+    def run(self) -> None:
+        if self.build_lib:
+            subprocess.run(  # nosec: B603
+                [
+                    sys.executable,
+                    "-c",
+                    "from mypy import stubgen; stubgen.main()",
+                    "--inspect-mode",
+                    "-v",
+                    "-p",
+                    "cuda.bindings",
+                    "-o",
+                    ".",
+                ],
+                check=True,
+                cwd=self.build_lib,
+            )
+
+
+class CustomBuild(build):
+    sub_commands = build.sub_commands + [("build_stubs", None)]
+
+
 cmdclass = {
     "bdist_wheel": WheelsBuildExtensions,
     "build_ext": ParallelBuildExtensions,
+    "build_stubs": BuildStubs,
+    "build": CustomBuild,
 }
 
 # ----------------------------------------------------------------------
