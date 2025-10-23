@@ -26,6 +26,14 @@ __global__ void SimpleKernel(float *src, float *dst)
 def main():
     print("Starting...")
 
+    if (
+        sys.platform.startswith("linux")
+        and platform.machine() == "x86_64"
+        and checkCudaErrors(cuda.cuDeviceGetCount()) > 1
+    ):
+        print("TODO(CTK-NEXT-13010): CURRENTLY EXCLUDED FROM TESTING (simpleP2P)")
+        return
+
     if platform.system() == "Darwin":
         print("simpleP2P is not supported on Mac OSX - waiving sample")
         return

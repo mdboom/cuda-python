@@ -1,20 +1,22 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 
+import os
+
 import pytest
 from cuda.bindings import runtime as cudart
 
 
 def test_graphics_api_smoketest():
-    # Due to lazy importing in pyglet, pytest.importorskip doesn't work
+    pyglet = pytest.importorskip("pyglet")
     try:
-        import pyglet
-
         tex = pyglet.image.Texture.create(512, 512)
-    except (ImportError, AttributeError):
-        pytest.skip("pyglet not available or could not create GL context")
-        # return to make linters happy
-        return
+    except ImportError:
+        pytest.skip("pyglet lazy ImportError")
+    except AttributeError:
+        pytest.skip("pyglet lazy import AttributeError")
+    except pyglet.display.xlib.NoSuchDisplayException:
+        pytest.skip("pyglet.display.xlib.NoSuchDisplayException")
 
     err, gfx_resource = cudart.cudaGraphicsGLRegisterImage(
         tex.id, tex.target, cudart.cudaGraphicsRegisterFlags.cudaGraphicsRegisterFlagsWriteDiscard
@@ -22,6 +24,8 @@ def test_graphics_api_smoketest():
     error_name = cudart.cudaGetErrorName(err)[1].decode()
     if error_name == "cudaSuccess":
         assert int(gfx_resource) != 0
+    elif os.environ.get("DISPLAY") is None:
+        assert error_name == "cudaErrorOperatingSystem"
     else:
         assert error_name in ("cudaErrorInvalidValue", "cudaErrorUnknown")
 

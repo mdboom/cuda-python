@@ -14,6 +14,8 @@ from functools import cache
 import cuda.bindings.driver as cuda
 import pytest
 
+cufile = pytest.importorskip("cuda.bindings.cufile")
+
 # Configure logging to show INFO level and above
 logging.basicConfig(
     level=logging.INFO,
@@ -21,19 +23,11 @@ logging.basicConfig(
     force=True,  # Override any existing logging configuration
 )
 
-try:
-    from cuda.bindings import cufile
-except ImportError:
-    cufile = None
-
 
 def platform_is_wsl():
     """Check if running on Windows Subsystem for Linux (WSL)."""
     return platform.system() == "Linux" and "microsoft" in pathlib.Path("/proc/version").read_text().lower()
 
-
-if cufile is None:
-    pytest.skip("skipping tests on Windows", allow_module_level=True)
 
 if platform_is_wsl():
     pytest.skip("skipping cuFile tests on WSL", allow_module_level=True)

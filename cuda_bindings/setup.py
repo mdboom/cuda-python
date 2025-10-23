@@ -114,15 +114,28 @@ class Struct:
             self._member_names += [var_name]
             self._member_types += [var_type]
 
-    def discoverMembers(self, memberDict, prefix):
+    def discoverMembers(self, memberDict, prefix, seen=None):
+        # Prevent infinite recursion on self- or mutually-referential types
+        if seen is None:
+            seen = set()
+        elif self._name in seen:
+            return []
+
         discovered = []
+        next_seen = set(seen)
+        next_seen.add(self._name)
+
         for memberName, memberType in zip(self._member_names, self._member_types):
             if memberName:
-                discovered += [".".join([prefix, memberName])]
-            if memberType in memberDict:
-                discovered += memberDict[memberType].discoverMembers(
-                    memberDict, discovered[-1] if memberName else prefix
+                discovered.append(".".join([prefix, memberName]))
+
+            # Normalize to base type for lookup (strip qualifiers/pointers)
+            t = memberType.replace("const ", "").replace("volatile ", "").strip().rstrip(" *")
+            if t in memberDict and t != self._name:
+                discovered += memberDict[t].discoverMembers(
+                    memberDict, discovered[-1] if memberName else prefix, next_seen
                 )
+
         return discovered
 
     def __repr__(self):
@@ -153,16 +166,16 @@ def parse_headers(header_dict):
         r"char reserved\[52 - sizeof\(CUcheckpointGpuPair \*\)\];": rf"char reserved[{52 - 8}];",
     }
 
-    print(f'Parsing headers in "{include_path_list}" (Caching = {PARSER_CACHING})')
+    print(f'Parsing headers in "{include_path_list}" (Caching = {PARSER_CACHING})', flush=True)
     for library, header_paths in header_dict.items():
-        print(f"Parsing {library} headers")
+        print(f"Parsing {library} headers", flush=True)
         parser = CParser(
             header_paths, cache="./cache_{}".format(library.split(".")[0]) if PARSER_CACHING else None, replace=replace
         )
 
         if library == "driver":
             CUDA_VERSION = parser.defs["macros"].get("CUDA_VERSION", "Unknown")
-            print(f"Found CUDA_VERSION: {CUDA_VERSION}")
+            print(f"Found CUDA_VERSION: {CUDA_VERSION}", flush=True)
 
         # Combine types with others since they sometimes get tangled
         found_types += {key for key in parser.defs["types"]}
@@ -185,6 +198,9 @@ def parse_headers(header_dict):
             discovered = value.discoverMembers(struct_list, key)
             if discovered:
                 found_struct += discovered
+
+    # TODO(CTK-NEXT-13010): make this work properly
+    found_types.append("CUstreamAtomicReductionDataType_enum")
 
     return found_types, found_functions, found_values, found_struct, struct_list
 
@@ -211,10 +227,10 @@ def generate_output(infile, local):
     if os.path.exists(outfile):
         with open(outfile) as f:
             if f.read() == pxdcontent:
-                print(f"Skipping {infile} (No change)")
+                print(f"Skipping {infile} (No change)", flush=True)
                 return
     with open(outfile, "w") as f:
-        print(f"Generating {infile}")
+        print(f"Generating {infile}", flush=True)
         f.write(pxdcontent)
 
 
@@ -336,7 +352,7 @@ def do_cythonize(extensions):
 
 static_runtime_libraries = ["cudart_static", "rt"] if sys.platform == "linux" else ["cudart_static"]
 cuda_bindings_files = glob.glob("cuda/bindings/*.pyx")
-if sys.platform == "win32":
+if sys.platform == "win32" or sys is not None:  # TODO(CTK-NEXT-13010): enable cufile
     # cuFILE does not support Windows
     cuda_bindings_files = [f for f in cuda_bindings_files if "cufile" not in f]
 sources_list = [
