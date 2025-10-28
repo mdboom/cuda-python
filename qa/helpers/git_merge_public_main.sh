@@ -89,8 +89,8 @@ if [[ -z "$current_branch" ]]; then
     exit 1
 fi
 
-if [[ "$current_branch" != "ctk-next" ]]; then
-    echo "Warning: current branch is '$current_branch', not 'ctk-next'." >&2
+if [[ "$current_branch" != "ctk-next-merge-main" ]]; then
+    echo "Warning: current branch is '$current_branch', not 'ctk-next-merge-main'." >&2
     echo "Continue anyway? [y/N]"
     if [[ "$CONFIRM" == "yes" ]]; then
         read -r ans
