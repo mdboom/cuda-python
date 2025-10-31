@@ -101,22 +101,14 @@ class TestIPCMempoolMultiple:
 
 class TestIPCSharedAllocationHandleAndBufferDescriptors:
     def test_main(self, ipc_device, ipc_memory_resource):
-        if self is not None:  # always true
-            import pytest
-
-            pytest.skip("TODO(CTK-NEXT-13010): CURRENTLY EXCLUDED FROM TESTING")
-        if not supports_ipc_mempool(ipc_device):
-            import pytest
-
-            pytest.skip("Driver rejects IPC-enabled mempool creation on this platform")
-        if not supports_ipc_mempool(ipc_device):
-            import pytest
-
-            pytest.skip("Driver rejects IPC-enabled mempool creation on this platform")
         """
         Demonstrate that a memory pool allocation handle can be reused for IPC
         with multiple processes. Uses buffer descriptors.
         """
+        if self is not None:  # always true
+            import pytest
+
+            pytest.skip("TODO(CTK-NEXT-13010): CURRENTLY EXCLUDED FROM TESTING")
         # Set up the IPC-enabled memory pool and share it using one handle.
         device = ipc_device
         mr = ipc_memory_resource
