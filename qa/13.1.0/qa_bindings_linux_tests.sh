@@ -17,6 +17,17 @@ if [[ ! -d "$CUDA_HOME" ]]; then
     exit 1
 fi
 
+ldconfig -p | grep -E '^[[:space:]]*libnvrtc.*\.so.*[[:space:]]=>[[:space:]]'"$(realpath "${CUDA_HOME}")" || {
+    echo "FATAL: libnvrtc matching $(realpath "$CUDA_HOME") not found in ldconfig cache" >&2
+    exit 1
+}
+
+nvidia-smi || {
+    rc=$?
+    echo "FATAL: nvidia-smi exited with status $rc" >&2
+    exit $rc
+}
+
 set +e # keep going as much as possible
 set -x
 

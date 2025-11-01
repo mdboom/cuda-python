@@ -13,6 +13,8 @@ if not exist "%CUDA_HOME%\" (
 
 echo CUDA_HOME="%CUDA_HOME%"
 
+nvidia-smi
+
 REM Keep going as much as possible
 verify >nul
 
