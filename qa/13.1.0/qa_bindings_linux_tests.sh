@@ -22,6 +22,12 @@ ldconfig -p | grep -E '^[[:space:]]*libnvrtc.*\.so.*[[:space:]]=>[[:space:]]'"$(
     exit 1
 }
 
+nvidia-smi || {
+    rc=$?
+    echo "FATAL: nvidia-smi exited with status $rc" >&2
+    exit $rc
+}
+
 set +e # keep going as much as possible
 set -x
 
