@@ -8,3 +8,4 @@ cuda/_version.py export-subst
 *.hpp binary
 # git should not convert line endings in PNG files
 *.png binary
+*.svg binary
