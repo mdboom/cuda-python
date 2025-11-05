@@ -1701,18 +1701,18 @@ def test_set_get_parameter_bool():
     assert err == cuda.CUresult.CUDA_SUCCESS
 
     param_val_pairs = (
-        (cufile.BoolConfigParameter.PROPERTIES_USE_POLL_MODE, True),
-        (cufile.BoolConfigParameter.PROPERTIES_ALLOW_COMPAT_MODE, False),
-        (cufile.BoolConfigParameter.FORCE_COMPAT_MODE, False),
-        (cufile.BoolConfigParameter.FS_MISC_API_CHECK_AGGRESSIVE, True),
-        (cufile.BoolConfigParameter.EXECUTION_PARALLEL_IO, True),
-        (cufile.BoolConfigParameter.PROFILE_NVTX, False),
-        (cufile.BoolConfigParameter.PROPERTIES_ALLOW_SYSTEM_MEMORY, True),
-        (cufile.BoolConfigParameter.USE_PCIP2PDMA, True),
-        (cufile.BoolConfigParameter.PREFER_IO_URING, False),
-        (cufile.BoolConfigParameter.FORCE_ODIRECT_MODE, True),
-        (cufile.BoolConfigParameter.SKIP_TOPOLOGY_DETECTION, False),
-        (cufile.BoolConfigParameter.STREAM_MEMOPS_BYPASS, True),
+        (cufile.BoolConfigParameter.PROPERTIES_USE_POLL_MODE, True, False),
+        (cufile.BoolConfigParameter.PROPERTIES_ALLOW_COMPAT_MODE, False, False),
+        (cufile.BoolConfigParameter.FORCE_COMPAT_MODE, False, False),
+        (cufile.BoolConfigParameter.FS_MISC_API_CHECK_AGGRESSIVE, True, False),
+        (cufile.BoolConfigParameter.EXECUTION_PARALLEL_IO, True, False),
+        (cufile.BoolConfigParameter.PROFILE_NVTX, False, not cufileVersionLessThan(1160)),
+        (cufile.BoolConfigParameter.PROPERTIES_ALLOW_SYSTEM_MEMORY, True, False),
+        (cufile.BoolConfigParameter.USE_PCIP2PDMA, True, False),
+        (cufile.BoolConfigParameter.PREFER_IO_URING, False, False),
+        (cufile.BoolConfigParameter.FORCE_ODIRECT_MODE, True, False),
+        (cufile.BoolConfigParameter.SKIP_TOPOLOGY_DETECTION, False, False),
+        (cufile.BoolConfigParameter.STREAM_MEMOPS_BYPASS, True, False),
     )
 
     def test_param(param, val):
@@ -1722,10 +1722,17 @@ def test_set_get_parameter_bool():
         assert retrieved_val is val
         cufile.set_parameter_bool(param, orig_val)
 
+    def test_param_xfail(param, val):
+        with pytest.raises(cufile.cufileError):
+            cufile.get_parameter_bool(param)
+
     try:
         # Test setting and getting various boolean parameters
-        for param, val in param_val_pairs:
-            test_param(param, val)
+        for param, val, xfail in param_val_pairs:
+            if xfail:
+                test_param_xfail(param, val)
+            else:
+                test_param(param, val)
     finally:
         cuda.cuDevicePrimaryCtxRelease(device)
 
