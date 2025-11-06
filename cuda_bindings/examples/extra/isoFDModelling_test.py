@@ -1,8 +1,6 @@
 # Copyright 2021-2025 NVIDIA Corporation.  All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 
-import platform
-import sys
 import time
 
 import numpy as np
@@ -622,10 +620,6 @@ def main():
 
     if gpu_n < 2:
         print("Two or more GPUs with Peer-to-Peer access capability are required")
-        return
-
-    if sys.platform.startswith("linux") and platform.machine() == "x86_64":
-        print("TODO(CTK-NEXT-13010): CURRENTLY EXCLUDED FROM TESTING (isoFDModelling_test)")
         return
 
     prop = [checkCudaErrors(cudart.cudaGetDeviceProperties(i)) for i in range(gpu_n)]

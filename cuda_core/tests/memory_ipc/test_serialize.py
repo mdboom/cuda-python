@@ -22,11 +22,6 @@ class TestObjectSerializationDirect:
     """
 
     def test_main(self, ipc_device, ipc_memory_resource):
-        if self is not None:  # always true
-            import pytest
-
-            pytest.skip("TODO(CTK-NEXT-13010): CURRENTLY EXCLUDED FROM TESTING")
-
         device = ipc_device
         mr = ipc_memory_resource
 
@@ -83,11 +78,6 @@ class TestObjectSerializationDirect:
 class TestObjectSerializationWithMR:
     def test_main(self, ipc_device, ipc_memory_resource):
         """Test sending IPC memory objects to a child through a queue."""
-        if self is not None:  # always true
-            import pytest
-
-            pytest.skip("TODO(CTK-NEXT-13010): CURRENTLY EXCLUDED FROM TESTING")
-
         device = ipc_device
         mr = ipc_memory_resource
 
@@ -140,10 +130,6 @@ def test_object_passing(ipc_device, ipc_memory_resource):
     when spawning a process. This is similar to the way sockets and various objects
     in multiprocessing (e.g., Queue) work.
     """
-    if test_object_passing is not None:  # always true
-        import pytest
-
-        pytest.skip("TODO(CTK-NEXT-13010): CURRENTLY EXCLUDED FROM TESTING")
 
     # Define the objects.
     device = ipc_device
