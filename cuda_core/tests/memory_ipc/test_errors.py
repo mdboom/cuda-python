@@ -5,7 +5,6 @@ import multiprocessing
 import pickle
 import re
 
-import pytest
 from cuda.core.experimental import Buffer, Device, DeviceMemoryResource, DeviceMemoryResourceOptions
 from cuda.core.experimental._utils.cuda_utils import CUDAError
 
@@ -103,7 +102,6 @@ class TestExportImportedMR(ChildErrorHarness):
         assert exc_msg == "Imported memory resource cannot be exported"
 
 
-@pytest.mark.skip("TODO(CTK-NEXT-13010): CURRENTLY EXCLUDED FROM TESTING")
 class TestImportBuffer(ChildErrorHarness):
     """Error when using a buffer as a buffer descriptor."""
 
@@ -122,7 +120,6 @@ class TestImportBuffer(ChildErrorHarness):
         assert exc_msg.startswith("Argument 'ipc_buffer' has incorrect type")
 
 
-@pytest.mark.skip("TODO(CTK-NEXT-13010): CURRENTLY EXCLUDED FROM TESTING")
 class TestDanglingBuffer(ChildErrorHarness):
     """
     Error when importing a buffer object without registering its memory

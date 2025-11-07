@@ -4,26 +4,35 @@
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 
 """
-Download CUDA kitpick local installers for the current platform (or a chosen one).
+Download CUDA kitpick local installers for the current platform (or a chosen one),
+and list available kitpicks for a given CTK version.
 
 USAGE EXAMPLES
 --------------
-1) Full URL (auto-arch detection; downloads only the matching file)
+1) List all kitpicks for a version
+   download_from_kitpicks.py 13.1
+
+2) Download the latest kitpick for 13.1 (auto-arch unless overridden)
+   download_from_kitpicks.py 13.1 --latest
+   download_from_kitpicks.py 13.1 --latest --arch=linux-sbsa
+   download_from_kitpicks.py 13.1 --latest --all
+
+3) Full URL (auto-arch detection; downloads only the matching file)
    download_from_kitpicks.py https://cuda-repo.nvidia.com/release-candidates/kitpicks/cuda-r13-1/13.1.0/028/local_installers/
 
-2) Full URL, override architecture
+4) Full URL, override architecture
    download_from_kitpicks.py https://.../local_installers/ --arch=linux
 
-3) Full URL, download all three files
+5) Full URL, download all three files
    download_from_kitpicks.py https://.../local_installers/ --all
 
-4) Shorthand (VERSION KITPICK), auto-arch detection
+6) Shorthand (VERSION KITPICK), auto-arch detection
    download_from_kitpicks.py 13.1 028
 
-5) Shorthand with explicit arch
+7) Shorthand with explicit arch
    download_from_kitpicks.py 13.1 028 --arch=linux-sbsa
 
-6) Shorthand, download all
+8) Shorthand, download all
    download_from_kitpicks.py 13.1 028 --all
 """
 
@@ -34,6 +43,7 @@ import re
 import subprocess
 import sys
 import urllib.request
+from dataclasses import dataclass
 from html.parser import HTMLParser
 from urllib.parse import urljoin
 
@@ -50,6 +60,10 @@ ARCH_ALIASES = {
     "linux-sbsa": "linux-aarch64",
     "linux-aarch64": "linux-aarch64",
 }
+
+
+def urlopen_with_timeout(url, timeout=20):
+    return urllib.request.urlopen(url, timeout=timeout)  # noqa: S310
 
 
 def debug(msg: str) -> None:
@@ -83,6 +97,11 @@ def normalize_version_tag(version_str: str) -> tuple[str, str]:
     return r_tag, semver
 
 
+def build_version_index_url(version_str: str) -> str:
+    r_tag, semver = normalize_version_tag(version_str)
+    return f"{BASE_URL}/{r_tag}/{semver}/"
+
+
 def build_full_url(version_str: str, kitpick: str) -> str:
     r_tag, semver = normalize_version_tag(version_str)
     kitpick3 = kitpick.strip()
@@ -92,7 +111,7 @@ def build_full_url(version_str: str, kitpick: str) -> str:
     return url
 
 
-class LinkExtractor(HTMLParser):
+class FileLinkExtractor(HTMLParser):
     def __init__(self) -> None:
         super().__init__()
         self.links: list[str] = []
@@ -106,15 +125,87 @@ class LinkExtractor(HTMLParser):
 
 def get_file_links(url: str) -> list[tuple[str, str]]:
     """
-    Scrape the directory listing page to find .run and .exe files.
+    Scrape the local_installers directory to find .run and .exe files.
     Returns list of (filename, absolute_url).
     """
-    with urllib.request.urlopen(url) as response:  # noqa: S310
+    with urlopen_with_timeout(url) as response:
         html = response.read().decode("utf-8")
 
-    parser = LinkExtractor()
+    parser = FileLinkExtractor()
     parser.feed(html)
     return [(href, urljoin(url, href)) for href in parser.links]
+
+
+@dataclass(frozen=True)
+class KitpickRow:
+    kitpick: str  # '031'
+    last_modified: str  # '2025-11-07 19:02:57'
+
+
+class KitpickIndexParser(HTMLParser):
+    """
+    Parser for the version index page listing numeric kitpick subdirectories with
+    an adjacent 'Last Modified' column. Built against the uploaded HTML.  (Rows like:
+      <td><a href="031/">031/</a></td>   <td>2025-11-07 19:02:57</td>
+    )
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._capture_href = False
+        self._capture_date = False
+        self._seen_anchor_in_row = False
+        self._current_kitpick: str | None = None
+        self._current_date: str | None = None
+        self.rows: list[KitpickRow] = []
+        self._td_open_index = -1  # track which column we're in
+
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() == "tr":
+            # reset row state
+            self._seen_anchor_in_row = False
+            self._current_kitpick = None
+            self._current_date = None
+            self._td_open_index = -1
+
+        if tag.lower() == "td":
+            self._td_open_index += 1  # 0=name, 1=Last Modified
+
+        if tag.lower() == "a":
+            href = dict(attrs).get("href")
+            if href:
+                m = re.fullmatch(r"(\d{3})\/", href.strip())
+                if m:
+                    self._seen_anchor_in_row = True
+                    self._current_kitpick = m.group(1)
+
+    def handle_data(self, data):
+        if self._seen_anchor_in_row and self._td_open_index == 1:
+            # second column's text after the kitpick anchor = last modified
+            txt = data.strip()
+            if txt and txt != "-":
+                # Expect format 'YYYY-MM-DD HH:MM:SS'
+                self._current_date = txt
+
+    def handle_endtag(self, tag):
+        if tag.lower() == "tr" and self._current_kitpick and self._current_date:
+            self.rows.append(KitpickRow(self._current_kitpick, self._current_date))
+
+
+def fetch_version_kitpicks(version_str: str) -> list[KitpickRow]:
+    """
+    Fetch and parse the version index page to obtain [(kitpick, last_modified), ...]
+    """
+    url = build_version_index_url(version_str)
+    with urlopen_with_timeout(url) as response:
+        html = response.read().decode("utf-8")
+
+    parser = KitpickIndexParser()
+    parser.feed(html)
+
+    # Deduplicate + sort numerically by kitpick
+    unique = {r.kitpick: r for r in parser.rows}
+    return [unique[k] for k in sorted(unique.keys(), key=lambda s: int(s))]
 
 
 def generate_new_filename(original_filename: str, kitpick: str) -> str:
@@ -135,7 +226,8 @@ def download_file(file_url: str, original_filename: str, new_filename: str) -> b
         result = subprocess.run(cmd, capture_output=True, text=True)  # noqa: S603
         if result.returncode == 0:
             print(f"✓ {new_filename}")
-            os.chmod(new_filename, 0o555)  # noqa: S103
+            if os.name != "nt":
+                os.chmod(new_filename, 0o555)  # noqa: S103
             return True
         print(f"✗ Failed: {original_filename}\n{result.stderr}")
         return False
@@ -191,12 +283,10 @@ def select_links_for_arch(file_links: list[tuple[str, str]], arch: str) -> list[
                 out.append((fname, href))
 
         elif arch == "linux-64":
-            # include 'linux' but exclude sbsa variants
             if lower.endswith(".run") and "linux" in lower and "sbsa" not in lower:
                 out.append((fname, href))
 
         elif arch == "linux-aarch64":  # noqa: SIM102
-            # include sbsa variants
             if lower.endswith(".run") and ("linux_sbsa" in lower or "sbsa" in lower):
                 out.append((fname, href))
 
@@ -208,21 +298,37 @@ def select_links_for_arch(file_links: list[tuple[str, str]], arch: str) -> list[
 # ---------------------------------------------------------------------------
 
 
-def parse_args(argv: list[str]) -> argparse.Namespace:
+def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        description="Download CUDA kitpick local installers for the current platform or a chosen one."
+        description="Download CUDA kitpick local installers, or list kitpicks for a CTK version."
     )
 
-    # Two invocation modes:
-    #   1) download_from_kitpicks.py <FULL_URL>
-    #   2) download_from_kitpicks.py <VERSION> <KITPICK>
+    # Positional args:
+    #   - EITHER: <FULL_URL>
+    #   - OR:     <VERSION> [KITPICK]
     p.add_argument("arg1", help="Either FULL_URL or VERSION (e.g., 13.1)")
     p.add_argument("arg2", nargs="?", help="KITPICK (e.g., 028) if using VERSION form")
 
-    grp = p.add_mutually_exclusive_group()
-    grp.add_argument("--arch", help="Target architecture (see ARCH ALIASES in script header)")
-    grp.add_argument("--all", action="store_true", help="Download all three installers")
+    p.add_argument(
+        "--latest",
+        action="store_true",
+        help="When given a VERSION (no KITPICK), resolve latest kitpick and proceed to download.",
+    )
 
+    # Download selection
+    grp = p.add_mutually_exclusive_group()
+    grp.add_argument(
+        "--arch", help="Target architecture (aliases: windows, win-64, linux, linux-64, linux-sbsa, linux-aarch64)"
+    )
+    grp.add_argument("--all", action="store_true", help="Download all three installers")
+    return p
+
+
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    p = build_parser()
+    if not argv:
+        p.print_help(sys.stderr)
+        sys.exit(0)
     return p.parse_args(argv)
 
 
@@ -230,19 +336,54 @@ def is_url(s: str) -> bool:
     return s.startswith("http://") or s.startswith("https://")
 
 
+def handle_listing(version_str: str) -> int:
+    rows = fetch_version_kitpicks(version_str)
+    if not rows:
+        print(f"No kitpicks found for {version_str}.")
+        return 1
+
+    for r in rows:
+        print(f"{r.kitpick} — {r.last_modified}")
+    return 0
+
+
+def resolve_latest_kitpick(version_str: str) -> str:
+    rows = fetch_version_kitpicks(version_str)
+    if not rows:
+        raise RuntimeError(f"No kitpicks available for version {version_str}")
+    # rows are sorted numerically
+    return rows[-1].kitpick
+
+
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
 
-    # Determine full URL & kitpick suffix
-    if args.arg2:  # VERSION + KITPICK
+    # MODE 1: VERSION-ONLY (listing or latest)
+    if not is_url(args.arg1) and not args.arg2:
+        version = args.arg1
+
+        if args.latest:
+            latest = resolve_latest_kitpick(version)
+            print(f"Latest kitpick for {version}: {latest}")
+            # fall-through to download code-path as VERSION + KITPICK
+            full_url = build_full_url(version, latest)
+            kitpick_suffix = latest
+        else:
+            return handle_listing(version)
+
+    # MODE 2: VERSION + KITPICK  -> build URL
+    elif not is_url(args.arg1) and args.arg2:
         full_url = build_full_url(args.arg1, args.arg2)
         kitpick_suffix = args.arg2
         debug(f"Constructed URL: {full_url}")
-    else:  # FULL URL
+
+    # MODE 3: FULL URL
+    else:
         if not is_url(args.arg1):
             print(
                 "ERROR: With one positional argument, it must be a FULL URL.\n"
-                "       Or use two args: VERSION KITPICK (e.g., '13.1 028')."
+                "       Or use: VERSION [KITPICK] (e.g., '13.1 028')\n"
+                "       Or: VERSION --latest"
             )
             return 2
         full_url = args.arg1 if args.arg1.endswith("/") else args.arg1 + "/"
@@ -263,7 +404,7 @@ def main(argv: list[str]) -> int:
             debug(f"Mode: auto-detected arch = {arch}")
         targets = [arch]
 
-    # Fetch directory listing
+    # Fetch directory listing for local_installers
     debug("Fetching directory listing...")
     try:
         file_links = get_file_links(full_url)

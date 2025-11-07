@@ -1,9 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-import platform
-import sys
-
 try:
     from cuda.bindings import driver, runtime
 except ImportError:
@@ -50,12 +47,6 @@ def test_device_alloc(deinit_cuda):
     assert buffer.device_id == int(device)
 
 
-@pytest.mark.skipif(
-    sys.platform.startswith("linux")
-    and platform.machine() == "x86_64"
-    and len(cuda.core.experimental.system.devices) > 1,
-    reason="TODO(CTK-NEXT-13010): CURRENTLY EXCLUDED FROM TESTING",
-)
 def test_device_id(deinit_cuda):
     for device in cuda.core.experimental.system.devices:
         device.set_current()
