@@ -2676,10 +2676,10 @@ cpdef read(intptr_t fh, intptr_t buf_ptr_base, size_t size, off_t file_offset, o
         size (size_t): size bytes to read.
         file_offset (off_t): file-offset from begining of the file.
         buf_ptr_offset (off_t): offset relative to the buf_ptr_base pointer to read into.
- 
+
     Returns:
         ssize_t: number of bytes read on success.
-    
+
     .. seealso:: `cuFileRead`
     """
     with nogil:
@@ -2697,10 +2697,10 @@ cpdef write(intptr_t fh, intptr_t buf_ptr_base, size_t size, off_t file_offset, 
         size (size_t): size bytes to write.
         file_offset (off_t): file-offset from begining of the file.
         buf_ptr_offset (off_t): offset relative to the buf_ptr_base pointer to write from.
-   
+
     Returns:
         ssize_t: number of bytes written on success.
-        
+
     .. seealso:: `cuFileWrite`
     """
     with nogil:
