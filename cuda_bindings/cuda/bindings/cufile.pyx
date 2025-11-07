@@ -2164,13 +2164,13 @@ class BoolConfigParameter(_IntEnum):
     FORCE_COMPAT_MODE = CUFILE_PARAM_FORCE_COMPAT_MODE
     FS_MISC_API_CHECK_AGGRESSIVE = CUFILE_PARAM_FS_MISC_API_CHECK_AGGRESSIVE
     EXECUTION_PARALLEL_IO = CUFILE_PARAM_EXECUTION_PARALLEL_IO
+    PROFILE_NVTX = CUFILE_PARAM_PROFILE_NVTX
     PROPERTIES_ALLOW_SYSTEM_MEMORY = CUFILE_PARAM_PROPERTIES_ALLOW_SYSTEM_MEMORY
     USE_PCIP2PDMA = CUFILE_PARAM_USE_PCIP2PDMA
     PREFER_IO_URING = CUFILE_PARAM_PREFER_IO_URING
     FORCE_ODIRECT_MODE = CUFILE_PARAM_FORCE_ODIRECT_MODE
     SKIP_TOPOLOGY_DETECTION = CUFILE_PARAM_SKIP_TOPOLOGY_DETECTION
     STREAM_MEMOPS_BYPASS = CUFILE_PARAM_STREAM_MEMOPS_BYPASS
-    PROFILE_NVTX = CUFILE_PARAM_PROFILE_NVTX
 
 class StringConfigParameter(_IntEnum):
     """See `CUFileStringConfigParameter_t`."""
@@ -2676,10 +2676,10 @@ cpdef read(intptr_t fh, intptr_t buf_ptr_base, size_t size, off_t file_offset, o
         size (size_t): size bytes to read.
         file_offset (off_t): file-offset from begining of the file.
         buf_ptr_offset (off_t): offset relative to the buf_ptr_base pointer to read into.
-
+ 
     Returns:
         ssize_t: number of bytes read on success.
-
+    
     .. seealso:: `cuFileRead`
     """
     with nogil:
@@ -2697,10 +2697,10 @@ cpdef write(intptr_t fh, intptr_t buf_ptr_base, size_t size, off_t file_offset, 
         size (size_t): size bytes to write.
         file_offset (off_t): file-offset from begining of the file.
         buf_ptr_offset (off_t): offset relative to the buf_ptr_base pointer to write from.
-
+   
     Returns:
         ssize_t: number of bytes written on success.
-
+        
     .. seealso:: `cuFileWrite`
     """
     with nogil:
