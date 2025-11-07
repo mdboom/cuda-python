@@ -1726,6 +1726,10 @@ def test_set_get_parameter_bool():
         # Test setting and getting various boolean parameters
         for param, val in param_val_pairs:
             test_param(param, val)
+    except cufile.cuFileError:
+        if cufile.get_version() < 1160:
+            raise
+        assert param is cufile.BoolConfigParameter.PROFILE_NVTX  # Deprecated in CTK 13.1.0
     finally:
         cuda.cuDevicePrimaryCtxRelease(device)
 
