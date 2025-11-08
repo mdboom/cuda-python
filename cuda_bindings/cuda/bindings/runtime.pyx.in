@@ -27609,6 +27609,7 @@ def cudaMemPrefetchAsync(devPtr, size_t count, location not None : cudaMemLocati
     bytes to copy. `stream` is the stream in which the operation is
     enqueued. The memory range must refer to managed memory allocated via
     :py:obj:`~.cudaMallocManaged` or declared via managed variables, or it
+    may also refer to memory allocated from a managed memory pool, or it
     may also refer to system-allocated memory on systems with non-zero
     cudaDevAttrPageableMemoryAccess.
 
@@ -29245,6 +29246,22 @@ def cudaMemPoolCreate(poolProps : Optional[cudaMemPoolProps]):
     /proc/devices users can execute the following command: `mknod
     /dev/nvidia-caps-imex-channels/channel0 c <major number> 0`
 
+    To create a managed memory pool, applications must set
+    :py:obj:`~.cudaMemPoolProps`:cudaMemAllocationType to
+    :py:obj:`~.cudaMemAllocationTypeManaged`.
+    :py:obj:`~.cudaMemPoolProps`::cudaMemAllocationHandleType must also be
+    set to :py:obj:`~.cudaMemHandleTypeNone` since IPC is not supported.
+    For managed memory pools, :py:obj:`~.cudaMemPoolProps`::cudaMemLocation
+    will be treated as the preferred location for all allocations created
+    from the pool. An application can also set
+    :py:obj:`~.cudaMemLocationTypeNone` to indicate no preferred location.
+    :py:obj:`~.cudaMemPoolProps.maxSize` must be set to zero for managed
+    memory pools. :py:obj:`~.cudaMemPoolProps.usage` should be zero as
+    decompress for managed memory is not supported. For managed memory
+    pools, all devices on the system must have non-zero
+    :py:obj:`~.concurrentManagedAccess`. If not, this call returns
+    :py:obj:`~.cudaErrorNotSupported`
+
     Parameters
     ----------
     poolProps : :py:obj:`~.cudaMemPoolProps`
@@ -29263,7 +29280,7 @@ def cudaMemPoolCreate(poolProps : Optional[cudaMemPoolProps]):
 
     Notes
     -----
-    Specifying cudaMemHandleTypeNone creates a memory pool that will not support IPC.
+    Specifying :py:obj:`~.cudaMemHandleTypeNone` creates a memory pool that will not support IPC.
     """
     cdef cudaMemPool_t memPool = cudaMemPool_t()
     cdef cyruntime.cudaMemPoolProps* cypoolProps_ptr = poolProps._pvt_ptr if poolProps is not None else NULL
