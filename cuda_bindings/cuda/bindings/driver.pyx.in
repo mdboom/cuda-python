@@ -34861,6 +34861,21 @@ def cuMemPoolCreate(poolProps : Optional[CUmemPoolProps]):
     /proc/devices users can execute the following command: `mknod
     /dev/nvidia-caps-imex-channels/channel0 c <major number> 0`
 
+    To create a managed memory pool, applications must set
+    :py:obj:`~.CUmemPoolProps`::CUmemAllocationType to
+    CU_MEM_ALLOCATION_TYPE_MANAGED.
+    :py:obj:`~.CUmemPoolProps`::CUmemAllocationHandleType must also be set
+    to CU_MEM_HANDLE_TYPE_NONE since IPC is not supported. For managed
+    memory pools, :py:obj:`~.CUmemPoolProps`::CUmemLocation will be treated
+    as the preferred location for all allocations created from the pool. An
+    application can also set CU_MEM_LOCATION_TYPE_NONE to indicate no
+    preferred location. :py:obj:`~.CUmemPoolProps.maxSize` must be set to
+    zero for managed memory pools. :py:obj:`~.CUmemPoolProps.usage` should
+    be zero as decompress for managed memory is not supported. For managed
+    memory pools, all devices on the system must have non-zero
+    :py:obj:`~.concurrentManagedAccess`. If not, this call returns
+    CUDA_ERROR_NOT_SUPPORTED
+
     Parameters
     ----------
     poolProps : :py:obj:`~.CUmemPoolProps`
@@ -36163,7 +36178,8 @@ def cuMemPrefetchAsync(devPtr, size_t count, location not None : CUmemLocation, 
     specifies the destination location. `count` specifies the number of
     bytes to copy. `hStream` is the stream in which the operation is
     enqueued. The memory range must refer to managed memory allocated via
-    :py:obj:`~.cuMemAllocManaged` or declared via managed variables.
+    :py:obj:`~.cuMemAllocManaged`, via :py:obj:`~.cuMemAllocFromPool` from
+    a managed memory pool or declared via managed variables.
 
     Specifying :py:obj:`~.CU_MEM_LOCATION_TYPE_DEVICE` for
     :py:obj:`~.CUmemLocation.type` will prefetch memory to GPU specified by
@@ -37965,6 +37981,7 @@ def cuStreamBeginCaptureToGraph(hStream, hGraph, dependencies : Optional[tuple[C
     elif len(dependencyData) == 1:
         cydependencyData = (<CUgraphEdgeData>dependencyData[0])._pvt_ptr
     if numDependencies > <size_t>len(dependencies): raise RuntimeError("List is too small: " + str(len(dependencies)) + " < " + str(numDependencies))
+    if numDependencies > <size_t>len(dependencyData): raise RuntimeError("List is too small: " + str(len(dependencyData)) + " < " + str(numDependencies))
     cdef cydriver.CUstreamCaptureMode cymode = mode.value
     with nogil:
         err = cydriver.cuStreamBeginCaptureToGraph(cyhStream, cyhGraph, cydependencies, cydependencyData, numDependencies, cymode)
