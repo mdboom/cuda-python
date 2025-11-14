@@ -122,4 +122,3 @@ Linux uses a unified driver; operational states appear in `nvidia-smi`.
 | MIG server              | N/A                          | MIG Enabled              |
 
 ---
-

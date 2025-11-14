@@ -25,6 +25,10 @@ verify >nul
 
 @echo on
 
+git log -n 1
+git status
+git diff
+
 python -m venv TestVenv
 call .\TestVenv\Scripts\activate.bat
 python -m pip install --upgrade pip

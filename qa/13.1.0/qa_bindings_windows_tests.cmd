@@ -13,12 +13,18 @@ if not exist "%CUDA_HOME%\" (
 
 echo CUDA_HOME="%CUDA_HOME%"
 
-nvidia-smi
-
 REM Keep going as much as possible
 verify >nul
 
 @echo on
+
+nvidia-smi
+
+reg query "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" /v HwSchMode
+
+git log -n 1
+git status
+git diff
 
 call .\TestVenv\Scripts\activate.bat
 pip list
