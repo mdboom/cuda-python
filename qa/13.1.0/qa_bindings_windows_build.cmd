@@ -8,6 +8,7 @@ REM     git clone --quiet --depth=1 --branch ctk-next https://github.com/rwgk/cu
 REM     cd ctk-next\
 
 set "CUDA_HOME=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v%~1"
+set "CUDA_PATH=%CUDA_HOME%"
 
 if not exist "%CUDA_HOME%\" (
   echo FATAL: NOT A DIRECTORY: "%CUDA_HOME%"

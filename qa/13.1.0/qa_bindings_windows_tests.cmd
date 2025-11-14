@@ -12,6 +12,7 @@ if not exist "%CUDA_HOME%\" (
 )
 
 echo CUDA_HOME="%CUDA_HOME%"
+set "CUDA_PATH=%CUDA_HOME%"
 
 REM Keep going as much as possible
 verify >nul
