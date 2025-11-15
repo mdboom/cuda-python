@@ -9,3 +9,5 @@ cuda/_version.py export-subst
 # git should not convert line endings in PNG files
 *.png binary
 *.svg binary
+# SCM syntax highlighting & preventing 3-way merges
+pixi.lock merge=binary linguist-language=YAML linguist-generated=true
