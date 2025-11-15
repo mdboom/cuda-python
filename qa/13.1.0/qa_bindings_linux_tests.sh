@@ -31,6 +31,10 @@ nvidia-smi || {
 set +e # keep going as much as possible
 set -x
 
+git log -n 1
+git status
+git diff
+
 if [[ -d ./TestVenv && -z "$VIRTUAL_ENV" ]]; then
     . ./TestVenv/bin/activate
 fi

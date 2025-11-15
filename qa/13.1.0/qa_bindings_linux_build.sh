@@ -28,6 +28,10 @@ if command -v nproc >/dev/null 2>&1; then
     export CUDA_PYTHON_PARALLEL_LEVEL="$(nproc)"
 fi
 
+git log -n 1
+git status
+git diff
+
 python -m venv TestVenv && . TestVenv/bin/activate && pip install --upgrade pip
 
 cd cuda_pathfinder/
