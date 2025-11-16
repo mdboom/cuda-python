@@ -6,7 +6,7 @@ Secure Boot prevents unsigned/prerelease drivers from loading.
 
 RDP remains active during this procedure (you may see a momentary flicker).
 
-Related: `qa/helpers/clean_windows_nvidia_drivers.py` automates the procedures outlined below.
+Related: `qa/helpers/Clean-Windows-Nvidia-Drivers.py` automates the procedures outlined below.
 
 ## 1. Identify the NVIDIA Display Device
 
@@ -121,3 +121,10 @@ RDP remains active.
   unpacked driver packages.
 - This sequence is safe for remote systems because **RDP uses a software
   display driver**, not the NVIDIA GPU driver.
+
+## Tip for Driver Installation
+
+`qa/helpers/Get-Windows-Prerelease-Driver.py` automates downloading
+prerelease drivers as used by the SWQA team. The script also shows how to
+install these drivers with `pnputil`, which is typically much faster and
+more reliable than using the standard graphical installer.

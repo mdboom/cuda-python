@@ -227,6 +227,19 @@ def main() -> None:
         print("\nDRY RUN complete. Add --i-am-sure to EXECUTE the commands just shown.\n")
     else:
         print(
+            "\n=== Reminder for non-VM workstations ===\n"
+            "If you are running this script on a permanently owned workstation "
+            "(i.e. not a temporary VM), you may want to re-enable automatic driver "
+            "updates *after* installing the new NVIDIA driver.\n\n"
+            "Restore Windows' default behavior with:\n\n"
+            "  PowerShell:\n"
+            '    Set-ItemProperty -Path "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DriverSearching" '
+            "-Name SearchOrderConfig -Value 1\n\n"
+            "  cmd.exe:\n"
+            '    reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DriverSearching" '
+            "/v SearchOrderConfig /t REG_DWORD /d 1 /f\n"
+        )
+        print(
             "\nDone. You should now reboot the system, e.g.:\n"
             "  Restart-Computer -Force  (PowerShell)\n"
             "or\n"
