@@ -37,11 +37,13 @@ USAGE EXAMPLES
 """
 
 import argparse
+import datetime as _dt
+import email.utils
 import os
 import platform
 import re
-import subprocess
 import sys
+import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from html.parser import HTMLParser
@@ -216,23 +218,85 @@ def generate_new_filename(original_filename: str, kitpick: str) -> str:
     return f"{name}_kitpick{kitpick}{ext}"
 
 
+def _http_date_to_timestamp(http_date: str) -> float | None:
+    """Convert an HTTP-date string to a POSIX timestamp."""
+    try:
+        dt = email.utils.parsedate_to_datetime(http_date)
+        if dt is None:
+            return None
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=_dt.timezone.utc)
+        return dt.timestamp()
+    except Exception:
+        return None
+
+
 def download_file(file_url: str, original_filename: str, new_filename: str) -> bool:
     """
-    Download file using wget with timestamp preservation.
+    Download file using pure Python, roughly emulating:
+        wget --timestamping --output-document=new_filename file_url
+
+    - Preserves server Last-Modified timestamp when available
+    - Skips download if local file is already up to date (like --timestamping)
     """
+    debug(f"Downloading: {original_filename} -> {new_filename}")
+
+    # 1) Optional HEAD request to emulate --timestamping
+    remote_ts: float | None = None
     try:
-        cmd = ["wget", "--timestamping", "--output-document", new_filename, file_url]
-        debug(f"Downloading: {original_filename} -> {new_filename}")
-        result = subprocess.run(cmd, capture_output=True, text=True)  # noqa: S603
-        if result.returncode == 0:
-            print(f"✓ {new_filename}")
-            if os.name != "nt":
-                os.chmod(new_filename, 0o555)  # noqa: S103
+        head_req = urllib.request.Request(file_url, method="HEAD")  # noqa: S310
+        with urllib.request.urlopen(head_req, timeout=30) as head_resp:  # noqa: S310
+            lm = head_resp.headers.get("Last-Modified")
+            if lm:
+                remote_ts = _http_date_to_timestamp(lm)
+    except Exception:
+        # HEAD might fail on some servers; just fall back to always GET.
+        remote_ts = None
+
+    # If we have both a local file and a remote timestamp, check if up to date.
+    if remote_ts is not None and os.path.exists(new_filename):
+        local_ts = os.path.getmtime(new_filename)
+        # Allow 1s slack for rounding
+        if local_ts >= remote_ts - 1:
+            print(f"✓ {new_filename} (up to date)")
             return True
-        print(f"✗ Failed: {original_filename}\n{result.stderr}")
+
+    # 2) Actually download the file (GET)
+    try:
+        get_req = urllib.request.Request(file_url, method="GET")  # noqa: S310
+        with urllib.request.urlopen(get_req, timeout=60) as resp, open(new_filename, "wb") as f:  # noqa: S310
+            # If HEAD failed / had no Last-Modified, try again from GET headers.
+            if remote_ts is None:
+                lm = resp.headers.get("Last-Modified")
+                if lm:
+                    remote_ts = _http_date_to_timestamp(lm)
+
+            # Stream to disk in chunks to avoid big-memory downloads.
+            while True:
+                chunk = resp.read(64 * 1024)
+                if not chunk:
+                    break
+                f.write(chunk)
+
+        # 3) Preserve timestamp if we got one
+        if remote_ts is not None:
+            os.utime(new_filename, (remote_ts, remote_ts))
+
+        # 4) chmod like your original code (non-Windows only)
+        if os.name != "nt":
+            os.chmod(new_filename, 0o555)  # noqa: S103
+
+        print(f"✓ {new_filename}")
+        return True
+
+    except urllib.error.HTTPError as e:
+        print(f"✗ Failed: {original_filename}\nHTTP {e.code}: {e.reason}")
         return False
-    except FileNotFoundError:
-        print("Error: wget not found. Please install wget first.")
+    except urllib.error.URLError as e:
+        print(f"✗ Failed: {original_filename}\nNetwork error: {e}")
+        return False
+    except OSError as e:
+        print(f"✗ Failed: {original_filename}\nFilesystem error: {e}")
         return False
 
 
