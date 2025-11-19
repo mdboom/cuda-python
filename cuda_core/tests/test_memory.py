@@ -382,6 +382,7 @@ def test_vmm_allocator_basic_allocation(use_device_object, handle_type):
         buf.close()
 
 
+@pytest.mark.skipif(IS_WINDOWS, reason="TODO(CTK-NEXT-13010): Known to fail already with CTK 13.0")
 def test_vmm_allocator_policy_configuration():
     """Test VMM allocator with different policy configurations.
 
