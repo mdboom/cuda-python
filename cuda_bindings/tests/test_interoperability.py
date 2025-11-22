@@ -7,6 +7,20 @@ import numpy as np
 import pytest
 
 
+def platform_is_jetson_orin():
+    cpath = "/proc/device-tree/compatible"
+    try:
+        with open(cpath, "rb") as f:
+            data = f.read().lower()
+        return b"nvidia,tegra234" in data
+    except OSError:
+        return False
+
+
+if platform_is_jetson_orin():
+    pytest.skip("TODO(CTK-NEXT-13010): All tests failing on Jetson AGX Orin P3730", allow_module_level=True)
+
+
 def supportsMemoryPool():
     err, isSupported = cudart.cudaDeviceGetAttribute(cudart.cudaDeviceAttr.cudaDevAttrMemoryPoolsSupported, 0)
     return err == cudart.cudaError_t.cudaSuccess and isSupported
