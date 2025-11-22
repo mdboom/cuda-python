@@ -24,6 +24,20 @@ logging.basicConfig(
 )
 
 
+def platform_is_jetson_orin():
+    cpath = "/proc/device-tree/compatible"
+    try:
+        with open(cpath, "rb") as f:
+            data = f.read().lower()
+        return b"nvidia,tegra234" in data
+    except OSError:
+        return False
+
+
+if platform_is_jetson_orin():
+    pytest.skip("skipping cuFile tests on Jetson Orin", allow_module_level=True)
+
+
 def platform_is_wsl():
     """Check if running on Windows Subsystem for Linux (WSL)."""
     return platform.system() == "Linux" and "microsoft" in pathlib.Path("/proc/version").read_text().lower()
