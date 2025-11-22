@@ -17,10 +17,22 @@ if [[ ! -d "$CUDA_HOME" ]]; then
     exit 1
 fi
 
-ldconfig -p | grep -E '^[[:space:]]*libnvrtc.*\.so.*[[:space:]]=>[[:space:]]'"$(realpath "${CUDA_HOME}")" || {
-    echo "FATAL: libnvrtc matching $(realpath "$CUDA_HOME") not found in ldconfig cache" >&2
+cuda_home_real=$(realpath "${CUDA_HOME}")
+found=0
+while IFS= read -r so; do
+    [ -z "$so" ] && continue
+    resolved=$(realpath "$so" 2>/dev/null) || continue
+    case "$resolved" in
+    "$cuda_home_real"/*)
+        found=1
+        break
+        ;;
+    esac
+done < <(ldconfig -p | awk '/libnvrtc\.so/ && /=>/ {print $NF}')
+if ((!found)); then
+    echo "FATAL: libnvrtc under ${cuda_home_real} not found in ldconfig cache" >&2
     exit 1
-}
+fi
 
 nvidia-smi || {
     rc=$?
