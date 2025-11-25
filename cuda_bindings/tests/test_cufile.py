@@ -24,18 +24,12 @@ logging.basicConfig(
 )
 
 
-def platform_is_jetson_orin():
-    cpath = "/proc/device-tree/compatible"
-    try:
-        with open(cpath, "rb") as f:
-            data = f.read().lower()
-        return b"nvidia,tegra234" in data
-    except OSError:
-        return False
+def platform_is_tegra_linux():
+    return pathlib.Path("/etc/nv_tegra_release").exists()
 
 
-if platform_is_jetson_orin():
-    pytest.skip("skipping cuFile tests on Jetson Orin", allow_module_level=True)
+if platform_is_tegra_linux():
+    pytest.skip("skipping cuFile tests on Tegra Linux", allow_module_level=True)
 
 
 def platform_is_wsl():
