@@ -145,6 +145,7 @@ def buffer_initialization(dummy_mr: MemoryResource):
     assert buffer.memory_resource == dummy_mr
     assert buffer.is_device_accessible == dummy_mr.is_device_accessible
     assert buffer.is_host_accessible == dummy_mr.is_host_accessible
+    assert not buffer.is_mapped
     buffer.close()
 
 
@@ -276,6 +277,19 @@ def test_buffer_dunder_dlpack_device_failure():
     buffer = dummy_mr.allocate(size=1024)
     with pytest.raises(BufferError, match=r"^buffer is neither device-accessible nor host-accessible$"):
         buffer.__dlpack_device__()
+
+
+def test_buffer_dlpack_failure_clean_up():
+    dummy_mr = NullMemoryResource()
+    buffer = dummy_mr.allocate(size=1024)
+    before = sys.getrefcount(buffer)
+    with pytest.raises(BufferError, match="invalid buffer"):
+        buffer.__dlpack__()
+    after = sys.getrefcount(buffer)
+    # we use the buffer refcount as sentinel for proper clean-up here,
+    # hoping that malloc and frees did the right thing
+    # as they are handled by the same deleter
+    assert after == before
 
 
 @pytest.mark.parametrize("use_device_object", [True, False])
@@ -421,7 +435,7 @@ def test_vmm_allocator_policy_configuration():
     except CUDAError as exc:
         msg = str(exc)
         if "CUDA_ERROR_INVALID_DEVICE" in msg:
-            pytest.xfail("TODO(CTK-NEXT-13010): Failing on Jetson AGX Orin P3730")
+            pytest.xfail("TODO(#1300): Failing on Jetson AGX Orin P3730")
         raise
     assert buffer.size >= 8192
     assert buffer.device_id == device.device_id
@@ -444,7 +458,7 @@ def test_vmm_allocator_policy_configuration():
     except CUDAError as exc:
         msg = str(exc)
         if "CUDA_ERROR_UNKNOWN" in msg:
-            pytest.xfail("TODO(CTK-NEXT-13010): Known to fail already with CTK 13.0 (Windows)")
+            pytest.xfail("TODO(#1300): Known to fail already with CTK 13.0 (Windows)")
         raise
     assert modified_buffer.size >= 16384
     assert vmm_mr.config == new_config
