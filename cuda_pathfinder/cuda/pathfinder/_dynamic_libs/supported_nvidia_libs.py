@@ -100,7 +100,7 @@ DIRECT_DEPENDENCIES = DIRECT_DEPENDENCIES_CTK | {
 #   cuda_12.8.1_570.124.06_linux.run
 #   cuda_12.9.1_575.57.08_linux.run
 #   cuda_13.0.2_580.95.05_linux.run
-#   cuda_13.1.0_590.33_linux_kitpick029.run TODO(CTK-NEXT-13010): Use released .run
+#   cuda_13.1.0_590.44.01_linux.run
 # Generated with toolshed/build_pathfinder_sonames.py
 # Please keep in old → new sort order.
 SUPPORTED_LINUX_SONAMES_CTK = {
@@ -227,7 +227,7 @@ SUPPORTED_LINUX_SONAMES = SUPPORTED_LINUX_SONAMES_CTK | SUPPORTED_LINUX_SONAMES_
 #   cuda_12.8.1_572.61_windows.exe
 #   cuda_12.9.1_576.57_windows.exe
 #   cuda_13.0.2_windows.exe
-#   cuda_13.1.0_kitpick029_windows.exe TODO(CTK-NEXT-13010): Use released .exe
+#   cuda_13.1.0_windows.exe
 # Generated with toolshed/build_pathfinder_dlls.py
 # Please keep in old → new sort order.
 SUPPORTED_WINDOWS_DLLS_CTK = {

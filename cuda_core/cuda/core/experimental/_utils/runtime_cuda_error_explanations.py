@@ -7,7 +7,7 @@
 # Also update the CUDA Toolkit version number below.
 
 # ruff: noqa: E501
-# CUDA Toolkit v13.1.0 RC 018
+# CUDA Toolkit v13.1.0
 RUNTIME_CUDA_ERROR_EXPLANATIONS = {
     0: (
         "The API call returned with no errors. In the case of query calls, this"
