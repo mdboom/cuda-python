@@ -199,7 +199,7 @@ def parse_headers(header_dict):
             if discovered:
                 found_struct += discovered
 
-    # TODO(CTK-NEXT-13010): make this work properly
+    # TODO(#1312): make this work properly
     found_types.append("CUstreamAtomicReductionDataType_enum")
 
     return found_types, found_functions, found_values, found_struct, struct_list
