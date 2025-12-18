@@ -80,5 +80,5 @@ xfail_strict = true
 [tool.setuptools_scm]
 root = ".."
 version_file = "cuda/bindings/_version.py"
-tag_regex = "^(?P<version>v\\d+\\.\\d+\\.\\d+((a|b|rc)\\d+)?)$"
+tag_regex = "^(?P<version>v\\d+\\.\\d+\\.\\d+)" # ((a|b|rc)\\d+)?$"
 git_describe_command = ["git", "describe", "--dirty", "--tags", "--long", "--match", "v*[0-9]*"]
