@@ -66,4 +66,5 @@ cd ..
 cd cuda_core/
 python -m pytest -ra -s -vv tests/
 python -m pytest -ra -s -vv tests/example_tests/
+python -m pytest -ra -s -vv tests/cython/
 cd ..

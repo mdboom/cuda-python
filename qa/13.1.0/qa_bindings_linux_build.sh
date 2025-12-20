@@ -45,4 +45,5 @@ cd ..
 
 cd cuda_core/
 pip install -v -e . --group test
+PYTHONPATH="$(dirname $(pwd))/cuda_bindings" ./tests/cython/build_tests.sh
 cd ..
