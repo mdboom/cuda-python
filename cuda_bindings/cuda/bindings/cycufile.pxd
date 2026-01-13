@@ -171,8 +171,6 @@ cdef extern from '<cufile.h>':
         CUFILE_PARAM_FORCE_ODIRECT_MODE
         CUFILE_PARAM_SKIP_TOPOLOGY_DETECTION
         CUFILE_PARAM_STREAM_MEMOPS_BYPASS
-        CUFILE_PARAM_PROPERTIES_POSIX_IO_MODE
-        CUFILE_PARAM_GDS_FALLBACK_IO
 
 cdef extern from '<cufile.h>':
     ctypedef enum CUFileStringConfigParameter_t:

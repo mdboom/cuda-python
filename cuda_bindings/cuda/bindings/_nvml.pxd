@@ -39,7 +39,6 @@ ctypedef nvmlGpuInstanceProfileInfo_t GpuInstanceProfileInfo
 ctypedef nvmlComputeInstanceProfileInfo_t ComputeInstanceProfileInfo
 ctypedef nvmlMask255_t Mask255
 ctypedef nvmlHostname_v1_t Hostname_v1
-ctypedef nvmlBBXTimeData_v1_t BBXTimeData_v1
 ctypedef nvmlVgpuSchedulerStateInfo_v2_t VgpuSchedulerStateInfo_v2
 ctypedef nvmlVgpuSchedulerLogEntry_v2_t VgpuSchedulerLogEntry_v2
 ctypedef nvmlVgpuSchedulerState_v2_t VgpuSchedulerState_v2
@@ -448,5 +447,4 @@ cpdef object device_get_pdi(intptr_t device)
 cpdef device_read_write_prm_v1(intptr_t device, intptr_t buffer)
 cpdef object device_get_gpu_instance_profile_info_by_id_v(intptr_t device, unsigned int profile_id)
 cpdef object device_get_unrepairable_memory_flag_v1(intptr_t device)
-cpdef device_read_prm_counters_v1(intptr_t device, intptr_t counter_list)
 cpdef device_set_rusd_settings_v1(intptr_t device, intptr_t settings)
