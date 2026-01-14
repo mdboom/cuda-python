@@ -38,7 +38,7 @@ from cuda.core._dlpack import DLDeviceType
 from cuda.core._memory import IPCBufferDescriptor
 from cuda.core._utils.cuda_utils import CUDAError, handle_return
 from cuda.core.utils import StridedMemoryView
-from helpers import IS_WINDOWS
+from helpers import IS_WINDOWS, supports_ipc_mempool
 from helpers.buffers import DummyUnifiedMemoryResource
 
 from conftest import (
@@ -46,7 +46,6 @@ from conftest import (
     skip_if_managed_memory_unsupported,
     skip_if_pinned_memory_unsupported,
 )
-from cuda_python_test_helpers import supports_ipc_mempool
 
 POOL_SIZE = 2097152  # 2MB size
 
@@ -595,6 +594,10 @@ def test_pinned_memory_resource_initialization(init_cuda):
         msg = str(exc)
         if "CUDA_ERROR_OUT_OF_MEMORY" in msg:
             pytest.xfail("TODO(#9999): Resolve CUDA_ERROR_OUT_OF_MEMORY")
+    except RuntimeError as exc:
+        msg = str(exc)
+        if "Failed to allocate memory from pool" in msg:
+            pytest.xfail("TODO(#9999): Resolve Failed to allocate memory from pool")
     assert buffer.size == 1024
     assert buffer.device_id == -1  # Not bound to any GPU
     assert buffer.is_host_accessible

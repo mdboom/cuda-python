@@ -837,7 +837,7 @@ class AffinityScope(_IntEnum):
     SOCKET = 1   # Scope of processor socket for affinity queries
 
 
-class FI(_IntEnum):
+class FieldId(_IntEnum):
     DEV_ECC_CURRENT =          1   # Current ECC mode. 1=Active. 0=Inactive
     DEV_ECC_PENDING =          2   # Pending ECC mode. 1=Active. 0=Inactive
     # ECC Count Totals
@@ -26795,10 +26795,16 @@ cdef FieldValue _cast_field_values(values):
     values_ = FieldValue(valuesCount)
     for i, v in enumerate(values):
         if isinstance(v, tuple):
+            if len(v) != 2:
+                raise ValueError("FieldValue tuple must be of length 2")
+            if not isinstance(v[0], int) or not isinstance(v[1], int):
+                raise ValueError("FieldValue tuple elements must be integers")
             values_[i].field_id = v[0]
             values_[i].scope_id = v[1]
-        else:
+        elif isinstance(v, int):
             values_[i].field_id = v
+        else:
+            raise ValueError("Each entry must be an integer field ID, or a tuple of (field ID, scope ID)")
     return values_
 
 
@@ -26818,7 +26824,8 @@ cpdef object device_get_field_values(intptr_t device, values):
         __status__ = nvmlDeviceGetFieldValues(<Device>device, valuesCount, ptr)
     check_status(__status__)
 
-    return FieldValue.from_ptr(<intptr_t>ptr, valuesCount)
+    values_._data.resize((valuesCount,))
+    return values_
 
 
 cpdef object device_clear_field_values(intptr_t device, values):
