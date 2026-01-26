@@ -136,19 +136,13 @@ def test_device_get_p2p_status(handles, index):
 
 def test_device_get_power_usage(ngpus, handles):
     for i in range(ngpus):
-        try:
-            power_mwatts = nvml.device_get_power_usage(handles[i])
-        except nvml.NotSupportedError:
-            pytest.skip("device_get_power_usage not supported")
+        power_mwatts = nvml.device_get_power_usage(handles[i])
         assert power_mwatts >= 0.0
 
 
 def test_device_get_total_energy_consumption(ngpus, handles):
     for i in range(ngpus):
-        try:
-            energy_mjoules1 = nvml.device_get_total_energy_consumption(handles[i])
-        except nvml.NotSupportedError:
-            pytest.skip("device_get_total_energy_consumption not supported")
+        energy_mjoules1 = nvml.device_get_total_energy_consumption(handles[i])
         for j in range(10):  # idle for 150 ms
             time.sleep(0.015)  # and check for increase every 15 ms
             energy_mjoules2 = nvml.device_get_total_energy_consumption(handles[i])
