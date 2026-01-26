@@ -70,8 +70,7 @@ requires = [
     "setuptools_scm[simple]>=8",
     "wheel"
 ]
-build-backend = "build_hooks"
-backend-path = ["."]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 root = ".."
