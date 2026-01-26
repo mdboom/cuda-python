@@ -2,11 +2,9 @@
 #
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 #
-# This code was automatically generated across versions from 12.9.1 to 13.2.0. Do not modify it directly.
+# This code was automatically generated across versions from 12.9.1 to 13.1.1. Do not modify it directly.
 
 cimport cython  # NOQA
-from cython cimport view
-cimport cpython
 
 from ._internal.utils cimport (get_buffer_pointer, get_nested_resource_ptr,
                                nested_resource)
@@ -20,6 +18,7 @@ from libc.stdlib cimport calloc, free, malloc
 from cython cimport view
 cimport cpython.buffer
 cimport cpython.memoryview
+cimport cpython
 from libc.string cimport memcmp, memcpy
 import numpy as _numpy
 
@@ -35,6 +34,7 @@ cdef __from_data(data, dtype_name, expected_dtype, lowpp_type):
     if data.dtype != expected_dtype:
         raise ValueError(f"data array must be of dtype {dtype_name}")
     return lowpp_type.from_ptr(data.ctypes.data, not data.flags.writeable, data)
+
 
 
 ###############################################################################
@@ -556,7 +556,6 @@ class GpmMetricId(_IntEnum):
     GPM_METRIC_ANY_TENSOR_UTIL = NVML_GPM_METRIC_ANY_TENSOR_UTIL
     GPM_METRIC_DFMA_TENSOR_UTIL = NVML_GPM_METRIC_DFMA_TENSOR_UTIL
     GPM_METRIC_HMMA_TENSOR_UTIL = NVML_GPM_METRIC_HMMA_TENSOR_UTIL
-    GPM_METRIC_DMMA_TENSOR_UTIL = NVML_GPM_METRIC_DMMA_TENSOR_UTIL
     GPM_METRIC_IMMA_TENSOR_UTIL = NVML_GPM_METRIC_IMMA_TENSOR_UTIL
     GPM_METRIC_DRAM_BW_UTIL = NVML_GPM_METRIC_DRAM_BW_UTIL
     GPM_METRIC_FP64_UTIL = NVML_GPM_METRIC_FP64_UTIL
@@ -730,55 +729,6 @@ class GpmMetricId(_IntEnum):
     GPM_METRIC_GR7_CTXSW_REQUESTS = NVML_GPM_METRIC_GR7_CTXSW_REQUESTS
     GPM_METRIC_GR7_CTXSW_CYCLES_PER_REQ = NVML_GPM_METRIC_GR7_CTXSW_CYCLES_PER_REQ
     GPM_METRIC_GR7_CTXSW_ACTIVE_PCT = NVML_GPM_METRIC_GR7_CTXSW_ACTIVE_PCT
-    GPM_METRIC_SM_CYCLES_ELAPSED = NVML_GPM_METRIC_SM_CYCLES_ELAPSED
-    GPM_METRIC_SM_CYCLES_ACTIVE = NVML_GPM_METRIC_SM_CYCLES_ACTIVE
-    GPM_METRIC_MMA_CYCLES_ACTIVE = NVML_GPM_METRIC_MMA_CYCLES_ACTIVE
-    GPM_METRIC_DMMA_CYCLES_ACTIVE = NVML_GPM_METRIC_DMMA_CYCLES_ACTIVE
-    GPM_METRIC_HMMA_CYCLES_ACTIVE = NVML_GPM_METRIC_HMMA_CYCLES_ACTIVE
-    GPM_METRIC_IMMA_CYCLES_ACTIVE = NVML_GPM_METRIC_IMMA_CYCLES_ACTIVE
-    GPM_METRIC_DFMA_CYCLES_ACTIVE = NVML_GPM_METRIC_DFMA_CYCLES_ACTIVE
-    GPM_METRIC_PCIE_TX = NVML_GPM_METRIC_PCIE_TX
-    GPM_METRIC_PCIE_RX = NVML_GPM_METRIC_PCIE_RX
-    GPM_METRIC_INTEGER_CYCLES_ACTIVE = NVML_GPM_METRIC_INTEGER_CYCLES_ACTIVE
-    GPM_METRIC_FP64_CYCLES_ACTIVE = NVML_GPM_METRIC_FP64_CYCLES_ACTIVE
-    GPM_METRIC_FP32_CYCLES_ACTIVE = NVML_GPM_METRIC_FP32_CYCLES_ACTIVE
-    GPM_METRIC_FP16_CYCLES_ACTIVE = NVML_GPM_METRIC_FP16_CYCLES_ACTIVE
-    GPM_METRIC_NVLINK_L0_RX = NVML_GPM_METRIC_NVLINK_L0_RX
-    GPM_METRIC_NVLINK_L0_TX = NVML_GPM_METRIC_NVLINK_L0_TX
-    GPM_METRIC_NVLINK_L1_RX = NVML_GPM_METRIC_NVLINK_L1_RX
-    GPM_METRIC_NVLINK_L1_TX = NVML_GPM_METRIC_NVLINK_L1_TX
-    GPM_METRIC_NVLINK_L2_RX = NVML_GPM_METRIC_NVLINK_L2_RX
-    GPM_METRIC_NVLINK_L2_TX = NVML_GPM_METRIC_NVLINK_L2_TX
-    GPM_METRIC_NVLINK_L3_RX = NVML_GPM_METRIC_NVLINK_L3_RX
-    GPM_METRIC_NVLINK_L3_TX = NVML_GPM_METRIC_NVLINK_L3_TX
-    GPM_METRIC_NVLINK_L4_RX = NVML_GPM_METRIC_NVLINK_L4_RX
-    GPM_METRIC_NVLINK_L4_TX = NVML_GPM_METRIC_NVLINK_L4_TX
-    GPM_METRIC_NVLINK_L5_RX = NVML_GPM_METRIC_NVLINK_L5_RX
-    GPM_METRIC_NVLINK_L5_TX = NVML_GPM_METRIC_NVLINK_L5_TX
-    GPM_METRIC_NVLINK_L6_RX = NVML_GPM_METRIC_NVLINK_L6_RX
-    GPM_METRIC_NVLINK_L6_TX = NVML_GPM_METRIC_NVLINK_L6_TX
-    GPM_METRIC_NVLINK_L7_RX = NVML_GPM_METRIC_NVLINK_L7_RX
-    GPM_METRIC_NVLINK_L7_TX = NVML_GPM_METRIC_NVLINK_L7_TX
-    GPM_METRIC_NVLINK_L8_RX = NVML_GPM_METRIC_NVLINK_L8_RX
-    GPM_METRIC_NVLINK_L8_TX = NVML_GPM_METRIC_NVLINK_L8_TX
-    GPM_METRIC_NVLINK_L9_RX = NVML_GPM_METRIC_NVLINK_L9_RX
-    GPM_METRIC_NVLINK_L9_TX = NVML_GPM_METRIC_NVLINK_L9_TX
-    GPM_METRIC_NVLINK_L10_RX = NVML_GPM_METRIC_NVLINK_L10_RX
-    GPM_METRIC_NVLINK_L10_TX = NVML_GPM_METRIC_NVLINK_L10_TX
-    GPM_METRIC_NVLINK_L11_RX = NVML_GPM_METRIC_NVLINK_L11_RX
-    GPM_METRIC_NVLINK_L11_TX = NVML_GPM_METRIC_NVLINK_L11_TX
-    GPM_METRIC_NVLINK_L12_RX = NVML_GPM_METRIC_NVLINK_L12_RX
-    GPM_METRIC_NVLINK_L12_TX = NVML_GPM_METRIC_NVLINK_L12_TX
-    GPM_METRIC_NVLINK_L13_RX = NVML_GPM_METRIC_NVLINK_L13_RX
-    GPM_METRIC_NVLINK_L13_TX = NVML_GPM_METRIC_NVLINK_L13_TX
-    GPM_METRIC_NVLINK_L14_RX = NVML_GPM_METRIC_NVLINK_L14_RX
-    GPM_METRIC_NVLINK_L14_TX = NVML_GPM_METRIC_NVLINK_L14_TX
-    GPM_METRIC_NVLINK_L15_RX = NVML_GPM_METRIC_NVLINK_L15_RX
-    GPM_METRIC_NVLINK_L15_TX = NVML_GPM_METRIC_NVLINK_L15_TX
-    GPM_METRIC_NVLINK_L16_RX = NVML_GPM_METRIC_NVLINK_L16_RX
-    GPM_METRIC_NVLINK_L16_TX = NVML_GPM_METRIC_NVLINK_L16_TX
-    GPM_METRIC_NVLINK_L17_RX = NVML_GPM_METRIC_NVLINK_L17_RX
-    GPM_METRIC_NVLINK_L17_TX = NVML_GPM_METRIC_NVLINK_L17_TX
     GPM_METRIC_MAX = NVML_GPM_METRIC_MAX
 
 class PowerProfileType(_IntEnum):
@@ -1241,391 +1191,370 @@ class RUSD(_IntEnum):
 
 
 class PowerMizerMode(_IntEnum):
-    POWER_MIZER_MODE_ADAPTIVE = 0  # Adjust GPU clocks based on GPU utilization
-    POWER_MIZER_MODE_PREFER_MAXIMUM_PERFORMANCE = 1  # Raise GPU clocks to favor maximum performance, to the extent that thermal and other constraints allow
-    POWER_MIZER_MODE_AUTO = 2  # PowerMizer mode is driver controlled
-    POWER_MIZER_MODE_PREFER_CONSISTENT_PERFORMANCE = 3  # lock to GPU base clocks
+    ADAPTIVE = 0  # Adjust GPU clocks based on GPU utilization
+    PREFER_MAXIMUM_PERFORMANCE = 1  # Raise GPU clocks to favor maximum performance, to the extent that thermal and other constraints allow
+    AUTO = 2  # PowerMizer mode is driver controlled
+    PREFER_CONSISTENT_PERFORMANCE = 3  # lock to GPU base clocks
 
 
 class DeviceArch(_IntEnum):
-    DEVICE_ARCH_KEPLER = 2
-    DEVICE_ARCH_MAXWELL = 3
-    DEVICE_ARCH_PASCAL = 4
-    DEVICE_ARCH_VOLTA = 5
-    DEVICE_ARCH_TURING = 6
-    DEVICE_ARCH_AMPERE = 7
-    DEVICE_ARCH_ADA = 8
-    DEVICE_ARCH_HOPPER = 9
-    DEVICE_ARCH_BLACKWELL = 10
-    DEVICE_ARCH_UNKNOWN = 0xFFFFFFFF
+    KEPLER = 2
+    MAXWELL = 3
+    PASCAL = 4
+    VOLTA = 5
+    TURING = 6
+    AMPERE = 7
+    ADA = 8
+    HOPPER = 9
+    BLACKWELL = 10
+    UNKNOWN = 0xFFFFFFFF
 
 
 class BusType(_IntEnum):
-    BUS_TYPE_UNKNOWN = 0
-    BUS_TYPE_PCI = 1
-    BUS_TYPE_PCIE = 2
-    BUS_TYPE_FPCI = 3
-    BUS_TYPE_AGP = 4
+    UNKNOWN = 0
+    PCI = 1
+    PCIE = 2
+    FPCI = 3
+    AGP = 4
 
 
 class FanControlPolicy(_IntEnum):
-    FAN_CONTROL_POLICY_TEMPERATURE_CONTINUOUS_SW = 0  # Temperature-controlled fan policy
-    FAN_CONTROL_POLICY_MANUAL = 1  # Manual fan control policy
+    TEMPERATURE_CONTINUOUS_SW = 0  # Temperature-controlled fan policy
+    MANUAL = 1  # Manual fan control policy
 
 
 class PowerSource(_IntEnum):
-    POWER_SOURCE_AC = 0x00000000
-    POWER_SOURCE_BATTERY = 0x00000001
-    POWER_SOURCE_UNDERSIZED = 0x00000002
+    AC = 0x00000000
+    BATTERY = 0x00000001
+    UNDERSIZED = 0x00000002
 
 
 class PcieLinkMaxSpeed(_IntEnum):
-    PCIE_LINK_MAX_SPEED_INVALID = 0x00000000
-    PCIE_LINK_MAX_SPEED_2500MBPS = 0x00000001
-    PCIE_LINK_MAX_SPEED_5000MBPS = 0x00000002
-    PCIE_LINK_MAX_SPEED_8000MBPS = 0x00000003
-    PCIE_LINK_MAX_SPEED_16000MBPS = 0x00000004
-    PCIE_LINK_MAX_SPEED_32000MBPS = 0x00000005
-    PCIE_LINK_MAX_SPEED_64000MBPS = 0x00000006
+    SPEED_INVALID = 0x00000000
+    SPEED_2500MBPS = 0x00000001
+    SPEED_5000MBPS = 0x00000002
+    SPEED_8000MBPS = 0x00000003
+    SPEED_16000MBPS = 0x00000004
+    SPEED_32000MBPS = 0x00000005
+    SPEED_64000MBPS = 0x00000006
 
 
 class AdaptiveClockingInfoStatus(_IntEnum):
-    ADAPTIVE_CLOCKING_INFO_STATUS_DISABLED = 0x00000000
-    ADAPTIVE_CLOCKING_INFO_STATUS_ENABLED = 0x00000001
+    DISABLED = 0x00000000
+    ENABLED = 0x00000001
 
 
 MAX_GPU_UTILIZATIONS = 8
 
 
 class PcieAtomicsCap(_IntEnum):
-    PCIE_ATOMICS_CAP_FETCHADD32 = 0x01
-    PCIE_ATOMICS_CAP_FETCHADD64 = 0x02
-    PCIE_ATOMICS_CAP_SWAP32 = 0x04
-    PCIE_ATOMICS_CAP_SWAP64 = 0x08
-    PCIE_ATOMICS_CAP_CAS32 = 0x10
-    PCIE_ATOMICS_CAP_CAS64 = 0x20
-    PCIE_ATOMICS_CAP_CAS128 = 0x40
-    PCIE_ATOMICS_OPS_MAX = 7
+    FETCHADD32 = 0x01
+    FETCHADD64 = 0x02
+    SWAP32 = 0x04
+    SWAP64 = 0x08
+    CAS32 = 0x10
+    CAS64 = 0x20
+    CAS128 = 0x40
+    MAX = 7
 
 
 class PowerScope(_IntEnum):
-    POWER_SCOPE_GPU = 0
-    POWER_SCOPE_MODULE = 1
-    POWER_SCOPE_MEMORY = 2
+    GPU = 0
+    MODULE = 1
+    MEMORY = 2
 
 
 # Need "Enum" suffix to disambiguate from nvmlGridLicenseExpiry_t
 class GridLicenseExpiryEnum(_IntEnum):
-    GRID_LICENSE_EXPIRY_NOT_AVAILABLE = 0
-    GRID_LICENSE_EXPIRY_INVALID = 1
-    GRID_LICENSE_EXPIRY_VALID = 2
-    GRID_LICENSE_EXPIRY_NOT_APPLICABLE = 3
-    GRID_LICENSE_EXPIRY_PERMANENT = 4
+    NOT_AVAILABLE = 0
+    INVALID = 1
+    VALID = 2
+    NOT_APPLICABLE = 3
+    PERMANENT = 4
 
 
 GRID_LICENSE_FEATURE_MAX_COUNT = 3
 
 
 class VgpuVirtualizationCapMigration(_IntEnum):
-    VGPU_VIRTUALIZATION_CAP_MIGRATION_NO = 0x0
-    VGPU_VIRTUALIZATION_CAP_MIGRATION_YES = 0x1
+    NO = 0x0
+    YES = 0x1
 
 
 class VgpuPgpuVirtualizationCapMigration(_IntEnum):
-    VGPU_PGPU_VIRTUALIZATION_CAP_MIGRATION_NO = 0x0
-    VGPU_PGPU_VIRTUALIZATION_CAP_MIGRATION_YES = 0x1
+    NO = 0x0
+    YES = 0x1
 
 
 class VgpuSchedulerPolicy(_IntEnum):
-    VGPU_SCHEDULER_POLICY_UNKNOWN = 0
-    VGPU_SCHEDULER_POLICY_BEST_EFFORT = 1
-    VGPU_SCHEDULER_POLICY_EQUAL_SHARE = 2
-    VGPU_SCHEDULER_POLICY_FIXED_SHARE = 3
-    SUPPORTED_VGPU_SCHEDULER_POLICY_COUNT = 3
+    UNKNOWN = 0
+    BEST_EFFORT = 1
+    EQUAL_SHARE = 2
+    FIXED_SHARE = 3
 
 
 class VgpuSchedulerArr(_IntEnum):
-    VGPU_SCHEDULER_ARR_DEFAULT = 0
-    VGPU_SCHEDULER_ARR_DISABLE = 1
-    VGPU_SCHEDULER_ARR_ENABLE = 2
+    DEFAULT = 0
+    DISABLE = 1
+    ENABLE = 2
 
 
 class VgpuSchedulerEngineType(_IntEnum):
-    VGPU_SCHEDULER_ENGINE_TYPE_GRAPHICS = 1
-    VGPU_SCHEDULER_ENGINE_TYPE_NVENC1 = 2
+    GRAPHICS = 1
+    NVENC1 = 2
 
 
 class GridLicenseState(_IntEnum):
-    GRID_LICENSE_STATE_UNKNOWN = 0
-    GRID_LICENSE_STATE_UNINITIALIZED = 1
-    GRID_LICENSE_STATE_UNLICENSED_UNRESTRICTED = 2
-    GRID_LICENSE_STATE_UNLICENSED_RESTRICTED = 3
-    GRID_LICENSE_STATE_UNLICENSED = 4
-    GRID_LICENSE_STATE_LICENSED = 5
+    UNKNOWN = 0
+    UNINITIALIZED = 1
+    UNLICENSED_UNRESTRICTED = 2
+    UNLICENSED_RESTRICTED = 3
+    UNLICENSED = 4
+    LICENSED = 5
 
 
 class NvlinkLowPowerThresholdUnit(_IntEnum):
-    NVLINK_LOW_POWER_THRESHOLD_UNIT_100US = 0x0
-    NVLINK_LOW_POWER_THRESHOLD_UNIT_50US = 0x1
+    UNIT_100US = 0x0
+    UNIT_50US = 0x1
 
 
 class NvlinkPowerState(_IntEnum):
-    NVLINK_POWER_STATE_HIGH_SPEED = 0x0
-    NVLINK_POWER_STATE_LOW_SPEED = 0x1
-
-
-NVLINK_LOW_POWER_THRESHOLD_MIN = 0x1
+    HIGH_SPEED = 0x0
+    LOW_SPEED = 0x1
 
 
 class NvlinkLowPowerThreshold(_IntEnum):
-    NVLINK_LOW_POWER_THRESHOLD_MAX = 0x1FFF
-    NVLINK_LOW_POWER_THRESHOLD_RESET = 0xFFFFFFFF
-    NVLINK_LOW_POWER_THRESHOLD_DEFAULT = 0xFFFFFFFF
+    MIN = 0x1
+    MAX = 0x1FFF
+    RESET = 0xFFFFFFFF
+    DEFAULT = 0xFFFFFFFF
 
 
 class C2CPowerState(_IntEnum):
-    C2C_POWER_STATE_FULL_POWER = 0
-    C2C_POWER_STATE_LOW_POWER = 1
+    FULL_POWER = 0
+    LOW_POWER = 1
 
 
 class EventType(_IntEnum):
-    EVENT_TYPE_NONE = 0x0000000000000000
-    EVENT_TYPE_SINGLE_BIT_ECC_ERROR = 0x0000000000000001
-    EVENT_TYPE_DOUBLE_BIT_ECC_ERROR = 0x0000000000000002
-    EVENT_TYPE_PSTATE = 0x0000000000000004
-    EVENT_TYPE_XID_CRITICAL_ERROR = 0x0000000000000008
-    EVENT_TYPE_CLOCK = 0x0000000000000010
-    EVENT_TYPE_POWER_SOURCE_CHANGE = 0x0000000000000080
-    EVENT_MIG_CONFIG_CHANGE = 0x0000000000000100
-    EVENT_TYPE_SINGLE_BIT_ECC_ERROR_STORM = 0x0000000000000200
-    EVENT_TYPE_DRAM_RETIREMENT_EVENT = 0x0000000000000400
-    EVENT_TYPE_DRAM_RETIREMENT_FAILURE = 0x0000000000000800
-    EVENT_TYPE_NON_FATAL_POISON_ERROR = 0x0000000000001000
-    EVENT_TYPE_FATAL_POISON_ERROR = 0x0000000000002000
-    EVENT_TYPE_GPU_UNAVAILABLE_ERROR = 0x0000000000004000
-    EVENT_TYPE_GPU_RECOVERY_ACTION = 0x0000000000008000
+    NONE = 0x0000000000000000
+    SINGLE_BIT_ECC_ERROR = 0x0000000000000001
+    DOUBLE_BIT_ECC_ERROR = 0x0000000000000002
+    PSTATE = 0x0000000000000004
+    XID_CRITICAL_ERROR = 0x0000000000000008
+    CLOCK = 0x0000000000000010
+    POWER_SOURCE_CHANGE = 0x0000000000000080
+    MIG_CONFIG_CHANGE = 0x0000000000000100
+    SINGLE_BIT_ECC_ERROR_STORM = 0x0000000000000200
+    DRAM_RETIREMENT_EVENT = 0x0000000000000400
+    DRAM_RETIREMENT_FAILURE = 0x0000000000000800
+    NON_FATAL_POISON_ERROR = 0x0000000000001000
+    FATAL_POISON_ERROR = 0x0000000000002000
+    GPU_UNAVAILABLE_ERROR = 0x0000000000004000
+    GPU_RECOVERY_ACTION = 0x0000000000008000
 
 
 class SystemEventType(_IntEnum):
-    SYSTEM_EVENT_TYPE_GPU_DRIVER_UNBIND = 0x0000000000000001
-    SYSTEM_EVENT_TYPE_GPU_DRIVER_BIND = 0x0000000000000002
+    GPU_DRIVER_UNBIND = 0x0000000000000001
+    GPU_DRIVER_BIND = 0x0000000000000002
 
 
-class ClocksEvent(_IntEnum):
-    CLOCKS_EVENT_REASON_GPU_IDLE = 0x0000000000000001
-    CLOCKS_EVENT_REASON_APPLICATIONS_CLOCKS_SETTING = 0x0000000000000002
-    CLOCKS_THROTTLE_REASON_USER_DEFINED_CLOCKS = 0x0000000000000002
-    CLOCKS_EVENT_REASON_SW_POWER_CAP = 0x0000000000000004
-    CLOCKS_THROTTLE_REASON_HW_SLOWDOWN = 0x0000000000000008
-    CLOCKS_EVENT_REASON_SYNC_BOOST = 0x0000000000000010
-    CLOCKS_EVENT_REASON_SW_THERMAL_SLOWDOWN = 0x0000000000000020
-    CLOCKS_THROTTLE_REASON_HW_THERMAL_SLOWDOWN = 0x0000000000000040
-    CLOCKS_THROTTLE_REASON_HW_POWER_BRAKE_SLOWDOWN = 0x0000000000000080
-    CLOCKS_EVENT_REASON_DISPLAY_CLOCK_SETTING = 0x0000000000000100
-    CLOCKS_EVENT_REASON_NONE = 0x0000000000000000
-    CLOCKS_THROTTLE_REASON_GPU_IDLE = 0x0000000000000001
-    CLOCKS_THROTTLE_REASON_APPLICATIONS_CLOCKS_SETTING = 0x0000000000002
-    CLOCKS_THROTTLE_REASON_SYNC_BOOST = 0x00000000000010
-    CLOCKS_THROTTLE_REASON_SW_POWER_CAP = 0x00000000000004
-    CLOCKS_THROTTLE_REASON_SW_THERMAL_SLOWDOWN = 0x00000000000020
-    CLOCKS_THROTTLE_REASON_DISPLAY_CLOCK_SETTING = 0x00000000000100
-    CLOCKS_THROTTLE_REASON_NONE = 0x0000000000000000
+class ClocksEventReasons(_IntEnum):
+    EVENT_REASON_GPU_IDLE = 0x0000000000000001
+    EVENT_REASON_APPLICATIONS_CLOCKS_SETTING = 0x0000000000000002
+    EVENT_REASON_SW_POWER_CAP = 0x0000000000000004
+    THROTTLE_REASON_HW_SLOWDOWN = 0x0000000000000008
+    EVENT_REASON_SYNC_BOOST = 0x0000000000000010
+    EVENT_REASON_SW_THERMAL_SLOWDOWN = 0x0000000000000020
+    THROTTLE_REASON_HW_THERMAL_SLOWDOWN = 0x0000000000000040
+    THROTTLE_REASON_HW_POWER_BRAKE_SLOWDOWN = 0x0000000000000080
+    EVENT_REASON_DISPLAY_CLOCK_SETTING = 0x0000000000000100
+    EVENT_REASON_NONE = 0x0000000000000000
 
 
 class EncoderQuery(_IntEnum):
-    ENCODER_QUERY_H264 = 0x00
-    ENCODER_QUERY_HEVC = 0x01
-    ENCODER_QUERY_AV1 = 0x02
-    ENCODER_QUERY_UNKNOWN = 0xFF
+    H264 = 0x00
+    HEVC = 0x01
+    AV1 = 0x02
+    UNKNOWN = 0xFF
 
 
 class NvFBCSessionFlag(_IntEnum):
-    NVFBC_SESSION_FLAG_DIFFMAP_ENABLED = 0x00000001
-    NVFBC_SESSION_FLAG_CLASSIFICATIONMAP_ENABLED = 0x00000002
-    NVFBC_SESSION_FLAG_CAPTURE_WITH_WAIT_NO_WAIT = 0x00000004
-    NVFBC_SESSION_FLAG_CAPTURE_WITH_WAIT_INFINITE = 0x00000008
-    NVFBC_SESSION_FLAG_CAPTURE_WITH_WAIT_TIMEOUT = 0x00000010
+    DIFFMAP_ENABLED = 0x00000001
+    CLASSIFICATIONMAP_ENABLED = 0x00000002
+    CAPTURE_WITH_WAIT_NO_WAIT = 0x00000004
+    CAPTURE_WITH_WAIT_INFINITE = 0x00000008
+    CAPTURE_WITH_WAIT_TIMEOUT = 0x00000010
 
 
 class CCSystemCpuCaps(_IntEnum):
-    CC_SYSTEM_CPU_CAPS_NONE = 0
-    CC_SYSTEM_CPU_CAPS_AMD_SEV = 1
-    CC_SYSTEM_CPU_CAPS_INTEL_TDX = 2
-    CC_SYSTEM_CPU_CAPS_AMD_SEV_SNP = 3
-    CC_SYSTEM_CPU_CAPS_AMD_SNP_VTOM = 4
+    NONE = 0
+    AMD_SEV = 1
+    INTEL_TDX = 2
+    AMD_SEV_SNP = 3
+    AMD_SNP_VTOM = 4
 
 
 class CCSystemGpus(_IntEnum):
-    CC_SYSTEM_GPUS_CC_NOT_CAPABLE = 0
-    CC_SYSTEM_GPUS_CC_CAPABLE = 1
+    CC_NOT_CAPABLE = 0
+    CC_CAPABLE = 1
 
 
 class CCSystemDevtoolsMode(_IntEnum):
-    CC_SYSTEM_DEVTOOLS_MODE_OFF = 0
-    CC_SYSTEM_DEVTOOLS_MODE_ON = 1
+    OFF = 0
+    ON = 1
 
 
 class CCSystemEnvironment(_IntEnum):
-    CC_SYSTEM_ENVIRONMENT_UNAVAILABLE = 0
-    CC_SYSTEM_ENVIRONMENT_SIM = 1
-    CC_SYSTEM_ENVIRONMENT_PROD = 2
+    UNAVAILABLE = 0
+    SIM = 1
+    PROD = 2
 
 
 class CCSystemFeature(_IntEnum):
-    CC_SYSTEM_FEATURE_DISABLED = 0
-    CC_SYSTEM_FEATURE_ENABLED = 1
+    DISABLED = 0
+    ENABLED = 1
 
 
 class CCSystemMultiGpu(_IntEnum):
-    CC_SYSTEM_MULTIGPU_NONE = 0
-    CC_SYSTEM_MULTIGPU_PROTECTED_PCIE = 1
-    CC_SYSTEM_MULTIGPU_NVLE = 2
+    NONE = 0
+    PROTECTED_PCIE = 1
+    NVLE = 2
 
 
 class CCAcceptingClientRequests(_IntEnum):
-    CC_ACCEPTING_CLIENT_REQUESTS_FALSE = 0
-    CC_ACCEPTING_CLIENT_REQUESTS_TRUE = 1
+    FALSE = 0
+    TRUE = 1
 
 
 class GpuFabricState(_IntEnum):
-    GPU_FABRIC_STATE_NOT_SUPPORTED = 0
-    GPU_FABRIC_STATE_NOT_STARTED = 1
-    GPU_FABRIC_STATE_IN_PROGRESS = 2
-    GPU_FABRIC_STATE_COMPLETED = 3
+    NOT_SUPPORTED = 0
+    NOT_STARTED = 1
+    IN_PROGRESS = 2
+    COMPLETED = 3
 
 
 class GpuFabricHealthMaskDegradedBw(_IntEnum):
-    GPU_FABRIC_HEALTH_MASK_DEGRADED_BW_NOT_SUPPORTED = 0
-    GPU_FABRIC_HEALTH_MASK_DEGRADED_BW_TRUE = 1
-    GPU_FABRIC_HEALTH_MASK_DEGRADED_BW_FALSE = 2
-    GPU_FABRIC_HEALTH_MASK_SHIFT_DEGRADED_BW = 0
-    GPU_FABRIC_HEALTH_MASK_WIDTH_DEGRADED_BW = 0x3
+    NOT_SUPPORTED = 0
+    TRUE = 1
+    FALSE = 2
 
 
 class GpuFabricHealthMaskRouteRecovery(_IntEnum):
-    GPU_FABRIC_HEALTH_MASK_ROUTE_RECOVERY_NOT_SUPPORTED = 0
-    GPU_FABRIC_HEALTH_MASK_ROUTE_RECOVERY_TRUE = 1
-    GPU_FABRIC_HEALTH_MASK_ROUTE_RECOVERY_FALSE = 2
-    GPU_FABRIC_HEALTH_MASK_SHIFT_ROUTE_RECOVERY = 2
-    GPU_FABRIC_HEALTH_MASK_WIDTH_ROUTE_RECOVERY = 0x3
+    NOT_SUPPORTED = 0
+    TRUE = 1
+    FALSE = 2
 
 
 class GpuFabricHealthMaskRouteUnhealthy(_IntEnum):
-    GPU_FABRIC_HEALTH_MASK_ROUTE_UNHEALTHY_NOT_SUPPORTED = 0
-    GPU_FABRIC_HEALTH_MASK_ROUTE_UNHEALTHY_TRUE = 1
-    GPU_FABRIC_HEALTH_MASK_ROUTE_UNHEALTHY_FALSE = 2
-    GPU_FABRIC_HEALTH_MASK_SHIFT_ROUTE_UNHEALTHY = 4
-    GPU_FABRIC_HEALTH_MASK_WIDTH_ROUTE_UNHEALTHY = 0x3
+    NOT_SUPPORTED = 0
+    TRUE = 1
+    FALSE = 2
 
 
 class GpuFabricHealthMaskAccessTimeout(_IntEnum):
-    GPU_FABRIC_HEALTH_MASK_ACCESS_TIMEOUT_NOT_SUPPORTED = 0
-    GPU_FABRIC_HEALTH_MASK_ACCESS_TIMEOUT_TRUE = 1
-    GPU_FABRIC_HEALTH_MASK_ACCESS_TIMEOUT_FALSE = 2
-    GPU_FABRIC_HEALTH_MASK_SHIFT_ACCESS_TIMEOUT = 6
-    GPU_FABRIC_HEALTH_MASK_WIDTH_ACCESS_TIMEOUT = 0x3
+    NOT_SUPPORTED = 0
+    TRUE = 1
+    FALSE = 2
 
 
 class GpuFabricHealthMaskIncorrectConfiguration(_IntEnum):
-    GPU_FABRIC_HEALTH_MASK_INCORRECT_CONFIGURATION_NOT_SUPPORTED = 0
-    GPU_FABRIC_HEALTH_MASK_INCORRECT_CONFIGURATION_NONE = 1
-    GPU_FABRIC_HEALTH_MASK_INCORRECT_CONFIGURATION_INCORRECT_SYSGUID = 2
-    GPU_FABRIC_HEALTH_MASK_INCORRECT_CONFIGURATION_INCORRECT_CHASSIS_SN = 3
-    GPU_FABRIC_HEALTH_MASK_INCORRECT_CONFIGRUATION_NO_PARTITION = 4
-    GPU_FABRIC_HEALTH_MASK_INCORRECT_CONFIGURATION_INSUFFICIENT_NVLINKS = 5
-    GPU_FABRIC_HEALTH_MASK_INCORRECT_CONFIGURATION_INCOMPATIBLE_GPU_FW = 6
-    GPU_FABRIC_HEALTH_MASK_INCORRECT_CONFIGURATION_INVALID_LOCATION = 7
-    GPU_FABRIC_HEALTH_MASK_SHIFT_INCORRECT_CONFIGURATION = 8
-    GPU_FABRIC_HEALTH_MASK_WIDTH_INCORRECT_CONFIGURATION = 0xf
+    NOT_SUPPORTED = 0
+    NONE = 1
+    INCORRECT_SYSGUID = 2
+    INCORRECT_CHASSIS_SN = 3
+    NO_PARTITION = 4
+    INSUFFICIENT_NVLINKS = 5
+    INCOMPATIBLE_GPU_FW = 6
+    INVALID_LOCATION = 7
 
 
 class GpuFabricHealthSummary(_IntEnum):
-    GPU_FABRIC_HEALTH_SUMMARY_NOT_SUPPORTED = 0
-    GPU_FABRIC_HEALTH_SUMMARY_HEALTHY = 1
-    GPU_FABRIC_HEALTH_SUMMARY_UNHEALTHY = 2
-    GPU_FABRIC_HEALTH_SUMMARY_LIMITED_CAPACITY = 3
+    NOT_SUPPORTED = 0
+    HEALTHY = 1
+    UNHEALTHY = 2
+    LIMITED_CAPACITY = 3
 
 
 class InitFlag(_IntEnum):
-    INIT_FLAG_NO_GPUS = 1
-    INIT_FLAG_NO_ATTACH = 2
+    NO_GPUS = 1
+    NO_ATTACH = 2
 
 
 class NvlinkState(_IntEnum):
-    NVLINK_STATE_INACTIVE = 0x0
-    NVLINK_STATE_ACTIVE = 0x1
-    NVLINK_STATE_SLEEP = 0x2
+    INACTIVE = 0x0
+    ACTIVE = 0x1
+    SLEEP = 0x2
 
 
 class NvlinkFirmwareUcodeType(_IntEnum):
-    NVLINK_FIRMWARE_UCODE_TYPE_MSE = 0x1
-    NVLINK_FIRMWARE_UCODE_TYPE_NETIR = 0x2
-    NVLINK_FIRMWARE_UCODE_TYPE_NETIR_UPHY = 0x3
-    NVLINK_FIRMWARE_UCODE_TYPE_NETIR_CLN = 0x4
-    NVLINK_FIRMWARE_UCODE_TYPE_NETIR_DLN = 0x5
+    MSE = 0x1
+    NETIR = 0x2
+    NETIR_UPHY = 0x3
+    NETIR_CLN = 0x4
+    NETIR_DLN = 0x5
 
 
 class DeviceMig(_IntEnum):
-    DEVICE_MIG_DISABLE = 0
-    DEVICE_MIG_ENABLE = 1
+    DISABLE = 0
+    ENABLE = 1
 
 
 class GpuInstanceProfile(_IntEnum):
-    GPU_INSTANCE_PROFILE_1_SLICE = 0x0
-    GPU_INSTANCE_PROFILE_2_SLICE = 0x1
-    GPU_INSTANCE_PROFILE_3_SLICE = 0x2
-    GPU_INSTANCE_PROFILE_4_SLICE = 0x3
-    GPU_INSTANCE_PROFILE_7_SLICE = 0x4
-    GPU_INSTANCE_PROFILE_8_SLICE = 0x5
-    GPU_INSTANCE_PROFILE_6_SLICE = 0x6
-    GPU_INSTANCE_PROFILE_1_SLICE_REV1 = 0x7
-    GPU_INSTANCE_PROFILE_2_SLICE_REV1 = 0x8
-    GPU_INSTANCE_PROFILE_1_SLICE_REV2 = 0x9
-    GPU_INSTANCE_PROFILE_1_SLICE_GFX = 0x0A
-    GPU_INSTANCE_PROFILE_2_SLICE_GFX = 0x0B
-    GPU_INSTANCE_PROFILE_4_SLICE_GFX = 0x0C
-    GPU_INSTANCE_PROFILE_1_SLICE_NO_ME = 0x0D
-    GPU_INSTANCE_PROFILE_2_SLICE_NO_ME = 0x0E
-    GPU_INSTANCE_PROFILE_1_SLICE_ALL_ME = 0x0F
-    GPU_INSTANCE_PROFILE_2_SLICE_ALL_ME = 0x10
-    GPU_INSTANCE_PROFILE_COUNT = 0x11
+    PROFILE_1_SLICE = 0x0
+    PROFILE_2_SLICE = 0x1
+    PROFILE_3_SLICE = 0x2
+    PROFILE_4_SLICE = 0x3
+    PROFILE_7_SLICE = 0x4
+    PROFILE_8_SLICE = 0x5
+    PROFILE_6_SLICE = 0x6
+    PROFILE_1_SLICE_REV1 = 0x7
+    PROFILE_2_SLICE_REV1 = 0x8
+    PROFILE_1_SLICE_REV2 = 0x9
+    PROFILE_1_SLICE_GFX = 0x0A
+    PROFILE_2_SLICE_GFX = 0x0B
+    PROFILE_4_SLICE_GFX = 0x0C
+    PROFILE_1_SLICE_NO_ME = 0x0D
+    PROFILE_2_SLICE_NO_ME = 0x0E
+    PROFILE_1_SLICE_ALL_ME = 0x0F
+    PROFILE_2_SLICE_ALL_ME = 0x10
+    PROFILE_COUNT = 0x11
 
 
 class GpuInstanceProfileCaps(_IntEnum):
-    GPU_INSTANCE_PROFILE_CAPS_P2P = 0x1
-    GPU_INSTANCE_PROFILE_CAPS_GFX = 0x2
+    P2P = 0x1
+    GFX = 0x2
 
 
 class ComputeInstanceProfileCaps(_IntEnum):
-    COMPUTE_INSTANCE_PROFILE_CAPS_GFX = 0x1
+    GFX = 0x1
 
 
 class ComputeInstanceProfile(_IntEnum):
-    COMPUTE_INSTANCE_PROFILE_1_SLICE = 0x0
-    COMPUTE_INSTANCE_PROFILE_2_SLICE = 0x1
-    COMPUTE_INSTANCE_PROFILE_3_SLICE = 0x2
-    COMPUTE_INSTANCE_PROFILE_4_SLICE = 0x3
-    COMPUTE_INSTANCE_PROFILE_7_SLICE = 0x4
-    COMPUTE_INSTANCE_PROFILE_8_SLICE = 0x5
-    COMPUTE_INSTANCE_PROFILE_6_SLICE = 0x6
-    COMPUTE_INSTANCE_PROFILE_1_SLICE_REV1 = 0x7
-    COMPUTE_INSTANCE_PROFILE_COUNT = 0x8
+    PROFILE_1_SLICE = 0x0
+    PROFILE_2_SLICE = 0x1
+    PROFILE_3_SLICE = 0x2
+    PROFILE_4_SLICE = 0x3
+    PROFILE_7_SLICE = 0x4
+    PROFILE_8_SLICE = 0x5
+    PROFILE_6_SLICE = 0x6
+    PROFILE_1_SLICE_REV1 = 0x7
+    PROFILE_COUNT = 0x8
 
 
 class ComputeInstanceEngineProfile(_IntEnum):
-    COMPUTE_INSTANCE_ENGINE_PROFILE_SHARED = 0x0
-    COMPUTE_INSTANCE_ENGINE_PROFILE_COUNT = 0x1
+    SHARED = 0x0
+    COUNT = 0x1
 
 
 class PowerSmoothingProfileParam(_IntEnum):
-    POWER_SMOOTHING_PROFILE_PARAM_PERCENT_TMP_FLOOR = 0
-    POWER_SMOOTHING_PROFILE_PARAM_RAMP_UP_RATE = 1
-    POWER_SMOOTHING_PROFILE_PARAM_RAMP_DOWN_RATE = 2
-    POWER_SMOOTHING_PROFILE_PARAM_RAMP_DOWN_HYSTERESIS = 3
-    POWER_SMOOTHING_PROFILE_PARAM_SECONDARY_POWER_FLOOR = 4
-    POWER_SMOOTHING_PROFILE_PARAM_PRIMARY_FLOOR_ACT_WIN_MULT = 5
-    POWER_SMOOTHING_PROFILE_PARAM_PRIMARY_FLOOR_TAR_WIN_MULT = 6
-    POWER_SMOOTHING_PROFILE_PARAM_PRIMARY_FLOOR_ACT_OFFSET = 7
+    PERCENT_TMP_FLOOR = 0
+    RAMP_UP_RATE = 1
+    RAMP_DOWN_RATE = 2
+    RAMP_DOWN_HYSTERESIS = 3
+    SECONDARY_POWER_FLOOR = 4
+    PRIMARY_FLOOR_ACT_WIN_MULT = 5
+    PRIMARY_FLOOR_TAR_WIN_MULT = 6
+    PRIMARY_FLOOR_ACT_OFFSET = 7
 
 
 ###############################################################################
@@ -4345,138 +4274,6 @@ cdef class CoolerInfo_v1:
         return obj
 
 
-cdef _get_margin_temperature_v1_dtype_offsets():
-    cdef nvmlMarginTemperature_v1_t pod = nvmlMarginTemperature_v1_t()
-    return _numpy.dtype({
-        'names': ['version', 'margin_temperature'],
-        'formats': [_numpy.uint32, _numpy.int32],
-        'offsets': [
-            (<intptr_t>&(pod.version)) - (<intptr_t>&pod),
-            (<intptr_t>&(pod.marginTemperature)) - (<intptr_t>&pod),
-        ],
-        'itemsize': sizeof(nvmlMarginTemperature_v1_t),
-    })
-
-margin_temperature_v1_dtype = _get_margin_temperature_v1_dtype_offsets()
-
-cdef class MarginTemperature_v1:
-    """Empty-initialize an instance of `nvmlMarginTemperature_v1_t`.
-
-
-    .. seealso:: `nvmlMarginTemperature_v1_t`
-    """
-    cdef:
-        nvmlMarginTemperature_v1_t *_ptr
-        object _owner
-        bint _owned
-        bint _readonly
-
-    def __init__(self):
-        self._ptr = <nvmlMarginTemperature_v1_t *>calloc(1, sizeof(nvmlMarginTemperature_v1_t))
-        if self._ptr == NULL:
-            raise MemoryError("Error allocating MarginTemperature_v1")
-        self._owner = None
-        self._owned = True
-        self._readonly = False
-
-    def __dealloc__(self):
-        cdef nvmlMarginTemperature_v1_t *ptr
-        if self._owned and self._ptr != NULL:
-            ptr = self._ptr
-            self._ptr = NULL
-            free(ptr)
-
-    def __repr__(self):
-        return f"<{__name__}.MarginTemperature_v1 object at {hex(id(self))}>"
-
-    @property
-    def ptr(self):
-        """Get the pointer address to the data as Python :class:`int`."""
-        return <intptr_t>(self._ptr)
-
-    cdef intptr_t _get_ptr(self):
-        return <intptr_t>(self._ptr)
-
-    def __int__(self):
-        return <intptr_t>(self._ptr)
-
-    def __eq__(self, other):
-        cdef MarginTemperature_v1 other_
-        if not isinstance(other, MarginTemperature_v1):
-            return False
-        other_ = other
-        return (memcmp(<void *><intptr_t>(self._ptr), <void *><intptr_t>(other_._ptr), sizeof(nvmlMarginTemperature_v1_t)) == 0)
-
-    def __setitem__(self, key, val):
-        if key == 0 and isinstance(val, _numpy.ndarray):
-            self._ptr = <nvmlMarginTemperature_v1_t *>malloc(sizeof(nvmlMarginTemperature_v1_t))
-            if self._ptr == NULL:
-                raise MemoryError("Error allocating MarginTemperature_v1")
-            memcpy(<void*>self._ptr, <void*><intptr_t>val.ctypes.data, sizeof(nvmlMarginTemperature_v1_t))
-            self._owner = None
-            self._owned = True
-            self._readonly = not val.flags.writeable
-        else:
-            setattr(self, key, val)
-
-    @property
-    def version(self):
-        """int: The version number of this struct."""
-        return self._ptr[0].version
-
-    @version.setter
-    def version(self, val):
-        if self._readonly:
-            raise ValueError("This MarginTemperature_v1 instance is read-only")
-        self._ptr[0].version = val
-
-    @property
-    def margin_temperature(self):
-        """int: The margin temperature value."""
-        return self._ptr[0].marginTemperature
-
-    @margin_temperature.setter
-    def margin_temperature(self, val):
-        if self._readonly:
-            raise ValueError("This MarginTemperature_v1 instance is read-only")
-        self._ptr[0].marginTemperature = val
-
-    @staticmethod
-    def from_data(data):
-        """Create an MarginTemperature_v1 instance wrapping the given NumPy array.
-
-        Args:
-            data (_numpy.ndarray): a single-element array of dtype `margin_temperature_v1_dtype` holding the data.
-        """
-        return __from_data(data, "margin_temperature_v1_dtype", margin_temperature_v1_dtype, MarginTemperature_v1)
-
-    @staticmethod
-    def from_ptr(intptr_t ptr, bint readonly=False, object owner=None):
-        """Create an MarginTemperature_v1 instance wrapping the given pointer.
-
-        Args:
-            ptr (intptr_t): pointer address as Python :class:`int` to the data.
-            owner (object): The Python object that owns the pointer. If not provided, data will be copied.
-            readonly (bool): whether the data is read-only (to the user). default is `False`.
-        """
-        if ptr == 0:
-            raise ValueError("ptr must not be null (0)")
-        cdef MarginTemperature_v1 obj = MarginTemperature_v1.__new__(MarginTemperature_v1)
-        if owner is None:
-            obj._ptr = <nvmlMarginTemperature_v1_t *>malloc(sizeof(nvmlMarginTemperature_v1_t))
-            if obj._ptr == NULL:
-                raise MemoryError("Error allocating MarginTemperature_v1")
-            memcpy(<void*>(obj._ptr), <void*>ptr, sizeof(nvmlMarginTemperature_v1_t))
-            obj._owner = None
-            obj._owned = True
-        else:
-            obj._ptr = <nvmlMarginTemperature_v1_t *>ptr
-            obj._owner = owner
-            obj._owned = False
-        obj._readonly = readonly
-        return obj
-
-
 cdef _get_clk_mon_fault_info_dtype_offsets():
     cdef nvmlClkMonFaultInfo_t pod = nvmlClkMonFaultInfo_t()
     return _numpy.dtype({
@@ -4797,150 +4594,6 @@ cdef class ClockOffset_v1:
             obj._owned = True
         else:
             obj._ptr = <nvmlClockOffset_v1_t *>ptr
-            obj._owner = owner
-            obj._owned = False
-        obj._readonly = readonly
-        return obj
-
-
-cdef _get_fan_speed_info_v1_dtype_offsets():
-    cdef nvmlFanSpeedInfo_v1_t pod = nvmlFanSpeedInfo_v1_t()
-    return _numpy.dtype({
-        'names': ['version', 'fan', 'speed'],
-        'formats': [_numpy.uint32, _numpy.uint32, _numpy.uint32],
-        'offsets': [
-            (<intptr_t>&(pod.version)) - (<intptr_t>&pod),
-            (<intptr_t>&(pod.fan)) - (<intptr_t>&pod),
-            (<intptr_t>&(pod.speed)) - (<intptr_t>&pod),
-        ],
-        'itemsize': sizeof(nvmlFanSpeedInfo_v1_t),
-    })
-
-fan_speed_info_v1_dtype = _get_fan_speed_info_v1_dtype_offsets()
-
-cdef class FanSpeedInfo_v1:
-    """Empty-initialize an instance of `nvmlFanSpeedInfo_v1_t`.
-
-
-    .. seealso:: `nvmlFanSpeedInfo_v1_t`
-    """
-    cdef:
-        nvmlFanSpeedInfo_v1_t *_ptr
-        object _owner
-        bint _owned
-        bint _readonly
-
-    def __init__(self):
-        self._ptr = <nvmlFanSpeedInfo_v1_t *>calloc(1, sizeof(nvmlFanSpeedInfo_v1_t))
-        if self._ptr == NULL:
-            raise MemoryError("Error allocating FanSpeedInfo_v1")
-        self._owner = None
-        self._owned = True
-        self._readonly = False
-
-    def __dealloc__(self):
-        cdef nvmlFanSpeedInfo_v1_t *ptr
-        if self._owned and self._ptr != NULL:
-            ptr = self._ptr
-            self._ptr = NULL
-            free(ptr)
-
-    def __repr__(self):
-        return f"<{__name__}.FanSpeedInfo_v1 object at {hex(id(self))}>"
-
-    @property
-    def ptr(self):
-        """Get the pointer address to the data as Python :class:`int`."""
-        return <intptr_t>(self._ptr)
-
-    cdef intptr_t _get_ptr(self):
-        return <intptr_t>(self._ptr)
-
-    def __int__(self):
-        return <intptr_t>(self._ptr)
-
-    def __eq__(self, other):
-        cdef FanSpeedInfo_v1 other_
-        if not isinstance(other, FanSpeedInfo_v1):
-            return False
-        other_ = other
-        return (memcmp(<void *><intptr_t>(self._ptr), <void *><intptr_t>(other_._ptr), sizeof(nvmlFanSpeedInfo_v1_t)) == 0)
-
-    def __setitem__(self, key, val):
-        if key == 0 and isinstance(val, _numpy.ndarray):
-            self._ptr = <nvmlFanSpeedInfo_v1_t *>malloc(sizeof(nvmlFanSpeedInfo_v1_t))
-            if self._ptr == NULL:
-                raise MemoryError("Error allocating FanSpeedInfo_v1")
-            memcpy(<void*>self._ptr, <void*><intptr_t>val.ctypes.data, sizeof(nvmlFanSpeedInfo_v1_t))
-            self._owner = None
-            self._owned = True
-            self._readonly = not val.flags.writeable
-        else:
-            setattr(self, key, val)
-
-    @property
-    def version(self):
-        """int: the API version number"""
-        return self._ptr[0].version
-
-    @version.setter
-    def version(self, val):
-        if self._readonly:
-            raise ValueError("This FanSpeedInfo_v1 instance is read-only")
-        self._ptr[0].version = val
-
-    @property
-    def fan(self):
-        """int: the fan index"""
-        return self._ptr[0].fan
-
-    @fan.setter
-    def fan(self, val):
-        if self._readonly:
-            raise ValueError("This FanSpeedInfo_v1 instance is read-only")
-        self._ptr[0].fan = val
-
-    @property
-    def speed(self):
-        """int: OUT: the fan speed in RPM."""
-        return self._ptr[0].speed
-
-    @speed.setter
-    def speed(self, val):
-        if self._readonly:
-            raise ValueError("This FanSpeedInfo_v1 instance is read-only")
-        self._ptr[0].speed = val
-
-    @staticmethod
-    def from_data(data):
-        """Create an FanSpeedInfo_v1 instance wrapping the given NumPy array.
-
-        Args:
-            data (_numpy.ndarray): a single-element array of dtype `fan_speed_info_v1_dtype` holding the data.
-        """
-        return __from_data(data, "fan_speed_info_v1_dtype", fan_speed_info_v1_dtype, FanSpeedInfo_v1)
-
-    @staticmethod
-    def from_ptr(intptr_t ptr, bint readonly=False, object owner=None):
-        """Create an FanSpeedInfo_v1 instance wrapping the given pointer.
-
-        Args:
-            ptr (intptr_t): pointer address as Python :class:`int` to the data.
-            owner (object): The Python object that owns the pointer. If not provided, data will be copied.
-            readonly (bool): whether the data is read-only (to the user). default is `False`.
-        """
-        if ptr == 0:
-            raise ValueError("ptr must not be null (0)")
-        cdef FanSpeedInfo_v1 obj = FanSpeedInfo_v1.__new__(FanSpeedInfo_v1)
-        if owner is None:
-            obj._ptr = <nvmlFanSpeedInfo_v1_t *>malloc(sizeof(nvmlFanSpeedInfo_v1_t))
-            if obj._ptr == NULL:
-                raise MemoryError("Error allocating FanSpeedInfo_v1")
-            memcpy(<void*>(obj._ptr), <void*>ptr, sizeof(nvmlFanSpeedInfo_v1_t))
-            obj._owner = None
-            obj._owned = True
-        else:
-            obj._ptr = <nvmlFanSpeedInfo_v1_t *>ptr
             obj._owner = owner
             obj._owned = False
         obj._readonly = readonly
@@ -10202,6 +9855,152 @@ cdef class EventData:
             obj._owner = owner
             obj._owned = False
         obj._readonly = readonly
+        return obj
+
+
+cdef _get_system_event_data_v1_dtype_offsets():
+    cdef nvmlSystemEventData_v1_t pod = nvmlSystemEventData_v1_t()
+    return _numpy.dtype({
+        'names': ['event_type', 'gpu_id'],
+        'formats': [_numpy.uint64, _numpy.uint32],
+        'offsets': [
+            (<intptr_t>&(pod.eventType)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.gpuId)) - (<intptr_t>&pod),
+        ],
+        'itemsize': sizeof(nvmlSystemEventData_v1_t),
+    })
+
+system_event_data_v1_dtype = _get_system_event_data_v1_dtype_offsets()
+
+cdef class SystemEventData_v1:
+    """Empty-initialize an array of `nvmlSystemEventData_v1_t`.
+
+    The resulting object is of length `size` and of dtype `system_event_data_v1_dtype`.
+    If default-constructed, the instance represents a single struct.
+
+    Args:
+        size (int): number of structs, default=1.
+
+
+    .. seealso:: `nvmlSystemEventData_v1_t`
+    """
+    cdef:
+        readonly object _data
+
+
+
+    def __init__(self, size=1):
+        arr = _numpy.empty(size, dtype=system_event_data_v1_dtype)
+        self._data = arr.view(_numpy.recarray)
+        assert self._data.itemsize == sizeof(nvmlSystemEventData_v1_t), \
+            f"itemsize {self._data.itemsize} mismatches struct size { sizeof(nvmlSystemEventData_v1_t) }"
+
+    def __repr__(self):
+        if self._data.size > 1:
+            return f"<{__name__}.SystemEventData_v1_Array_{self._data.size} object at {hex(id(self))}>"
+        else:
+            return f"<{__name__}.SystemEventData_v1 object at {hex(id(self))}>"
+
+    @property
+    def ptr(self):
+        """Get the pointer address to the data as Python :class:`int`."""
+        return self._data.ctypes.data
+
+    cdef intptr_t _get_ptr(self):
+        return self._data.ctypes.data
+
+    def __int__(self):
+        if self._data.size > 1:
+            raise TypeError("int() argument must be a bytes-like object of size 1. "
+                            "To get the pointer address of an array, use .ptr")
+        return self._data.ctypes.data
+
+    def __len__(self):
+        return self._data.size
+
+    def __eq__(self, other):
+        cdef object self_data = self._data
+        if (not isinstance(other, SystemEventData_v1)) or self_data.size != other._data.size or self_data.dtype != other._data.dtype:
+            return False
+        return bool((self_data == other._data).all())
+
+    @property
+    def event_type(self):
+        """Union[~_numpy.uint64, int]: Information about what specific system event occurred."""
+        if self._data.size == 1:
+            return int(self._data.event_type[0])
+        return self._data.event_type
+
+    @event_type.setter
+    def event_type(self, val):
+        self._data.event_type = val
+
+    @property
+    def gpu_id(self):
+        """Union[~_numpy.uint32, int]: gpuId in PCI format"""
+        if self._data.size == 1:
+            return int(self._data.gpu_id[0])
+        return self._data.gpu_id
+
+    @gpu_id.setter
+    def gpu_id(self, val):
+        self._data.gpu_id = val
+
+    def __getitem__(self, key):
+        cdef ssize_t key_
+        cdef ssize_t size
+        if isinstance(key, int):
+            key_ = key
+            size = self._data.size
+            if key_ >= size or key_ <= -(size+1):
+                raise IndexError("index is out of bounds")
+            if key_ < 0:
+                key_ += size
+            return SystemEventData_v1.from_data(self._data[key_:key_+1])
+        out = self._data[key]
+        if isinstance(out, _numpy.recarray) and out.dtype == system_event_data_v1_dtype:
+            return SystemEventData_v1.from_data(out)
+        return out
+
+    def __setitem__(self, key, val):
+        self._data[key] = val
+
+    @staticmethod
+    def from_data(data):
+        """Create an SystemEventData_v1 instance wrapping the given NumPy array.
+
+        Args:
+            data (_numpy.ndarray): a 1D array of dtype `system_event_data_v1_dtype` holding the data.
+        """
+        cdef SystemEventData_v1 obj = SystemEventData_v1.__new__(SystemEventData_v1)
+        if not isinstance(data, _numpy.ndarray):
+            raise TypeError("data argument must be a NumPy ndarray")
+        if data.ndim != 1:
+            raise ValueError("data array must be 1D")
+        if data.dtype != system_event_data_v1_dtype:
+            raise ValueError("data array must be of dtype system_event_data_v1_dtype")
+        obj._data = data.view(_numpy.recarray)
+
+        return obj
+
+    @staticmethod
+    def from_ptr(intptr_t ptr, size_t size=1, bint readonly=False):
+        """Create an SystemEventData_v1 instance wrapping the given pointer.
+
+        Args:
+            ptr (intptr_t): pointer address as Python :class:`int` to the data.
+            size (int): number of structs, default=1.
+            readonly (bool): whether the data is read-only (to the user). default is `False`.
+        """
+        if ptr == 0:
+            raise ValueError("ptr must not be null (0)")
+        cdef SystemEventData_v1 obj = SystemEventData_v1.__new__(SystemEventData_v1)
+        cdef flag = cpython.buffer.PyBUF_READ if readonly else cpython.buffer.PyBUF_WRITE
+        cdef object buf = cpython.memoryview.PyMemoryView_FromMemory(
+            <char*>ptr, sizeof(nvmlSystemEventData_v1_t) * size, flag)
+        data = _numpy.ndarray(size, buffer=buf, dtype=system_event_data_v1_dtype)
+        obj._data = data.view(_numpy.recarray)
+
         return obj
 
 
@@ -16277,6 +16076,126 @@ cdef class RusdSettings_v1:
         return obj
 
 
+cdef _get_prm_counter_input_v1_dtype_offsets():
+    cdef nvmlPRMCounterInput_v1_t pod = nvmlPRMCounterInput_v1_t()
+    return _numpy.dtype({
+        'names': ['local_port'],
+        'formats': [_numpy.uint32],
+        'offsets': [
+            (<intptr_t>&(pod.localPort)) - (<intptr_t>&pod),
+        ],
+        'itemsize': sizeof(nvmlPRMCounterInput_v1_t),
+    })
+
+prm_counter_input_v1_dtype = _get_prm_counter_input_v1_dtype_offsets()
+
+cdef class PRMCounterInput_v1:
+    """Empty-initialize an instance of `nvmlPRMCounterInput_v1_t`.
+
+
+    .. seealso:: `nvmlPRMCounterInput_v1_t`
+    """
+    cdef:
+        nvmlPRMCounterInput_v1_t *_ptr
+        object _owner
+        bint _owned
+        bint _readonly
+
+    def __init__(self):
+        self._ptr = <nvmlPRMCounterInput_v1_t *>calloc(1, sizeof(nvmlPRMCounterInput_v1_t))
+        if self._ptr == NULL:
+            raise MemoryError("Error allocating PRMCounterInput_v1")
+        self._owner = None
+        self._owned = True
+        self._readonly = False
+
+    def __dealloc__(self):
+        cdef nvmlPRMCounterInput_v1_t *ptr
+        if self._owned and self._ptr != NULL:
+            ptr = self._ptr
+            self._ptr = NULL
+            free(ptr)
+
+    def __repr__(self):
+        return f"<{__name__}.PRMCounterInput_v1 object at {hex(id(self))}>"
+
+    @property
+    def ptr(self):
+        """Get the pointer address to the data as Python :class:`int`."""
+        return <intptr_t>(self._ptr)
+
+    cdef intptr_t _get_ptr(self):
+        return <intptr_t>(self._ptr)
+
+    def __int__(self):
+        return <intptr_t>(self._ptr)
+
+    def __eq__(self, other):
+        cdef PRMCounterInput_v1 other_
+        if not isinstance(other, PRMCounterInput_v1):
+            return False
+        other_ = other
+        return (memcmp(<void *><intptr_t>(self._ptr), <void *><intptr_t>(other_._ptr), sizeof(nvmlPRMCounterInput_v1_t)) == 0)
+
+    def __setitem__(self, key, val):
+        if key == 0 and isinstance(val, _numpy.ndarray):
+            self._ptr = <nvmlPRMCounterInput_v1_t *>malloc(sizeof(nvmlPRMCounterInput_v1_t))
+            if self._ptr == NULL:
+                raise MemoryError("Error allocating PRMCounterInput_v1")
+            memcpy(<void*>self._ptr, <void*><intptr_t>val.ctypes.data, sizeof(nvmlPRMCounterInput_v1_t))
+            self._owner = None
+            self._owned = True
+            self._readonly = not val.flags.writeable
+        else:
+            setattr(self, key, val)
+
+    @property
+    def local_port(self):
+        """int: Local port number."""
+        return self._ptr[0].localPort
+
+    @local_port.setter
+    def local_port(self, val):
+        if self._readonly:
+            raise ValueError("This PRMCounterInput_v1 instance is read-only")
+        self._ptr[0].localPort = val
+
+    @staticmethod
+    def from_data(data):
+        """Create an PRMCounterInput_v1 instance wrapping the given NumPy array.
+
+        Args:
+            data (_numpy.ndarray): a single-element array of dtype `prm_counter_input_v1_dtype` holding the data.
+        """
+        return __from_data(data, "prm_counter_input_v1_dtype", prm_counter_input_v1_dtype, PRMCounterInput_v1)
+
+    @staticmethod
+    def from_ptr(intptr_t ptr, bint readonly=False, object owner=None):
+        """Create an PRMCounterInput_v1 instance wrapping the given pointer.
+
+        Args:
+            ptr (intptr_t): pointer address as Python :class:`int` to the data.
+            owner (object): The Python object that owns the pointer. If not provided, data will be copied.
+            readonly (bool): whether the data is read-only (to the user). default is `False`.
+        """
+        if ptr == 0:
+            raise ValueError("ptr must not be null (0)")
+        cdef PRMCounterInput_v1 obj = PRMCounterInput_v1.__new__(PRMCounterInput_v1)
+        if owner is None:
+            obj._ptr = <nvmlPRMCounterInput_v1_t *>malloc(sizeof(nvmlPRMCounterInput_v1_t))
+            if obj._ptr == NULL:
+                raise MemoryError("Error allocating PRMCounterInput_v1")
+            memcpy(<void*>(obj._ptr), <void*>ptr, sizeof(nvmlPRMCounterInput_v1_t))
+            obj._owner = None
+            obj._owned = True
+        else:
+            obj._ptr = <nvmlPRMCounterInput_v1_t *>ptr
+            obj._owner = owner
+            obj._owned = False
+        obj._readonly = readonly
+        return obj
+
+
 cdef _get_excluded_device_info_dtype_offsets():
     cdef nvmlExcludedDeviceInfo_t pod = nvmlExcludedDeviceInfo_t()
     return _numpy.dtype({
@@ -17253,6 +17172,151 @@ cdef class FieldValue:
         data = _numpy.ndarray(size, buffer=buf, dtype=field_value_dtype)
         obj._data = data.view(_numpy.recarray)
 
+        return obj
+
+
+cdef _get_prm_counter_value_v1_dtype_offsets():
+    cdef nvmlPRMCounterValue_v1_t pod = nvmlPRMCounterValue_v1_t()
+    return _numpy.dtype({
+        'names': ['status', 'output_type', 'output_value'],
+        'formats': [_numpy.int32, _numpy.int32, value_dtype],
+        'offsets': [
+            (<intptr_t>&(pod.status)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.outputType)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.outputValue)) - (<intptr_t>&pod),
+        ],
+        'itemsize': sizeof(nvmlPRMCounterValue_v1_t),
+    })
+
+prm_counter_value_v1_dtype = _get_prm_counter_value_v1_dtype_offsets()
+
+cdef class PRMCounterValue_v1:
+    """Empty-initialize an instance of `nvmlPRMCounterValue_v1_t`.
+
+
+    .. seealso:: `nvmlPRMCounterValue_v1_t`
+    """
+    cdef:
+        nvmlPRMCounterValue_v1_t *_ptr
+        object _owner
+        bint _owned
+        bint _readonly
+
+    def __init__(self):
+        self._ptr = <nvmlPRMCounterValue_v1_t *>calloc(1, sizeof(nvmlPRMCounterValue_v1_t))
+        if self._ptr == NULL:
+            raise MemoryError("Error allocating PRMCounterValue_v1")
+        self._owner = None
+        self._owned = True
+        self._readonly = False
+
+    def __dealloc__(self):
+        cdef nvmlPRMCounterValue_v1_t *ptr
+        if self._owned and self._ptr != NULL:
+            ptr = self._ptr
+            self._ptr = NULL
+            free(ptr)
+
+    def __repr__(self):
+        return f"<{__name__}.PRMCounterValue_v1 object at {hex(id(self))}>"
+
+    @property
+    def ptr(self):
+        """Get the pointer address to the data as Python :class:`int`."""
+        return <intptr_t>(self._ptr)
+
+    cdef intptr_t _get_ptr(self):
+        return <intptr_t>(self._ptr)
+
+    def __int__(self):
+        return <intptr_t>(self._ptr)
+
+    def __eq__(self, other):
+        cdef PRMCounterValue_v1 other_
+        if not isinstance(other, PRMCounterValue_v1):
+            return False
+        other_ = other
+        return (memcmp(<void *><intptr_t>(self._ptr), <void *><intptr_t>(other_._ptr), sizeof(nvmlPRMCounterValue_v1_t)) == 0)
+
+    def __setitem__(self, key, val):
+        if key == 0 and isinstance(val, _numpy.ndarray):
+            self._ptr = <nvmlPRMCounterValue_v1_t *>malloc(sizeof(nvmlPRMCounterValue_v1_t))
+            if self._ptr == NULL:
+                raise MemoryError("Error allocating PRMCounterValue_v1")
+            memcpy(<void*>self._ptr, <void*><intptr_t>val.ctypes.data, sizeof(nvmlPRMCounterValue_v1_t))
+            self._owner = None
+            self._owned = True
+            self._readonly = not val.flags.writeable
+        else:
+            setattr(self, key, val)
+
+    @property
+    def output_value(self):
+        """Value: Output value."""
+        return Value.from_ptr(<intptr_t>&(self._ptr[0].outputValue), self._readonly, self)
+
+    @output_value.setter
+    def output_value(self, val):
+        if self._readonly:
+            raise ValueError("This PRMCounterValue_v1 instance is read-only")
+        cdef Value val_ = val
+        memcpy(<void *>&(self._ptr[0].outputValue), <void *>(val_._get_ptr()), sizeof(nvmlValue_t) * 1)
+
+    @property
+    def status(self):
+        """int: Status of the PRM counter read."""
+        return <int>(self._ptr[0].status)
+
+    @status.setter
+    def status(self, val):
+        if self._readonly:
+            raise ValueError("This PRMCounterValue_v1 instance is read-only")
+        self._ptr[0].status = <nvmlReturn_t><int>val
+
+    @property
+    def output_type(self):
+        """int: Output value type."""
+        return <int>(self._ptr[0].outputType)
+
+    @output_type.setter
+    def output_type(self, val):
+        if self._readonly:
+            raise ValueError("This PRMCounterValue_v1 instance is read-only")
+        self._ptr[0].outputType = <nvmlValueType_t><int>val
+
+    @staticmethod
+    def from_data(data):
+        """Create an PRMCounterValue_v1 instance wrapping the given NumPy array.
+
+        Args:
+            data (_numpy.ndarray): a single-element array of dtype `prm_counter_value_v1_dtype` holding the data.
+        """
+        return __from_data(data, "prm_counter_value_v1_dtype", prm_counter_value_v1_dtype, PRMCounterValue_v1)
+
+    @staticmethod
+    def from_ptr(intptr_t ptr, bint readonly=False, object owner=None):
+        """Create an PRMCounterValue_v1 instance wrapping the given pointer.
+
+        Args:
+            ptr (intptr_t): pointer address as Python :class:`int` to the data.
+            owner (object): The Python object that owns the pointer. If not provided, data will be copied.
+            readonly (bool): whether the data is read-only (to the user). default is `False`.
+        """
+        if ptr == 0:
+            raise ValueError("ptr must not be null (0)")
+        cdef PRMCounterValue_v1 obj = PRMCounterValue_v1.__new__(PRMCounterValue_v1)
+        if owner is None:
+            obj._ptr = <nvmlPRMCounterValue_v1_t *>malloc(sizeof(nvmlPRMCounterValue_v1_t))
+            if obj._ptr == NULL:
+                raise MemoryError("Error allocating PRMCounterValue_v1")
+            memcpy(<void*>(obj._ptr), <void*>ptr, sizeof(nvmlPRMCounterValue_v1_t))
+            obj._owner = None
+            obj._owned = True
+        else:
+            obj._ptr = <nvmlPRMCounterValue_v1_t *>ptr
+            obj._owner = owner
+            obj._owned = False
+        obj._readonly = readonly
         return obj
 
 
@@ -19674,6 +19738,152 @@ cdef class VgpuInstancesUtilizationInfo_v1:
         return obj
 
 
+cdef _get_prm_counter_v1_dtype_offsets():
+    cdef nvmlPRMCounter_v1_t pod = nvmlPRMCounter_v1_t()
+    return _numpy.dtype({
+        'names': ['counter_id', 'in_data', 'counter_value'],
+        'formats': [_numpy.uint32, prm_counter_input_v1_dtype, prm_counter_value_v1_dtype],
+        'offsets': [
+            (<intptr_t>&(pod.counterId)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.inData)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.counterValue)) - (<intptr_t>&pod),
+        ],
+        'itemsize': sizeof(nvmlPRMCounter_v1_t),
+    })
+
+prm_counter_v1_dtype = _get_prm_counter_v1_dtype_offsets()
+
+cdef class PRMCounter_v1:
+    """Empty-initialize an instance of `nvmlPRMCounter_v1_t`.
+
+
+    .. seealso:: `nvmlPRMCounter_v1_t`
+    """
+    cdef:
+        nvmlPRMCounter_v1_t *_ptr
+        object _owner
+        bint _owned
+        bint _readonly
+
+    def __init__(self):
+        self._ptr = <nvmlPRMCounter_v1_t *>calloc(1, sizeof(nvmlPRMCounter_v1_t))
+        if self._ptr == NULL:
+            raise MemoryError("Error allocating PRMCounter_v1")
+        self._owner = None
+        self._owned = True
+        self._readonly = False
+
+    def __dealloc__(self):
+        cdef nvmlPRMCounter_v1_t *ptr
+        if self._owned and self._ptr != NULL:
+            ptr = self._ptr
+            self._ptr = NULL
+            free(ptr)
+
+    def __repr__(self):
+        return f"<{__name__}.PRMCounter_v1 object at {hex(id(self))}>"
+
+    @property
+    def ptr(self):
+        """Get the pointer address to the data as Python :class:`int`."""
+        return <intptr_t>(self._ptr)
+
+    cdef intptr_t _get_ptr(self):
+        return <intptr_t>(self._ptr)
+
+    def __int__(self):
+        return <intptr_t>(self._ptr)
+
+    def __eq__(self, other):
+        cdef PRMCounter_v1 other_
+        if not isinstance(other, PRMCounter_v1):
+            return False
+        other_ = other
+        return (memcmp(<void *><intptr_t>(self._ptr), <void *><intptr_t>(other_._ptr), sizeof(nvmlPRMCounter_v1_t)) == 0)
+
+    def __setitem__(self, key, val):
+        if key == 0 and isinstance(val, _numpy.ndarray):
+            self._ptr = <nvmlPRMCounter_v1_t *>malloc(sizeof(nvmlPRMCounter_v1_t))
+            if self._ptr == NULL:
+                raise MemoryError("Error allocating PRMCounter_v1")
+            memcpy(<void*>self._ptr, <void*><intptr_t>val.ctypes.data, sizeof(nvmlPRMCounter_v1_t))
+            self._owner = None
+            self._owned = True
+            self._readonly = not val.flags.writeable
+        else:
+            setattr(self, key, val)
+
+    @property
+    def in_data(self):
+        """PRMCounterInput_v1: PRM input values."""
+        return PRMCounterInput_v1.from_ptr(<intptr_t>&(self._ptr[0].inData), self._readonly, self)
+
+    @in_data.setter
+    def in_data(self, val):
+        if self._readonly:
+            raise ValueError("This PRMCounter_v1 instance is read-only")
+        cdef PRMCounterInput_v1 val_ = val
+        memcpy(<void *>&(self._ptr[0].inData), <void *>(val_._get_ptr()), sizeof(nvmlPRMCounterInput_v1_t) * 1)
+
+    @property
+    def counter_value(self):
+        """PRMCounterValue_v1: Counter value."""
+        return PRMCounterValue_v1.from_ptr(<intptr_t>&(self._ptr[0].counterValue), self._readonly, self)
+
+    @counter_value.setter
+    def counter_value(self, val):
+        if self._readonly:
+            raise ValueError("This PRMCounter_v1 instance is read-only")
+        cdef PRMCounterValue_v1 val_ = val
+        memcpy(<void *>&(self._ptr[0].counterValue), <void *>(val_._get_ptr()), sizeof(nvmlPRMCounterValue_v1_t) * 1)
+
+    @property
+    def counter_id(self):
+        """int: Counter ID, one of nvmlPRMCounterId_t."""
+        return self._ptr[0].counterId
+
+    @counter_id.setter
+    def counter_id(self, val):
+        if self._readonly:
+            raise ValueError("This PRMCounter_v1 instance is read-only")
+        self._ptr[0].counterId = val
+
+    @staticmethod
+    def from_data(data):
+        """Create an PRMCounter_v1 instance wrapping the given NumPy array.
+
+        Args:
+            data (_numpy.ndarray): a single-element array of dtype `prm_counter_v1_dtype` holding the data.
+        """
+        return __from_data(data, "prm_counter_v1_dtype", prm_counter_v1_dtype, PRMCounter_v1)
+
+    @staticmethod
+    def from_ptr(intptr_t ptr, bint readonly=False, object owner=None):
+        """Create an PRMCounter_v1 instance wrapping the given pointer.
+
+        Args:
+            ptr (intptr_t): pointer address as Python :class:`int` to the data.
+            owner (object): The Python object that owns the pointer. If not provided, data will be copied.
+            readonly (bool): whether the data is read-only (to the user). default is `False`.
+        """
+        if ptr == 0:
+            raise ValueError("ptr must not be null (0)")
+        cdef PRMCounter_v1 obj = PRMCounter_v1.__new__(PRMCounter_v1)
+        if owner is None:
+            obj._ptr = <nvmlPRMCounter_v1_t *>malloc(sizeof(nvmlPRMCounter_v1_t))
+            if obj._ptr == NULL:
+                raise MemoryError("Error allocating PRMCounter_v1")
+            memcpy(<void*>(obj._ptr), <void*>ptr, sizeof(nvmlPRMCounter_v1_t))
+            obj._owner = None
+            obj._owned = True
+        else:
+            obj._ptr = <nvmlPRMCounter_v1_t *>ptr
+            obj._owner = owner
+            obj._owned = False
+        obj._readonly = readonly
+        return obj
+
+
 cdef _get_vgpu_scheduler_log_dtype_offsets():
     cdef nvmlVgpuSchedulerLog_t pod = nvmlVgpuSchedulerLog_t()
     return _numpy.dtype({
@@ -20829,6 +21039,135 @@ cdef class NvLinkInfo_v2:
         return obj
 
 
+cdef _get_prm_counter_list_v1_dtype_offsets():
+    cdef nvmlPRMCounterList_v1_t pod = nvmlPRMCounterList_v1_t()
+    return _numpy.dtype({
+        'names': ['num_counters', 'counters'],
+        'formats': [_numpy.uint32, _numpy.intp],
+        'offsets': [
+            (<intptr_t>&(pod.numCounters)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.counters)) - (<intptr_t>&pod),
+        ],
+        'itemsize': sizeof(nvmlPRMCounterList_v1_t),
+    })
+
+prm_counter_list_v1_dtype = _get_prm_counter_list_v1_dtype_offsets()
+
+cdef class PRMCounterList_v1:
+    """Empty-initialize an instance of `nvmlPRMCounterList_v1_t`.
+
+
+    .. seealso:: `nvmlPRMCounterList_v1_t`
+    """
+    cdef:
+        nvmlPRMCounterList_v1_t *_ptr
+        object _owner
+        bint _owned
+        bint _readonly
+        dict _refs
+
+    def __init__(self):
+        self._ptr = <nvmlPRMCounterList_v1_t *>calloc(1, sizeof(nvmlPRMCounterList_v1_t))
+        if self._ptr == NULL:
+            raise MemoryError("Error allocating PRMCounterList_v1")
+        self._owner = None
+        self._owned = True
+        self._readonly = False
+        self._refs = {}
+
+    def __dealloc__(self):
+        cdef nvmlPRMCounterList_v1_t *ptr
+        if self._owned and self._ptr != NULL:
+            ptr = self._ptr
+            self._ptr = NULL
+            free(ptr)
+
+    def __repr__(self):
+        return f"<{__name__}.PRMCounterList_v1 object at {hex(id(self))}>"
+
+    @property
+    def ptr(self):
+        """Get the pointer address to the data as Python :class:`int`."""
+        return <intptr_t>(self._ptr)
+
+    cdef intptr_t _get_ptr(self):
+        return <intptr_t>(self._ptr)
+
+    def __int__(self):
+        return <intptr_t>(self._ptr)
+
+    def __eq__(self, other):
+        cdef PRMCounterList_v1 other_
+        if not isinstance(other, PRMCounterList_v1):
+            return False
+        other_ = other
+        return (memcmp(<void *><intptr_t>(self._ptr), <void *><intptr_t>(other_._ptr), sizeof(nvmlPRMCounterList_v1_t)) == 0)
+
+    def __setitem__(self, key, val):
+        if key == 0 and isinstance(val, _numpy.ndarray):
+            self._ptr = <nvmlPRMCounterList_v1_t *>malloc(sizeof(nvmlPRMCounterList_v1_t))
+            if self._ptr == NULL:
+                raise MemoryError("Error allocating PRMCounterList_v1")
+            memcpy(<void*>self._ptr, <void*><intptr_t>val.ctypes.data, sizeof(nvmlPRMCounterList_v1_t))
+            self._owner = None
+            self._owned = True
+            self._readonly = not val.flags.writeable
+        else:
+            setattr(self, key, val)
+
+    @property
+    def counters(self):
+        """int: Pointer to array of PRM counters."""
+        if self._ptr[0].counters == NULL or self._ptr[0].numCounters == 0:
+            return []
+        return PRMCounter_v1.from_ptr(<intptr_t>(self._ptr[0].counters), self._ptr[0].numCounters)
+
+    @counters.setter
+    def counters(self, val):
+        if self._readonly:
+            raise ValueError("This PRMCounterList_v1 instance is read-only")
+        cdef PRMCounter_v1 arr = val
+        self._ptr[0].counters = <nvmlPRMCounter_v1_t*><intptr_t>(arr._get_ptr())
+        self._ptr[0].numCounters = len(arr)
+        self._refs["counters"] = arr
+
+    @staticmethod
+    def from_data(data):
+        """Create an PRMCounterList_v1 instance wrapping the given NumPy array.
+
+        Args:
+            data (_numpy.ndarray): a single-element array of dtype `prm_counter_list_v1_dtype` holding the data.
+        """
+        return __from_data(data, "prm_counter_list_v1_dtype", prm_counter_list_v1_dtype, PRMCounterList_v1)
+
+    @staticmethod
+    def from_ptr(intptr_t ptr, bint readonly=False, object owner=None):
+        """Create an PRMCounterList_v1 instance wrapping the given pointer.
+
+        Args:
+            ptr (intptr_t): pointer address as Python :class:`int` to the data.
+            owner (object): The Python object that owns the pointer. If not provided, data will be copied.
+            readonly (bool): whether the data is read-only (to the user). default is `False`.
+        """
+        if ptr == 0:
+            raise ValueError("ptr must not be null (0)")
+        cdef PRMCounterList_v1 obj = PRMCounterList_v1.__new__(PRMCounterList_v1)
+        if owner is None:
+            obj._ptr = <nvmlPRMCounterList_v1_t *>malloc(sizeof(nvmlPRMCounterList_v1_t))
+            if obj._ptr == NULL:
+                raise MemoryError("Error allocating PRMCounterList_v1")
+            memcpy(<void*>(obj._ptr), <void*>ptr, sizeof(nvmlPRMCounterList_v1_t))
+            obj._owner = None
+            obj._owned = True
+        else:
+            obj._ptr = <nvmlPRMCounterList_v1_t *>ptr
+            obj._owner = owner
+            obj._owned = False
+        obj._readonly = readonly
+        obj._refs = {}
+        return obj
+
+
 
 cpdef init_v2():
     """Initialize NVML, but don't initialize any GPUs yet.
@@ -21592,23 +21931,26 @@ cpdef device_validate_inforom(intptr_t device):
     check_status(__status__)
 
 
-cpdef unsigned long device_get_last_bbx_flush_time(intptr_t device, intptr_t timestamp) except? 0:
+cpdef tuple device_get_last_bbx_flush_time(intptr_t device):
     """Retrieves the timestamp and the duration of the last flush of the BBX (blackbox) infoROM object during the current run.
 
     Args:
         device (intptr_t): The identifier of the target device.
-        timestamp (intptr_t): The start timestamp of the last BBX Flush.
 
     Returns:
-        unsigned long: The duration (us) of the last BBX Flush.
+        A 2-tuple containing:
+
+        - unsigned long long: The start timestamp of the last BBX Flush.
+        - unsigned long: The duration (us) of the last BBX Flush.
 
     .. seealso:: `nvmlDeviceGetLastBBXFlushTime`
     """
+    cdef unsigned long long timestamp
     cdef unsigned long duration_us
     with nogil:
-        __status__ = nvmlDeviceGetLastBBXFlushTime(<Device>device, <unsigned long long*>timestamp, &duration_us)
+        __status__ = nvmlDeviceGetLastBBXFlushTime(<Device>device, &timestamp, &duration_us)
     check_status(__status__)
-    return duration_us
+    return (timestamp, duration_us)
 
 
 cpdef int device_get_display_mode(intptr_t device) except? -1:
@@ -22030,26 +22372,6 @@ cpdef unsigned int device_get_fan_speed_v2(intptr_t device, unsigned int fan) ex
     return speed
 
 
-cpdef object device_get_fan_speed_rpm(intptr_t device):
-    """Retrieves the intended operating speed in rotations per minute (RPM) of the device's specified fan.
-
-    Args:
-        device (intptr_t): The identifier of the target device.
-
-    Returns:
-        nvmlFanSpeedInfo_v1_t: Structure specifying the index of the target fan (input) and retrieved fan speed value (output).
-
-    .. seealso:: `nvmlDeviceGetFanSpeedRPM`
-    """
-    cdef FanSpeedInfo_v1 fan_speed_py = FanSpeedInfo_v1()
-    cdef nvmlFanSpeedInfo_t *fan_speed = <nvmlFanSpeedInfo_t *><intptr_t>(fan_speed_py._get_ptr())
-    fan_speed.version = sizeof(nvmlFanSpeedInfo_v1_t) | (1 << 24)
-    with nogil:
-        __status__ = nvmlDeviceGetFanSpeedRPM(<Device>device, fan_speed)
-    check_status(__status__)
-    return fan_speed_py
-
-
 cpdef unsigned int device_get_target_fan_speed(intptr_t device, unsigned int fan) except? 0:
     """Retrieves the intended target speed of the device's specified fan.
 
@@ -22165,26 +22487,6 @@ cpdef unsigned int device_get_temperature_threshold(intptr_t device, int thresho
         __status__ = nvmlDeviceGetTemperatureThreshold(<Device>device, <_TemperatureThresholds>threshold_type, &temp)
     check_status(__status__)
     return temp
-
-
-cpdef object device_get_margin_temperature(intptr_t device):
-    """Retrieves the thermal margin temperature (distance to nearest slowdown threshold).
-
-    Args:
-        device (intptr_t): The identifier of the target device.
-
-    Returns:
-        nvmlMarginTemperature_v1_t: Versioned structure in which to return the temperature reading.
-
-    .. seealso:: `nvmlDeviceGetMarginTemperature`
-    """
-    cdef MarginTemperature_v1 margin_temp_info_py = MarginTemperature_v1()
-    cdef nvmlMarginTemperature_t *margin_temp_info = <nvmlMarginTemperature_t *><intptr_t>(margin_temp_info_py._get_ptr())
-    margin_temp_info.version = sizeof(nvmlMarginTemperature_v1_t) | (1 << 24)
-    with nogil:
-        __status__ = nvmlDeviceGetMarginTemperature(<Device>device, margin_temp_info)
-    check_status(__status__)
-    return margin_temp_info_py
 
 
 cpdef object device_get_thermal_settings(intptr_t device, unsigned int sensor_ind_ex):
@@ -22382,26 +22684,6 @@ cpdef tuple device_get_mem_clk_min_max_vf_offset(intptr_t device):
         __status__ = nvmlDeviceGetMemClkMinMaxVfOffset(<Device>device, &min_offset, &max_offset)
     check_status(__status__)
     return (min_offset, max_offset)
-
-
-cpdef object device_get_clock_offsets(intptr_t device):
-    """Retrieve min, max and current clock offset of some clock domain for a given PState.
-
-    Args:
-        device (intptr_t): The identifier of the target device.
-
-    Returns:
-        nvmlClockOffset_v1_t: Structure specifying the clock type (input) and the pstate (input) retrieved clock offset value (output), min clock offset (output) and max clock offset (output).
-
-    .. seealso:: `nvmlDeviceGetClockOffsets`
-    """
-    cdef ClockOffset_v1 info_py = ClockOffset_v1()
-    cdef nvmlClockOffset_t *info = <nvmlClockOffset_t *><intptr_t>(info_py._get_ptr())
-    info.version = sizeof(nvmlClockOffset_v1_t) | (1 << 24)
-    with nogil:
-        __status__ = nvmlDeviceGetClockOffsets(<Device>device, info)
-    check_status(__status__)
-    return info_py
 
 
 cpdef device_set_clock_offsets(intptr_t device, intptr_t info):
@@ -24423,58 +24705,6 @@ cpdef event_set_free(intptr_t set):
     check_status(__status__)
 
 
-cpdef system_event_set_create(intptr_t request):
-    """Create an empty set of system events. Event set should be freed by ``nvmlSystemEventSetFree``.
-
-    Args:
-        request (intptr_t): Reference to nvmlSystemEventSetCreateRequest_t.
-
-    .. seealso:: `nvmlSystemEventSetCreate`
-    """
-    with nogil:
-        __status__ = nvmlSystemEventSetCreate(<nvmlSystemEventSetCreateRequest_t*>request)
-    check_status(__status__)
-
-
-cpdef system_event_set_free(intptr_t request):
-    """Releases system event set.
-
-    Args:
-        request (intptr_t): Reference to nvmlSystemEventSetFreeRequest_t.
-
-    .. seealso:: `nvmlSystemEventSetFree`
-    """
-    with nogil:
-        __status__ = nvmlSystemEventSetFree(<nvmlSystemEventSetFreeRequest_t*>request)
-    check_status(__status__)
-
-
-cpdef system_register_events(intptr_t request):
-    """Starts recording of events on system and add the events to specified ``nvmlSystemEventSet_t``.
-
-    Args:
-        request (intptr_t): Reference to the struct nvmlSystemRegisterEventRequest_t.
-
-    .. seealso:: `nvmlSystemRegisterEvents`
-    """
-    with nogil:
-        __status__ = nvmlSystemRegisterEvents(<nvmlSystemRegisterEventRequest_t*>request)
-    check_status(__status__)
-
-
-cpdef system_event_set_wait(intptr_t request):
-    """Waits on system events and delivers events.
-
-    Args:
-        request (intptr_t): Reference in which to nvmlSystemEventSetWaitRequest_t.
-
-    .. seealso:: `nvmlSystemEventSetWait`
-    """
-    with nogil:
-        __status__ = nvmlSystemEventSetWait(<nvmlSystemEventSetWaitRequest_t*>request)
-    check_status(__status__)
-
-
 cpdef device_modify_drain_state(intptr_t pci_info, int new_state):
     """Modify the drain state of a GPU. This method forces a GPU to no longer accept new incoming requests. Any new NVML process will no longer see this GPU. Persistence mode for this GPU must be turned off before this call is made. Must be called as administrator. For Linux only.
 
@@ -26175,7 +26405,7 @@ cpdef gpm_sample_get(intptr_t device, intptr_t gpm_sample):
     """Read a sample of GPM metrics into the provided ``gpm_sample`` buffer. After two samples are gathered, you can call nvmlGpmMetricGet on those samples to retrive metrics.
 
     Args:
-        device (intptr_t): The device handle or MIG device handle to get samples for.
+        device (intptr_t): Device to get samples for.
         gpm_sample (intptr_t): Buffer to read samples into.
 
     .. seealso:: `nvmlGpmSampleGet`
@@ -26204,7 +26434,7 @@ cpdef object gpm_query_device_support(intptr_t device):
     """Indicate whether the supplied device supports GPM.
 
     Args:
-        device (intptr_t): The device handle or MIG device handle to query for.
+        device (intptr_t): NVML device to query for.
 
     Returns:
         nvmlGpmSupport_t: Structure to indicate GPM support ``nvmlGpmSupport_t``. Indicates GPM support per system for the supplied device.
@@ -26475,6 +26705,20 @@ cpdef object device_get_unrepairable_memory_flag_v1(intptr_t device):
     return unrepairable_memory_status_py
 
 
+cpdef device_read_prm_counters_v1(intptr_t device, intptr_t counter_list):
+    """Read a list of GPU PRM Counters.
+
+    Args:
+        device (intptr_t): Identifer of target GPU device.
+        counter_list (intptr_t): Structure holding the input parameters as well as the retrieved counter values.
+
+    .. seealso:: `nvmlDeviceReadPRMCounters_v1`
+    """
+    with nogil:
+        __status__ = nvmlDeviceReadPRMCounters_v1(<Device>device, <nvmlPRMCounterList_v1_t*>counter_list)
+    check_status(__status__)
+
+
 cpdef device_set_rusd_settings_v1(intptr_t device, intptr_t settings):
     """Set Read-only user shared data (RUSD) settings for GPU. Requires root/admin permissions.
 
@@ -26503,8 +26747,8 @@ cpdef object system_get_topology_gpu_set(unsigned int cpuNumber):
         __status__ = nvmlSystemGetTopologyGpuSet(cpuNumber, <unsigned int*>count, NULL)
     check_status_size(__status__)
     if count[0] == 0:
-        return view.array(shape=(1,), itemsize=sizeof(intptr_t), format="i", mode="c")[:0]
-    cdef view.array deviceArray = view.array(shape=(count[0],), itemsize=sizeof(intptr_t), format="i", mode="c")
+        return view.array(shape=(1,), itemsize=sizeof(intptr_t), format="P", mode="c")[:0]
+    cdef view.array deviceArray = view.array(shape=(count[0],), itemsize=sizeof(intptr_t), format="P", mode="c")
     with nogil:
         __status__ = nvmlSystemGetTopologyGpuSet(cpuNumber, <unsigned int*>count, <nvmlDevice_t *>deviceArray.data)
     check_status(__status__)
@@ -26543,8 +26787,8 @@ cpdef object unit_get_devices(intptr_t unit):
         __status__ = nvmlUnitGetDevices(<nvmlUnit_t *>unit, <unsigned int*>deviceCount, NULL)
     check_status_size(__status__)
     if deviceCount[0] == 0:
-        return view.array(shape=(1,), itemsize=sizeof(intptr_t), format="i", mode="c")[:0]
-    cdef view.array deviceArray = view.array(shape=(deviceCount[0],), itemsize=sizeof(intptr_t), format="i", mode="c")
+        return view.array(shape=(1,), itemsize=sizeof(intptr_t), format="P", mode="c")[:0]
+    cdef view.array deviceArray = view.array(shape=(deviceCount[0],), itemsize=sizeof(intptr_t), format="P", mode="c")
     with nogil:
         __status__ = nvmlUnitGetDevices(<nvmlUnit_t *>unit, <unsigned int*>deviceCount, <nvmlDevice_t *>deviceArray.data)
     check_status(__status__)
@@ -26571,8 +26815,8 @@ cpdef object device_get_topology_nearest_gpus(intptr_t device, unsigned int leve
         )
     check_status_size(__status__)
     if count[0] == 0:
-        return view.array(shape=(1,), itemsize=sizeof(intptr_t), format="i", mode="c")[:0]
-    cdef view.array deviceArray = view.array(shape=(deviceCount[0],), itemsize=sizeof(intptr_t), format="i", mode="c")
+        return view.array(shape=(1,), itemsize=sizeof(intptr_t), format="P", mode="c")[:0]
+    cdef view.array deviceArray = view.array(shape=(count[0],), itemsize=sizeof(intptr_t), format="P", mode="c")
     with nogil:
         __status__ = nvmlDeviceGetTopologyNearestGpus(
             <Device>device,
@@ -26605,15 +26849,13 @@ cpdef object device_get_temperature_v(intptr_t device, nvmlTemperatureSensors_t 
     return temperature.temperature
 
 
-cpdef object device_get_supported_performance_states(intptr_t device, unsigned int size):
+cpdef object device_get_supported_performance_states(intptr_t device):
     """Get all supported Performance States (P-States) for the device.
 
     Args:
         device (Device): The identifier of the target device.
-        size (unsigned int): The number of states to return.
     """
-    if size == 0:
-        return view.array(shape=(1,), itemsize=sizeof(unsigned int), format="I", mode="c")[:0]
+    cdef int size = 16  # NVML_MAX_GPU_PERF_STATES
     cdef view.array pstates = view.array(shape=(size,), itemsize=sizeof(unsigned int), format="I", mode="c")
 
     # The header says "size is the size of the pstates array in bytes".
@@ -27236,9 +27478,9 @@ cpdef object device_get_gpu_instances(intptr_t device, unsigned int profile_id):
     check_status_size(__status__)
 
     if count[0] == 0:
-        view.array(shape=(1,), itemsize=sizeof(intptr_t), format="i", mode="c")[:0]
+        view.array(shape=(1,), itemsize=sizeof(intptr_t), format="P", mode="c")[:0]
 
-    cdef view.array gpuInstances = view.array(shape=(count[0],), itemsize=sizeof(intptr_t), format="i", mode="c")
+    cdef view.array gpuInstances = view.array(shape=(count[0],), itemsize=sizeof(intptr_t), format="P", mode="c")
     with nogil:
         __status__ = nvmlDeviceGetGpuInstances(<Device>device, profile_id, <nvmlGpuInstance_t *>gpuInstances.data, count)
     check_status(__status__)
@@ -27262,9 +27504,9 @@ cpdef object gpu_instance_get_compute_instances(intptr_t gpu_instance, unsigned 
     check_status_size(__status__)
 
     if count[0] == 0:
-        view.array(shape=(1,), itemsize=sizeof(intptr_t), format="i", mode="c")[:0]
+        view.array(shape=(1,), itemsize=sizeof(intptr_t), format="P", mode="c")[:0]
 
-    cdef view.array computeInstances = view.array(shape=(count[0],), itemsize=sizeof(intptr_t), format="i", mode="c")
+    cdef view.array computeInstances = view.array(shape=(count[0],), itemsize=sizeof(intptr_t), format="P", mode="c")
     with nogil:
         __status__ = nvmlGpuInstanceGetComputeInstances(<GpuInstance>gpu_instance, profile_id, <nvmlComputeInstance_t *>computeInstances.data, count)
     check_status(__status__)
@@ -27404,3 +27646,126 @@ cpdef object device_get_nvlink_info(intptr_t device):
             __status__ = nvmlDeviceGetNvLinkInfo(<Device>device, info)
         check_status(__status__)
         return info_v1_py
+
+
+cpdef intptr_t system_event_set_create():
+    """Create an empty set of system events. Event set should be freed by ``nvmlSystemEventSetFree``."""
+    cdef nvmlSystemEventSetCreateRequest_v1_t[1] request
+    with nogil:
+        request[0].version = sizeof(nvmlSystemEventSetCreateRequest_v1_t) | (1 << 24)
+        __status__ = nvmlSystemEventSetCreate(<nvmlSystemEventSetCreateRequest_t*>request)
+    check_status(__status__)
+    return <intptr_t>(request[0].set)
+
+
+cpdef system_event_set_free(intptr_t event_set):
+    """Frees an event set."""
+    cdef nvmlSystemEventSetFreeRequest_v1_t[1] request
+    request[0].set = <SystemEventSet>event_set
+    with nogil:
+        request[0].version = sizeof(nvmlSystemEventSetFreeRequest_v1_t) | (1 << 24)
+        __status__ = nvmlSystemEventSetFree(<nvmlSystemEventSetFreeRequest_t*>request)
+    check_status(__status__)
+
+
+cpdef system_register_events(unsigned long long event_types, intptr_t event_set):
+    """Starts recording of events on system and add the events to specified ``nvmlSystemEventSet_t``.
+
+    Args:
+        event_types (unsigned long long): Bitmask of nvmlSystemEventType_t values representing the events to register.
+        event_set (intptr_t): The system event set handle.
+    """
+    cdef nvmlSystemRegisterEventRequest_v1_t[1] request
+    request[0].set = <SystemEventSet>event_set
+    request[0].eventTypes = event_types
+    with nogil:
+        request[0].version = sizeof(nvmlSystemRegisterEventRequest_v1_t) | (1 << 24)
+        __status__ = nvmlSystemRegisterEvents(<nvmlSystemRegisterEventRequest_t*>request)
+    check_status(__status__)
+
+
+cpdef object system_event_set_wait(intptr_t event_set, unsigned int timeout_ms, unsigned int buffer_size):
+    """Waits for events to occur on the system event set.
+
+    Args:
+        event_set (intptr_t): The system event set handle.
+        timeout_ms (unsigned int): The maximum amount of time in milliseconds to wait for an event.
+        buffer_size (unsigned int): The size of the event buffer.
+
+    Returns:
+        SystemEvent: The system event that occurred.
+    """
+    cdef nvmlSystemEventSetWaitRequest_v1_t[1] request
+    cdef SystemEventData_v1 event_data = SystemEventData_v1(buffer_size)
+    request[0].timeoutms = timeout_ms
+    request[0].set = <SystemEventSet>event_set
+    request[0].data = <nvmlSystemEventData_v1_t *><intptr_t>(event_data._get_ptr())
+    request[0].dataSize = buffer_size
+    with nogil:
+        request[0].version = sizeof(nvmlSystemEventSetWaitRequest_v1_t) | (1 << 24)
+        __status__ = nvmlSystemEventSetWait(<nvmlSystemEventSetWaitRequest_t*>request)
+    check_status(__status__)
+    event_data._data.resize((request[0].numEvent,))
+    return event_data
+
+
+cpdef unsigned int device_get_fan_speed_rpm(intptr_t device, unsigned int fan):
+    """Retrieves the intended operating speed in rotations per minute (RPM) of the device's specified fan.
+
+    Args:
+        device (intptr_t): The identifier of the target device.
+        fan (unsigned int): The index of the fan to query.
+
+    Returns:
+        rpm (unsigned int): The fan speed in RPM.
+
+    .. seealso:: `nvmlDeviceGetFanSpeedRPM`
+    """
+    cdef nvmlFanSpeedInfo_v1_t[1] fan_speed
+    fan_speed[0].version = sizeof(nvmlFanSpeedInfo_v1_t) | (1 << 24)
+    fan_speed[0].fan = fan
+    with nogil:
+        __status__ = nvmlDeviceGetFanSpeedRPM(<Device>device, fan_speed)
+    check_status(__status__)
+    return fan_speed[0].speed
+
+
+cpdef int device_get_margin_temperature(intptr_t device):
+    """Retrieves the thermal margin temperature (distance to nearest slowdown threshold).
+
+    Args:
+        device (intptr_t): The identifier of the target device.
+
+    Returns:
+        margin_temperature (int): The margin temperature value.
+
+    .. seealso:: `nvmlDeviceGetMarginTemperature`
+    """
+    cdef nvmlMarginTemperature_v1_t[1] margin_temp_info
+    margin_temp_info[0].version = sizeof(nvmlMarginTemperature_v1_t) | (1 << 24)
+    with nogil:
+        __status__ = nvmlDeviceGetMarginTemperature(<Device>device, margin_temp_info)
+    check_status(__status__)
+    return margin_temp_info[0].marginTemperature
+
+
+cpdef object device_get_clock_offsets(intptr_t device, nvmlClockType_t clock_type, nvmlPstates_t pstate):
+    """Retrieve min, max and current clock offset of some clock domain for a given PState.
+
+    Args:
+        device (intptr_t): The identifier of the target device.
+
+    Returns:
+        nvmlClockOffset_v1_t: Structure specifying the clock type (input) and the pstate (input) retrieved clock offset value (output), min clock offset (output) and max clock offset (output).
+
+    .. seealso:: `nvmlDeviceGetClockOffsets`
+    """
+    cdef ClockOffset_v1 info_py = ClockOffset_v1()
+    cdef nvmlClockOffset_v1_t *info = <nvmlClockOffset_v1_t *><intptr_t>(info_py._get_ptr())
+    info.version = sizeof(nvmlClockOffset_v1_t) | (1 << 24)
+    info.type = clock_type
+    info.pstate = pstate
+    with nogil:
+        __status__ = nvmlDeviceGetClockOffsets(<Device>device, info)
+    check_status(__status__)
+    return info_py

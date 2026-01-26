@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
 from ._dlpack cimport *
 from libc.stdint cimport intptr_t
 from cuda.core._layout cimport _StridedLayout
@@ -9,20 +11,15 @@ from cuda.core._stream import Stream
 
 import functools
 import warnings
-from typing import Optional
 
 import numpy
 
 from cuda.bindings cimport cydriver
 from cuda.core._resource_handles cimport (
     EventHandle,
-    _init_handles_table,
     create_event_handle_noctx,
     as_cu,
 )
-
-# Prerequisite before calling handle API functions (see _cpp/DESIGN.md)
-_init_handles_table()
 
 from cuda.core._utils.cuda_utils import handle_return, driver
 from cuda.core._utils.cuda_utils cimport HANDLE_RETURN
@@ -325,14 +322,14 @@ cdef class StridedMemoryView:
         return self.get_layout().get_shape_tuple()
 
     @property
-    def strides(self) -> Optional[tuple[int, ...]]:
+    def strides(self) -> tuple[int, ...] | None:
         """
         Strides of the tensor (in **counts**, not bytes).
         """
         return self.get_layout().get_strides_tuple()
 
     @property
-    def dtype(self) -> Optional[numpy.dtype]:
+    def dtype(self) -> numpy.dtype | None:
         """
         Data type of the tensor.
         """

@@ -11,16 +11,12 @@ from cuda.core._context cimport Context
 from cuda.core._resource_handles cimport (
     ContextHandle,
     EventHandle,
-    _init_handles_table,
     create_event_handle,
     create_event_handle_ipc,
     as_intptr,
     as_cu,
     as_py,
 )
-
-# Prerequisite before calling handle API functions (see _cpp/DESIGN.md)
-_init_handles_table()
 
 from cuda.core._utils.cuda_utils cimport (
     check_or_create_options,
@@ -30,14 +26,11 @@ from cuda.core._utils.cuda_utils cimport (
 import cython
 from dataclasses import dataclass
 import multiprocessing
-from typing import TYPE_CHECKING, Optional
 
 from cuda.core._utils.cuda_utils import (
     CUDAError,
     check_multiprocessing_start_method,
 )
-if TYPE_CHECKING:
-    import cuda.bindings
 
 
 @dataclass
@@ -60,9 +53,9 @@ cdef class EventOptions:
 
     """
 
-    enable_timing: Optional[bool] = False
-    busy_waited_sync: Optional[bool] = False
-    ipc_enabled: Optional[bool] = False
+    enable_timing: bool | None = False
+    busy_waited_sync: bool | None = False
+    ipc_enabled: bool | None = False
 
 
 cdef class Event:
@@ -176,7 +169,7 @@ cdef class Event:
             raise RuntimeError(explanation)
 
     def __hash__(self) -> int:
-        return hash((type(self), as_intptr(self._h_context), as_intptr(self._h_event)))
+        return hash((type(self), as_intptr(self._h_event)))
 
     def __eq__(self, other) -> bool:
         # Note: using isinstance because `Event` can be subclassed.
