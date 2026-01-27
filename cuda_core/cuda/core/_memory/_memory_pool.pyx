@@ -16,7 +16,6 @@ from cuda.core._stream cimport default_stream, Stream_accept, Stream
 from cuda.core._resource_handles cimport (
     MemoryPoolHandle,
     DevicePtrHandle,
-    _init_handles_table,
     create_mempool_handle,
     create_mempool_handle_ref,
     get_device_mempool,
@@ -25,22 +24,14 @@ from cuda.core._resource_handles cimport (
     as_py,
 )
 
-# Prerequisite before calling handle API functions (see _cpp/DESIGN.md)
-_init_handles_table()
-
 from cuda.core._utils.cuda_utils cimport (
     HANDLE_RETURN,
 )
 
-from typing import TYPE_CHECKING
 import platform  # no-cython-lint
 import weakref
 
 from cuda.core._utils.cuda_utils import driver
-
-if TYPE_CHECKING:
-    from cuda.core._memory.buffer import DevicePointerT
-    from .._device import Device
 
 
 cdef class _MemPoolOptions:
@@ -306,7 +297,7 @@ cdef class _MemPool(MemoryResource):
         return self._ipc_data is not None and self._ipc_data._is_mapped
 
     @property
-    def uuid(self) -> Optional[uuid.UUID]:
+    def uuid(self) -> uuid.UUID | None:
         """
         A universally unique identifier for this memory resource. Meaningful
         only for IPC-enabled memory resources.

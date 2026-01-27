@@ -2,10 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
+import functools
+import threading
 import weakref
 from collections import namedtuple
-from typing import Union
-from warnings import warn
 
 from cuda.core._device import Device
 from cuda.core._launch_config import LaunchConfig, _to_native_launch_config
@@ -15,54 +17,109 @@ from cuda.core._utils.clear_error_support import (
     assert_type_str_or_bytes_like,
     raise_code_path_meant_to_be_unreachable,
 )
-from cuda.core._utils.cuda_utils import driver, get_binding_version, handle_return, precondition
+from cuda.core._utils.cuda_utils import CUDAError, driver, get_binding_version, handle_return, precondition
 
-_backend = {
-    "old": {
-        "file": driver.cuModuleLoad,
-        "data": driver.cuModuleLoadDataEx,
-        "kernel": driver.cuModuleGetFunction,
-        "attribute": driver.cuFuncGetAttribute,
-    },
-}
-
-
-# TODO: revisit this treatment for py313t builds
+# Lazy initialization state and synchronization
+# For Python 3.13t (free-threaded builds), we use a lock to ensure thread-safe initialization.
+# For regular Python builds with GIL, the lock overhead is minimal and the code remains safe.
+_init_lock = threading.Lock()
 _inited = False
 _py_major_ver = None
+_py_minor_ver = None
 _driver_ver = None
 _kernel_ctypes = None
+_backend = {}
 
 
 def _lazy_init():
+    """
+    Initialize module-level state in a thread-safe manner.
+
+    This function is thread-safe and suitable for both:
+    - Regular Python builds (with GIL)
+    - Python 3.13t free-threaded builds (without GIL)
+
+    Uses double-checked locking pattern for performance:
+    - Fast path: check without lock if already initialized
+    - Slow path: acquire lock and initialize if needed
+    """
     global _inited
+    # Fast path: already initialized (no lock needed for read)
     if _inited:
         return
 
-    global _py_major_ver, _driver_ver, _kernel_ctypes
-    # binding availability depends on cuda-python version
-    _py_major_ver, _ = get_binding_version()
-    if _py_major_ver >= 12:
-        _backend["new"] = {
+    # Slow path: acquire lock and initialize
+    with _init_lock:
+        # Double-check: another thread might have initialized while we waited
+        if _inited:
+            return
+
+        global _py_major_ver, _py_minor_ver, _driver_ver, _kernel_ctypes, _backend
+        # binding availability depends on cuda-python version
+        _py_major_ver, _py_minor_ver = get_binding_version()
+        _backend = {
             "file": driver.cuLibraryLoadFromFile,
             "data": driver.cuLibraryLoadData,
             "kernel": driver.cuLibraryGetKernel,
             "attribute": driver.cuKernelGetAttribute,
         }
-        _kernel_ctypes = (driver.CUfunction, driver.CUkernel)
-    else:
-        _kernel_ctypes = (driver.CUfunction,)
-    _driver_ver = handle_return(driver.cuDriverGetVersion())
-    if _py_major_ver >= 12 and _driver_ver >= 12040:
-        _backend["new"]["paraminfo"] = driver.cuKernelGetParamInfo
-    _inited = True
+        _kernel_ctypes = (driver.CUkernel,)
+        _driver_ver = handle_return(driver.cuDriverGetVersion())
+        if _driver_ver >= 12040:
+            _backend["paraminfo"] = driver.cuKernelGetParamInfo
+
+        # Mark as initialized (must be last to ensure all state is set)
+        _inited = True
+
+
+# Auto-initializing property accessors
+def _get_py_major_ver():
+    """Get the Python binding major version, initializing if needed."""
+    _lazy_init()
+    return _py_major_ver
+
+
+def _get_py_minor_ver():
+    """Get the Python binding minor version, initializing if needed."""
+    _lazy_init()
+    return _py_minor_ver
+
+
+def _get_driver_ver():
+    """Get the CUDA driver version, initializing if needed."""
+    _lazy_init()
+    return _driver_ver
+
+
+def _get_kernel_ctypes():
+    """Get the kernel ctypes tuple, initializing if needed."""
+    _lazy_init()
+    return _kernel_ctypes
+
+
+@functools.cache
+def _is_cukernel_get_library_supported() -> bool:
+    """Return True when cuKernelGetLibrary is available for inverse kernel-to-library lookup.
+
+    Requires cuda-python bindings >= 12.5 and driver >= 12.5.
+    """
+    return (
+        (_get_py_major_ver(), _get_py_minor_ver()) >= (12, 5)
+        and _get_driver_ver() >= 12050
+        and hasattr(driver, "cuKernelGetLibrary")
+    )
+
+
+def _make_dummy_library_handle():
+    """Create a non-null placeholder CUlibrary handle to disable lazy loading."""
+    return driver.CUlibrary(1) if hasattr(driver, "CUlibrary") else 1
 
 
 class KernelAttributes:
     def __new__(self, *args, **kwargs):
         raise RuntimeError("KernelAttributes cannot be instantiated directly. Please use Kernel APIs.")
 
-    slots = ("_kernel", "_cache", "_backend_version", "_loader")
+    slots = ("_kernel", "_cache", "_loader")
 
     @classmethod
     def _init(cls, kernel):
@@ -70,8 +127,9 @@ class KernelAttributes:
         self._kernel = weakref.ref(kernel)
         self._cache = {}
 
-        self._backend_version = "new" if (_py_major_ver >= 12 and _driver_ver >= 12000) else "old"
-        self._loader = _backend[self._backend_version]
+        # Ensure backend is initialized before setting loader
+        _lazy_init()
+        self._loader = _backend
         return self
 
     def _get_cached_attribute(self, device_id: Device | int, attribute: driver.CUfunction_attribute) -> int:
@@ -84,15 +142,7 @@ class KernelAttributes:
         kernel = self._kernel()
         if kernel is None:
             raise RuntimeError("Cannot access kernel attributes for expired Kernel object")
-        if self._backend_version == "new":
-            result = handle_return(self._loader["attribute"](attribute, kernel._handle, device_id))
-        else:  # "old" backend
-            warn(
-                "Device ID argument is ignored when getting attribute from kernel when cuda version < 12. ",
-                RuntimeWarning,
-                stacklevel=2,
-            )
-            result = handle_return(self._loader["attribute"](attribute, kernel._handle))
+        result = handle_return(self._loader["attribute"](attribute, kernel._handle, device_id))
         self._cache[cache_key] = result
         return result
 
@@ -197,7 +247,9 @@ MaxPotentialBlockSizeOccupancyResult = namedtuple("MaxPotential", ("min_grid_siz
 
 
 class KernelOccupancy:
-    """ """
+    """This class offers methods to query occupancy metrics that help determine optimal
+    launch parameters such as block size, grid size, and shared memory usage.
+    """
 
     def __new__(self, *args, **kwargs):
         raise RuntimeError("KernelOccupancy cannot be instantiated directly. Please use Kernel APIs.")
@@ -241,7 +293,7 @@ class KernelOccupancy:
         )
 
     def max_potential_block_size(
-        self, dynamic_shared_memory_needed: Union[int, driver.CUoccupancyB2DSize], block_size_limit: int
+        self, dynamic_shared_memory_needed: int | driver.CUoccupancyB2DSize, block_size_limit: int
     ) -> MaxPotentialBlockSizeOccupancyResult:
         """MaxPotentialBlockSizeOccupancyResult: Suggested launch configuration for reasonable occupancy.
 
@@ -378,7 +430,7 @@ class Kernel:
 
     @classmethod
     def _from_obj(cls, obj, mod):
-        assert_type(obj, _kernel_ctypes)
+        assert_type(obj, _get_kernel_ctypes())
         assert_type(mod, ObjectCode)
         ker = super().__new__(cls)
         ker._handle = obj
@@ -396,12 +448,11 @@ class Kernel:
 
     def _get_arguments_info(self, param_info=False) -> tuple[int, list[ParamInfo]]:
         attr_impl = self.attributes
-        if attr_impl._backend_version != "new":
-            raise NotImplementedError("New backend is required")
         if "paraminfo" not in attr_impl._loader:
+            driver_ver = _get_driver_ver()
             raise NotImplementedError(
                 "Driver version 12.4 or newer is required for this function. "
-                f"Using driver version {_driver_ver // 1000}.{(_driver_ver % 1000) // 10}"
+                f"Using driver version {driver_ver // 1000}.{(driver_ver % 1000) // 10}"
             )
         arg_pos = 0
         param_info_data = []
@@ -436,10 +487,49 @@ class Kernel:
             self._occupancy = KernelOccupancy._init(self._handle)
         return self._occupancy
 
-    # TODO: implement from_handle()
+    @staticmethod
+    def from_handle(handle: int, mod: ObjectCode = None) -> Kernel:
+        """Creates a new :obj:`Kernel` object from a foreign kernel handle.
+
+        Uses a CUkernel pointer address to create a new :obj:`Kernel` object.
+
+        Parameters
+        ----------
+        handle : int
+            Kernel handle representing the address of a foreign
+            kernel object (CUkernel).
+        mod : :obj:`ObjectCode`, optional
+            The ObjectCode object associated with this kernel. If not provided,
+            a placeholder ObjectCode will be created. Note that without a proper
+            ObjectCode, certain operations may be limited.
+        """
+
+        # Validate that handle is an integer
+        if not isinstance(handle, int):
+            raise TypeError(f"handle must be an integer, got {type(handle).__name__}")
+
+        # Convert the integer handle to CUkernel driver type
+        kernel_obj = driver.CUkernel(handle)
+
+        # If no module provided, create a placeholder
+        if mod is None:
+            # For CUkernel, we can (optionally) inverse-lookup the owning CUlibrary via
+            # cuKernelGetLibrary (added in CUDA 12.5). If the API is not available, we fall
+            # back to a non-null dummy handle purely to disable lazy loading.
+            mod = ObjectCode._init(b"", "cubin")
+            if _is_cukernel_get_library_supported():
+                try:
+                    mod._handle = handle_return(driver.cuKernelGetLibrary(kernel_obj))
+                except (CUDAError, RuntimeError):
+                    # Best-effort: don't fail construction if inverse lookup fails.
+                    mod._handle = _make_dummy_library_handle()
+            else:
+                mod._handle = _make_dummy_library_handle()
+
+        return Kernel._from_obj(kernel_obj, mod)
 
 
-CodeTypeT = Union[bytes, bytearray, str]
+CodeTypeT = bytes | bytearray | str
 
 
 class ObjectCode:
@@ -454,14 +544,9 @@ class ObjectCode:
     like to load, use the :meth:`from_cubin` alternative constructor. Constructing directly
     from all other possible code types should be avoided in favor of compilation through
     :class:`~cuda.core.Program`
-
-    Note
-    ----
-    Usage under CUDA 11.x will only load to the current device
-    context.
     """
 
-    __slots__ = ("_handle", "_backend_version", "_code_type", "_module", "_loader", "_sym_map", "_name")
+    __slots__ = ("_handle", "_code_type", "_module", "_loader", "_sym_map", "_name")
     _supported_code_type = ("cubin", "ptx", "ltoir", "fatbin", "object", "library")
 
     def __new__(self, *args, **kwargs):
@@ -474,13 +559,13 @@ class ObjectCode:
     def _init(cls, module, code_type, *, name: str = "", symbol_mapping: dict | None = None):
         self = super().__new__(cls)
         assert code_type in self._supported_code_type, f"{code_type=} is not supported"
-        _lazy_init()
 
         # handle is assigned during _lazy_load
         self._handle = None
 
-        self._backend_version = "new" if (_py_major_ver >= 12 and _driver_ver >= 12000) else "old"
-        self._loader = _backend[self._backend_version]
+        # Ensure backend is initialized before setting loader
+        _lazy_init()
+        self._loader = _backend
 
         self._code_type = code_type
         self._module = module
@@ -498,7 +583,7 @@ class ObjectCode:
         return ObjectCode._reduce_helper, (self._module, self._code_type, self._name, self._sym_map)
 
     @staticmethod
-    def from_cubin(module: Union[bytes, str], *, name: str = "", symbol_mapping: dict | None = None) -> "ObjectCode":
+    def from_cubin(module: bytes | str, *, name: str = "", symbol_mapping: dict | None = None) -> ObjectCode:
         """Create an :class:`ObjectCode` instance from an existing cubin.
 
         Parameters
@@ -516,7 +601,7 @@ class ObjectCode:
         return ObjectCode._init(module, "cubin", name=name, symbol_mapping=symbol_mapping)
 
     @staticmethod
-    def from_ptx(module: Union[bytes, str], *, name: str = "", symbol_mapping: dict | None = None) -> "ObjectCode":
+    def from_ptx(module: bytes | str, *, name: str = "", symbol_mapping: dict | None = None) -> ObjectCode:
         """Create an :class:`ObjectCode` instance from an existing PTX.
 
         Parameters
@@ -534,7 +619,7 @@ class ObjectCode:
         return ObjectCode._init(module, "ptx", name=name, symbol_mapping=symbol_mapping)
 
     @staticmethod
-    def from_ltoir(module: Union[bytes, str], *, name: str = "", symbol_mapping: dict | None = None) -> "ObjectCode":
+    def from_ltoir(module: bytes | str, *, name: str = "", symbol_mapping: dict | None = None) -> ObjectCode:
         """Create an :class:`ObjectCode` instance from an existing LTOIR.
 
         Parameters
@@ -552,7 +637,7 @@ class ObjectCode:
         return ObjectCode._init(module, "ltoir", name=name, symbol_mapping=symbol_mapping)
 
     @staticmethod
-    def from_fatbin(module: Union[bytes, str], *, name: str = "", symbol_mapping: dict | None = None) -> "ObjectCode":
+    def from_fatbin(module: bytes | str, *, name: str = "", symbol_mapping: dict | None = None) -> ObjectCode:
         """Create an :class:`ObjectCode` instance from an existing fatbin.
 
         Parameters
@@ -570,7 +655,7 @@ class ObjectCode:
         return ObjectCode._init(module, "fatbin", name=name, symbol_mapping=symbol_mapping)
 
     @staticmethod
-    def from_object(module: Union[bytes, str], *, name: str = "", symbol_mapping: dict | None = None) -> "ObjectCode":
+    def from_object(module: bytes | str, *, name: str = "", symbol_mapping: dict | None = None) -> ObjectCode:
         """Create an :class:`ObjectCode` instance from an existing object code.
 
         Parameters
@@ -588,7 +673,7 @@ class ObjectCode:
         return ObjectCode._init(module, "object", name=name, symbol_mapping=symbol_mapping)
 
     @staticmethod
-    def from_library(module: Union[bytes, str], *, name: str = "", symbol_mapping: dict | None = None) -> "ObjectCode":
+    def from_library(module: bytes | str, *, name: str = "", symbol_mapping: dict | None = None) -> ObjectCode:
         """Create an :class:`ObjectCode` instance from an existing library.
 
         Parameters
@@ -613,16 +698,10 @@ class ObjectCode:
         module = self._module
         assert_type_str_or_bytes_like(module)
         if isinstance(module, str):
-            if self._backend_version == "new":
-                self._handle = handle_return(self._loader["file"](module.encode(), [], [], 0, [], [], 0))
-            else:  # "old" backend
-                self._handle = handle_return(self._loader["file"](module.encode()))
+            self._handle = handle_return(self._loader["file"](module.encode(), [], [], 0, [], [], 0))
             return
         if isinstance(module, (bytes, bytearray)):
-            if self._backend_version == "new":
-                self._handle = handle_return(self._loader["data"](module, [], [], 0, [], [], 0))
-            else:  # "old" backend
-                self._handle = handle_return(self._loader["data"](module, 0, [], []))
+            self._handle = handle_return(self._loader["data"](module, [], [], 0, [], [], 0))
             return
         raise_code_path_meant_to_be_unreachable()
 

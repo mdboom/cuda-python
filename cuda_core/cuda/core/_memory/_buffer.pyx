@@ -16,21 +16,17 @@ from cuda.core._memory cimport _ipc
 from cuda.core._resource_handles cimport (
     DevicePtrHandle,
     StreamHandle,
-    _init_handles_table,
     deviceptr_create_with_owner,
     as_intptr,
     as_cu,
     set_deallocation_stream,
 )
 
-# Prerequisite before calling handle API functions (see _cpp/DESIGN.md)
-_init_handles_table()
-
 from cuda.core._stream cimport Stream_accept, Stream
 from cuda.core._utils.cuda_utils cimport HANDLE_RETURN
 
 import sys
-from typing import TypeVar, Union
+from typing import TypeVar
 
 if sys.version_info >= (3, 12):
     from collections.abc import Buffer as BufferProtocol
@@ -44,7 +40,7 @@ from cuda.core._device import Device
 __all__ = ['Buffer', 'MemoryResource']
 
 
-DevicePointerT = Union[driver.CUdeviceptr, int, None]
+DevicePointerT = driver.CUdeviceptr | int | None
 """
 A type union of :obj:`~driver.CUdeviceptr`, `int` and `None` for hinting
 :attr:`Buffer.handle`.
