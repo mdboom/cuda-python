@@ -2288,6 +2288,8 @@ cdef class StatsLevel2:
     def read_size_kb_hist(self, val):
         if self._readonly:
             raise ValueError("This StatsLevel2 instance is read-only")
+        if len(val) != 32:
+            raise ValueError(f"Expected length { 32 } for field read_size_kb_hist, got {len(val)}")
         cdef view.array arr = view.array(shape=(32,), itemsize=sizeof(uint64_t), format="Q", mode="c")
         arr[:] = _numpy.asarray(val, dtype=_numpy.uint64)
         memcpy(<void *>(&(self._ptr[0].read_size_kb_hist)), <void *>(arr.data), sizeof(uint64_t) * len(val))
@@ -2303,6 +2305,8 @@ cdef class StatsLevel2:
     def write_size_kb_hist(self, val):
         if self._readonly:
             raise ValueError("This StatsLevel2 instance is read-only")
+        if len(val) != 32:
+            raise ValueError(f"Expected length { 32 } for field write_size_kb_hist, got {len(val)}")
         cdef view.array arr = view.array(shape=(32,), itemsize=sizeof(uint64_t), format="Q", mode="c")
         arr[:] = _numpy.asarray(val, dtype=_numpy.uint64)
         memcpy(<void *>(&(self._ptr[0].write_size_kb_hist)), <void *>(arr.data), sizeof(uint64_t) * len(val))
@@ -2441,7 +2445,7 @@ cdef class StatsLevel3:
             raise ValueError("This StatsLevel3 instance is read-only")
         cdef PerGpuStats val_ = val
         if len(val) != 16:
-            raise ValueError(f"Expected length 16 for field per_gpu_stats, got {len(val)}")
+            raise ValueError(f"Expected length { 16 } for field per_gpu_stats, got {len(val)}")
         memcpy(<void *>&(self._ptr[0].per_gpu_stats), <void *>(val_._get_ptr()), sizeof(CUfilePerGpuStats_t) * 16)
 
     @property
