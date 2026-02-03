@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 
 # This code was automatically generated with version 13.2.0. Do not modify it directly.
@@ -15661,7 +15661,7 @@ cdef class cudaKernelNodeParamsV2:
         return _dict_cudaKernelFunctionType[self._pvt_ptr[0].functionType]
     @functionType.setter
     def functionType(self, functionType not None : cudaKernelFunctionType):
-        self._pvt_ptr[0].functionType = functionType.value
+        self._pvt_ptr[0].functionType = int(functionType)
     {{endif}}
 {{endif}}
 {{if 'cudaExternalSemaphoreSignalNodeParams' in found_struct}}
@@ -18461,7 +18461,7 @@ cdef class cudaLaunchAttributeValue:
         return _dict_cudaLaunchAttributePortableClusterMode[self._pvt_ptr[0].portableClusterSizeMode]
     @portableClusterSizeMode.setter
     def portableClusterSizeMode(self, portableClusterSizeMode not None : cudaLaunchAttributePortableClusterMode):
-        self._pvt_ptr[0].portableClusterSizeMode = portableClusterSizeMode.value
+        self._pvt_ptr[0].portableClusterSizeMode = int(portableClusterSizeMode)
     {{endif}}
     {{if 'cudaLaunchAttributeValue.sharedMemoryMode' in found_struct}}
     @property
@@ -18471,7 +18471,7 @@ cdef class cudaLaunchAttributeValue:
         return _dict_cudaSharedMemoryMode[self._pvt_ptr[0].sharedMemoryMode]
     @sharedMemoryMode.setter
     def sharedMemoryMode(self, sharedMemoryMode not None : cudaSharedMemoryMode):
-        self._pvt_ptr[0].sharedMemoryMode = sharedMemoryMode.value
+        self._pvt_ptr[0].sharedMemoryMode = int(sharedMemoryMode)
     {{endif}}
 {{endif}}
 {{if 'cudaLaunchAttribute_st' in found_struct}}
@@ -40708,10 +40708,10 @@ def sizeof(objType):
     {{if True}}
     if objType == VdpOutputSurface:
         return sizeof(cyruntime.VdpOutputSurface){{endif}}
-    {{if 'cudaStreamAttrValue' in found_types}}
+    {{if True}}
     if objType == cudaStreamAttrValue:
         return sizeof(cyruntime.cudaStreamAttrValue){{endif}}
-    {{if 'cudaKernelNodeAttrValue' in found_types}}
+    {{if True}}
     if objType == cudaKernelNodeAttrValue:
         return sizeof(cyruntime.cudaKernelNodeAttrValue){{endif}}
     {{if True}}

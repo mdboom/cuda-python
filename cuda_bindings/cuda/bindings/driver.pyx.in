@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 
 # This code was automatically generated with version 13.2.0. Do not modify it directly.
@@ -12878,7 +12878,7 @@ cdef class CUlaunchAttributeValue_union:
         return _dict_CUlaunchAttributePortableClusterMode[self._pvt_ptr[0].portableClusterSizeMode]
     @portableClusterSizeMode.setter
     def portableClusterSizeMode(self, portableClusterSizeMode not None : CUlaunchAttributePortableClusterMode):
-        self._pvt_ptr[0].portableClusterSizeMode = portableClusterSizeMode.value
+        self._pvt_ptr[0].portableClusterSizeMode = int(portableClusterSizeMode)
     {{endif}}
     {{if 'CUlaunchAttributeValue_union.sharedMemoryMode' in found_struct}}
     @property
@@ -12888,7 +12888,7 @@ cdef class CUlaunchAttributeValue_union:
         return _dict_CUsharedMemoryMode[self._pvt_ptr[0].sharedMemoryMode]
     @sharedMemoryMode.setter
     def sharedMemoryMode(self, sharedMemoryMode not None : CUsharedMemoryMode):
-        self._pvt_ptr[0].sharedMemoryMode = sharedMemoryMode.value
+        self._pvt_ptr[0].sharedMemoryMode = int(sharedMemoryMode)
     {{endif}}
 {{endif}}
 {{if 'CUlaunchAttribute_st' in found_struct}}
@@ -13644,7 +13644,7 @@ cdef class CUstreamCigParam_st:
         return _dict_CUstreamCigDataType[self._pvt_ptr[0].streamSharedDataType]
     @streamSharedDataType.setter
     def streamSharedDataType(self, streamSharedDataType not None : CUstreamCigDataType):
-        self._pvt_ptr[0].streamSharedDataType = streamSharedDataType.value
+        self._pvt_ptr[0].streamSharedDataType = int(streamSharedDataType)
     {{endif}}
     {{if 'CUstreamCigParam_st.streamSharedData' in found_struct}}
     @property
