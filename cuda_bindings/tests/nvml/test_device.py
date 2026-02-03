@@ -105,16 +105,6 @@ def test_device_vgpu_get_heterogeneous_mode(all_devices):
         assert isinstance(mode, int)
 
 
-@pytest.mark.skipif(cuda_version_less_than(13010), reason="Introduced in 13.1")
-def test_read_prm_counters(all_devices):
-    for device in all_devices:
-        counters = nvml.PRMCounter_v1(5)
-        with unsupported_before(device, None):
-            read_counters = nvml.device_read_prm_counters_v1(device, counters)
-        assert counters is read_counters
-        assert len(read_counters) == 5
-
-
 def test_read_write_prm(all_devices):
     for device in all_devices:
         # Docs say supported in BLACKWELL or later

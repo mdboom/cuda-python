@@ -25758,29 +25758,6 @@ cpdef tuple device_get_vgpu_utilization(intptr_t device, unsigned long long last
     return (arr, utilization_samples_py)
 
 
-cpdef object device_read_prm_counters_v1(intptr_t device, PRMCounter_v1 counters):
-    """Read a list of GPU PRM Counters.
-
-    Args:
-        device (intptr_t): Identifer of target GPU device.
-        counters (PRMCounter_v1): Array holding the input parameters as well as the retrieved counter values.
-
-    .. seealso:: `nvmlDeviceReadPRMCounters_v1`
-    """
-    # Unlike in the raw C API, counter_list here is an PRMCounter_v1
-    # AUTO_LOWPP_ARRAY, and we need to wrap it in a nvmlPRMCounterList_v1_t.
-
-    cdef nvmlPRMCounterList_v1_t[1] counter_list
-    counter_list[0].numCounters = len(counters)
-    counter_list[0].counters = <nvmlPRMCounter_v1_t *>counters._get_ptr()
-
-    with nogil:
-        __status__ = nvmlDeviceReadPRMCounters_v1(<Device>device, <nvmlPRMCounterList_v1_t*>counter_list)
-    check_status(__status__)
-
-    return counters
-
-
 ctypedef union __nvmlPRMTLV_v1_value_t:
     char[496] inData
     char[496] outData
