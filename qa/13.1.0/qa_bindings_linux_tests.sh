@@ -50,6 +50,7 @@ git diff
 if [[ -d ./TestVenv && -z "$VIRTUAL_ENV" ]]; then
     . ./TestVenv/bin/activate
 fi
+python -VV
 pip list
 
 cd cuda_pathfinder/

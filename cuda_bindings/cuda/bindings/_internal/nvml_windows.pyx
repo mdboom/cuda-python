@@ -418,6 +418,7 @@ cdef void* __nvmlDeviceReadWritePRM_v1 = NULL
 cdef void* __nvmlDeviceGetGpuInstanceProfileInfoByIdV = NULL
 cdef void* __nvmlDeviceGetSramUniqueUncorrectedEccErrorCounts = NULL
 cdef void* __nvmlDeviceGetUnrepairableMemoryFlag_v1 = NULL
+cdef void* __nvmlDeviceReadPRMCounters_v1 = NULL
 cdef void* __nvmlDeviceSetRusdSettings_v1 = NULL
 
 
@@ -1483,6 +1484,9 @@ cdef int _init_nvml() except -1 nogil:
         global __nvmlDeviceGetUnrepairableMemoryFlag_v1
         __nvmlDeviceGetUnrepairableMemoryFlag_v1 = GetProcAddress(handle, 'nvmlDeviceGetUnrepairableMemoryFlag_v1')
 
+        global __nvmlDeviceReadPRMCounters_v1
+        __nvmlDeviceReadPRMCounters_v1 = GetProcAddress(handle, 'nvmlDeviceReadPRMCounters_v1')
+
         global __nvmlDeviceSetRusdSettings_v1
         __nvmlDeviceSetRusdSettings_v1 = GetProcAddress(handle, 'nvmlDeviceSetRusdSettings_v1')
 
@@ -2530,6 +2534,9 @@ cpdef dict _inspect_function_pointers():
 
     global __nvmlDeviceGetUnrepairableMemoryFlag_v1
     data["__nvmlDeviceGetUnrepairableMemoryFlag_v1"] = <intptr_t>__nvmlDeviceGetUnrepairableMemoryFlag_v1
+
+    global __nvmlDeviceReadPRMCounters_v1
+    data["__nvmlDeviceReadPRMCounters_v1"] = <intptr_t>__nvmlDeviceReadPRMCounters_v1
 
     global __nvmlDeviceSetRusdSettings_v1
     data["__nvmlDeviceSetRusdSettings_v1"] = <intptr_t>__nvmlDeviceSetRusdSettings_v1
@@ -5957,6 +5964,16 @@ cdef nvmlReturn_t _nvmlDeviceGetUnrepairableMemoryFlag_v1(nvmlDevice_t device, n
             raise FunctionNotFoundError("function nvmlDeviceGetUnrepairableMemoryFlag_v1 is not found")
     return (<nvmlReturn_t (*)(nvmlDevice_t, nvmlUnrepairableMemoryStatus_v1_t*) noexcept nogil>__nvmlDeviceGetUnrepairableMemoryFlag_v1)(
         device, unrepairableMemoryStatus)
+
+
+cdef nvmlReturn_t _nvmlDeviceReadPRMCounters_v1(nvmlDevice_t device, nvmlPRMCounterList_v1_t* counterList) except?_NVMLRETURN_T_INTERNAL_LOADING_ERROR nogil:
+    global __nvmlDeviceReadPRMCounters_v1
+    _check_or_init_nvml()
+    if __nvmlDeviceReadPRMCounters_v1 == NULL:
+        with gil:
+            raise FunctionNotFoundError("function nvmlDeviceReadPRMCounters_v1 is not found")
+    return (<nvmlReturn_t (*)(nvmlDevice_t, nvmlPRMCounterList_v1_t*) noexcept nogil>__nvmlDeviceReadPRMCounters_v1)(
+        device, counterList)
 
 
 cdef nvmlReturn_t _nvmlDeviceSetRusdSettings_v1(nvmlDevice_t device, nvmlRusdSettings_v1_t* settings) except?_NVMLRETURN_T_INTERNAL_LOADING_ERROR nogil:

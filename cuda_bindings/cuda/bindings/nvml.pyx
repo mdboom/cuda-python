@@ -14287,6 +14287,126 @@ cdef class NvlinkFirmwareVersion:
         return obj
 
 
+cdef _get_prm_counter_input_v1_dtype_offsets():
+    cdef nvmlPRMCounterInput_v1_t pod = nvmlPRMCounterInput_v1_t()
+    return _numpy.dtype({
+        'names': ['local_port'],
+        'formats': [_numpy.uint32],
+        'offsets': [
+            (<intptr_t>&(pod.localPort)) - (<intptr_t>&pod),
+        ],
+        'itemsize': sizeof(nvmlPRMCounterInput_v1_t),
+    })
+
+prm_counter_input_v1_dtype = _get_prm_counter_input_v1_dtype_offsets()
+
+cdef class PRMCounterInput_v1:
+    """Empty-initialize an instance of `nvmlPRMCounterInput_v1_t`.
+
+
+    .. seealso:: `nvmlPRMCounterInput_v1_t`
+    """
+    cdef:
+        nvmlPRMCounterInput_v1_t *_ptr
+        object _owner
+        bint _owned
+        bint _readonly
+
+    def __init__(self):
+        self._ptr = <nvmlPRMCounterInput_v1_t *>calloc(1, sizeof(nvmlPRMCounterInput_v1_t))
+        if self._ptr == NULL:
+            raise MemoryError("Error allocating PRMCounterInput_v1")
+        self._owner = None
+        self._owned = True
+        self._readonly = False
+
+    def __dealloc__(self):
+        cdef nvmlPRMCounterInput_v1_t *ptr
+        if self._owned and self._ptr != NULL:
+            ptr = self._ptr
+            self._ptr = NULL
+            free(ptr)
+
+    def __repr__(self):
+        return f"<{__name__}.PRMCounterInput_v1 object at {hex(id(self))}>"
+
+    @property
+    def ptr(self):
+        """Get the pointer address to the data as Python :class:`int`."""
+        return <intptr_t>(self._ptr)
+
+    cdef intptr_t _get_ptr(self):
+        return <intptr_t>(self._ptr)
+
+    def __int__(self):
+        return <intptr_t>(self._ptr)
+
+    def __eq__(self, other):
+        cdef PRMCounterInput_v1 other_
+        if not isinstance(other, PRMCounterInput_v1):
+            return False
+        other_ = other
+        return (memcmp(<void *><intptr_t>(self._ptr), <void *><intptr_t>(other_._ptr), sizeof(nvmlPRMCounterInput_v1_t)) == 0)
+
+    def __setitem__(self, key, val):
+        if key == 0 and isinstance(val, _numpy.ndarray):
+            self._ptr = <nvmlPRMCounterInput_v1_t *>malloc(sizeof(nvmlPRMCounterInput_v1_t))
+            if self._ptr == NULL:
+                raise MemoryError("Error allocating PRMCounterInput_v1")
+            memcpy(<void*>self._ptr, <void*><intptr_t>val.ctypes.data, sizeof(nvmlPRMCounterInput_v1_t))
+            self._owner = None
+            self._owned = True
+            self._readonly = not val.flags.writeable
+        else:
+            setattr(self, key, val)
+
+    @property
+    def local_port(self):
+        """int: Local port number."""
+        return self._ptr[0].localPort
+
+    @local_port.setter
+    def local_port(self, val):
+        if self._readonly:
+            raise ValueError("This PRMCounterInput_v1 instance is read-only")
+        self._ptr[0].localPort = val
+
+    @staticmethod
+    def from_data(data):
+        """Create an PRMCounterInput_v1 instance wrapping the given NumPy array.
+
+        Args:
+            data (_numpy.ndarray): a single-element array of dtype `prm_counter_input_v1_dtype` holding the data.
+        """
+        return __from_data(data, "prm_counter_input_v1_dtype", prm_counter_input_v1_dtype, PRMCounterInput_v1)
+
+    @staticmethod
+    def from_ptr(intptr_t ptr, bint readonly=False, object owner=None):
+        """Create an PRMCounterInput_v1 instance wrapping the given pointer.
+
+        Args:
+            ptr (intptr_t): pointer address as Python :class:`int` to the data.
+            owner (object): The Python object that owns the pointer. If not provided, data will be copied.
+            readonly (bool): whether the data is read-only (to the user). default is `False`.
+        """
+        if ptr == 0:
+            raise ValueError("ptr must not be null (0)")
+        cdef PRMCounterInput_v1 obj = PRMCounterInput_v1.__new__(PRMCounterInput_v1)
+        if owner is None:
+            obj._ptr = <nvmlPRMCounterInput_v1_t *>malloc(sizeof(nvmlPRMCounterInput_v1_t))
+            if obj._ptr == NULL:
+                raise MemoryError("Error allocating PRMCounterInput_v1")
+            memcpy(<void*>(obj._ptr), <void*>ptr, sizeof(nvmlPRMCounterInput_v1_t))
+            obj._owner = None
+            obj._owned = True
+        else:
+            obj._ptr = <nvmlPRMCounterInput_v1_t *>ptr
+            obj._owner = owner
+            obj._owned = False
+        obj._readonly = readonly
+        return obj
+
+
 cdef _get_excluded_device_info_dtype_offsets():
     cdef nvmlExcludedDeviceInfo_t pod = nvmlExcludedDeviceInfo_t()
     return _numpy.dtype({
@@ -15441,6 +15561,151 @@ cdef class FieldValue:
         data = _numpy.ndarray(size, buffer=buf, dtype=field_value_dtype)
         obj._data = data.view(_numpy.recarray)
 
+        return obj
+
+
+cdef _get_prm_counter_value_v1_dtype_offsets():
+    cdef nvmlPRMCounterValue_v1_t pod = nvmlPRMCounterValue_v1_t()
+    return _numpy.dtype({
+        'names': ['status', 'output_type', 'output_value'],
+        'formats': [_numpy.int32, _numpy.int32, value_dtype],
+        'offsets': [
+            (<intptr_t>&(pod.status)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.outputType)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.outputValue)) - (<intptr_t>&pod),
+        ],
+        'itemsize': sizeof(nvmlPRMCounterValue_v1_t),
+    })
+
+prm_counter_value_v1_dtype = _get_prm_counter_value_v1_dtype_offsets()
+
+cdef class PRMCounterValue_v1:
+    """Empty-initialize an instance of `nvmlPRMCounterValue_v1_t`.
+
+
+    .. seealso:: `nvmlPRMCounterValue_v1_t`
+    """
+    cdef:
+        nvmlPRMCounterValue_v1_t *_ptr
+        object _owner
+        bint _owned
+        bint _readonly
+
+    def __init__(self):
+        self._ptr = <nvmlPRMCounterValue_v1_t *>calloc(1, sizeof(nvmlPRMCounterValue_v1_t))
+        if self._ptr == NULL:
+            raise MemoryError("Error allocating PRMCounterValue_v1")
+        self._owner = None
+        self._owned = True
+        self._readonly = False
+
+    def __dealloc__(self):
+        cdef nvmlPRMCounterValue_v1_t *ptr
+        if self._owned and self._ptr != NULL:
+            ptr = self._ptr
+            self._ptr = NULL
+            free(ptr)
+
+    def __repr__(self):
+        return f"<{__name__}.PRMCounterValue_v1 object at {hex(id(self))}>"
+
+    @property
+    def ptr(self):
+        """Get the pointer address to the data as Python :class:`int`."""
+        return <intptr_t>(self._ptr)
+
+    cdef intptr_t _get_ptr(self):
+        return <intptr_t>(self._ptr)
+
+    def __int__(self):
+        return <intptr_t>(self._ptr)
+
+    def __eq__(self, other):
+        cdef PRMCounterValue_v1 other_
+        if not isinstance(other, PRMCounterValue_v1):
+            return False
+        other_ = other
+        return (memcmp(<void *><intptr_t>(self._ptr), <void *><intptr_t>(other_._ptr), sizeof(nvmlPRMCounterValue_v1_t)) == 0)
+
+    def __setitem__(self, key, val):
+        if key == 0 and isinstance(val, _numpy.ndarray):
+            self._ptr = <nvmlPRMCounterValue_v1_t *>malloc(sizeof(nvmlPRMCounterValue_v1_t))
+            if self._ptr == NULL:
+                raise MemoryError("Error allocating PRMCounterValue_v1")
+            memcpy(<void*>self._ptr, <void*><intptr_t>val.ctypes.data, sizeof(nvmlPRMCounterValue_v1_t))
+            self._owner = None
+            self._owned = True
+            self._readonly = not val.flags.writeable
+        else:
+            setattr(self, key, val)
+
+    @property
+    def output_value(self):
+        """Value: Output value."""
+        return Value.from_ptr(<intptr_t>&(self._ptr[0].outputValue), self._readonly, self)
+
+    @output_value.setter
+    def output_value(self, val):
+        if self._readonly:
+            raise ValueError("This PRMCounterValue_v1 instance is read-only")
+        cdef Value val_ = val
+        memcpy(<void *>&(self._ptr[0].outputValue), <void *>(val_._get_ptr()), sizeof(nvmlValue_t) * 1)
+
+    @property
+    def status(self):
+        """int: Status of the PRM counter read."""
+        return <int>(self._ptr[0].status)
+
+    @status.setter
+    def status(self, val):
+        if self._readonly:
+            raise ValueError("This PRMCounterValue_v1 instance is read-only")
+        self._ptr[0].status = <nvmlReturn_t><int>val
+
+    @property
+    def output_type(self):
+        """int: Output value type."""
+        return <int>(self._ptr[0].outputType)
+
+    @output_type.setter
+    def output_type(self, val):
+        if self._readonly:
+            raise ValueError("This PRMCounterValue_v1 instance is read-only")
+        self._ptr[0].outputType = <nvmlValueType_t><int>val
+
+    @staticmethod
+    def from_data(data):
+        """Create an PRMCounterValue_v1 instance wrapping the given NumPy array.
+
+        Args:
+            data (_numpy.ndarray): a single-element array of dtype `prm_counter_value_v1_dtype` holding the data.
+        """
+        return __from_data(data, "prm_counter_value_v1_dtype", prm_counter_value_v1_dtype, PRMCounterValue_v1)
+
+    @staticmethod
+    def from_ptr(intptr_t ptr, bint readonly=False, object owner=None):
+        """Create an PRMCounterValue_v1 instance wrapping the given pointer.
+
+        Args:
+            ptr (intptr_t): pointer address as Python :class:`int` to the data.
+            owner (object): The Python object that owns the pointer. If not provided, data will be copied.
+            readonly (bool): whether the data is read-only (to the user). default is `False`.
+        """
+        if ptr == 0:
+            raise ValueError("ptr must not be null (0)")
+        cdef PRMCounterValue_v1 obj = PRMCounterValue_v1.__new__(PRMCounterValue_v1)
+        if owner is None:
+            obj._ptr = <nvmlPRMCounterValue_v1_t *>malloc(sizeof(nvmlPRMCounterValue_v1_t))
+            if obj._ptr == NULL:
+                raise MemoryError("Error allocating PRMCounterValue_v1")
+            memcpy(<void*>(obj._ptr), <void*>ptr, sizeof(nvmlPRMCounterValue_v1_t))
+            obj._owner = None
+            obj._owned = True
+        else:
+            obj._ptr = <nvmlPRMCounterValue_v1_t *>ptr
+            obj._owner = owner
+            obj._owned = False
+        obj._readonly = readonly
         return obj
 
 
@@ -17851,6 +18116,160 @@ cdef class VgpuInstancesUtilizationInfo_v1:
             obj._owned = False
         obj._readonly = readonly
         obj._refs = {}
+        return obj
+
+
+cdef _get_prm_counter_v1_dtype_offsets():
+    cdef nvmlPRMCounter_v1_t pod = nvmlPRMCounter_v1_t()
+    return _numpy.dtype({
+        'names': ['counter_id', 'in_data', 'counter_value'],
+        'formats': [_numpy.uint32, prm_counter_input_v1_dtype, prm_counter_value_v1_dtype],
+        'offsets': [
+            (<intptr_t>&(pod.counterId)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.inData)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.counterValue)) - (<intptr_t>&pod),
+        ],
+        'itemsize': sizeof(nvmlPRMCounter_v1_t),
+    })
+
+prm_counter_v1_dtype = _get_prm_counter_v1_dtype_offsets()
+
+cdef class PRMCounter_v1:
+    """Empty-initialize an array of `nvmlPRMCounter_v1_t`.
+
+    The resulting object is of length `size` and of dtype `prm_counter_v1_dtype`.
+    If default-constructed, the instance represents a single struct.
+
+    Args:
+        size (int): number of structs, default=1.
+
+
+    .. seealso:: `nvmlPRMCounter_v1_t`
+    """
+    cdef:
+        readonly object _data
+
+
+
+    def __init__(self, size=1):
+        arr = _numpy.empty(size, dtype=prm_counter_v1_dtype)
+        self._data = arr.view(_numpy.recarray)
+        assert self._data.itemsize == sizeof(nvmlPRMCounter_v1_t), \
+            f"itemsize {self._data.itemsize} mismatches struct size { sizeof(nvmlPRMCounter_v1_t) }"
+
+    def __repr__(self):
+        if self._data.size > 1:
+            return f"<{__name__}.PRMCounter_v1_Array_{self._data.size} object at {hex(id(self))}>"
+        else:
+            return f"<{__name__}.PRMCounter_v1 object at {hex(id(self))}>"
+
+    @property
+    def ptr(self):
+        """Get the pointer address to the data as Python :class:`int`."""
+        return self._data.ctypes.data
+
+    cdef intptr_t _get_ptr(self):
+        return self._data.ctypes.data
+
+    def __int__(self):
+        if self._data.size > 1:
+            raise TypeError("int() argument must be a bytes-like object of size 1. "
+                            "To get the pointer address of an array, use .ptr")
+        return self._data.ctypes.data
+
+    def __len__(self):
+        return self._data.size
+
+    def __eq__(self, other):
+        cdef object self_data = self._data
+        if (not isinstance(other, PRMCounter_v1)) or self_data.size != other._data.size or self_data.dtype != other._data.dtype:
+            return False
+        return bool((self_data == other._data).all())
+
+    @property
+    def counter_id(self):
+        """Union[~_numpy.uint32, int]: Counter ID, one of nvmlPRMCounterId_t."""
+        if self._data.size == 1:
+            return int(self._data.counter_id[0])
+        return self._data.counter_id
+
+    @counter_id.setter
+    def counter_id(self, val):
+        self._data.counter_id = val
+
+    @property
+    def in_data(self):
+        """prm_counter_input_v1_dtype: PRM input values."""
+        return self._data.in_data
+
+    @in_data.setter
+    def in_data(self, val):
+        self._data.in_data = val
+
+    @property
+    def counter_value(self):
+        """prm_counter_value_v1_dtype: Counter value."""
+        return self._data.counter_value
+
+    @counter_value.setter
+    def counter_value(self, val):
+        self._data.counter_value = val
+
+    def __getitem__(self, key):
+        cdef ssize_t key_
+        cdef ssize_t size
+        if isinstance(key, int):
+            key_ = key
+            size = self._data.size
+            if key_ >= size or key_ <= -(size+1):
+                raise IndexError("index is out of bounds")
+            if key_ < 0:
+                key_ += size
+            return PRMCounter_v1.from_data(self._data[key_:key_+1])
+        out = self._data[key]
+        if isinstance(out, _numpy.recarray) and out.dtype == prm_counter_v1_dtype:
+            return PRMCounter_v1.from_data(out)
+        return out
+
+    def __setitem__(self, key, val):
+        self._data[key] = val
+
+    @staticmethod
+    def from_data(data):
+        """Create an PRMCounter_v1 instance wrapping the given NumPy array.
+
+        Args:
+            data (_numpy.ndarray): a 1D array of dtype `prm_counter_v1_dtype` holding the data.
+        """
+        cdef PRMCounter_v1 obj = PRMCounter_v1.__new__(PRMCounter_v1)
+        if not isinstance(data, _numpy.ndarray):
+            raise TypeError("data argument must be a NumPy ndarray")
+        if data.ndim != 1:
+            raise ValueError("data array must be 1D")
+        if data.dtype != prm_counter_v1_dtype:
+            raise ValueError("data array must be of dtype prm_counter_v1_dtype")
+        obj._data = data.view(_numpy.recarray)
+
+        return obj
+
+    @staticmethod
+    def from_ptr(intptr_t ptr, size_t size=1, bint readonly=False):
+        """Create an PRMCounter_v1 instance wrapping the given pointer.
+
+        Args:
+            ptr (intptr_t): pointer address as Python :class:`int` to the data.
+            size (int): number of structs, default=1.
+            readonly (bool): whether the data is read-only (to the user). default is `False`.
+        """
+        if ptr == 0:
+            raise ValueError("ptr must not be null (0)")
+        cdef PRMCounter_v1 obj = PRMCounter_v1.__new__(PRMCounter_v1)
+        cdef flag = cpython.buffer.PyBUF_READ if readonly else cpython.buffer.PyBUF_WRITE
+        cdef object buf = cpython.memoryview.PyMemoryView_FromMemory(
+            <char*>ptr, sizeof(nvmlPRMCounter_v1_t) * size, flag)
+        data = _numpy.ndarray(size, buffer=buf, dtype=prm_counter_v1_dtype)
+        obj._data = data.view(_numpy.recarray)
+
         return obj
 
 
@@ -25387,6 +25806,29 @@ cpdef tuple device_get_vgpu_utilization(intptr_t device, unsigned long long last
     check_status(__status__)
 
     return (arr, utilization_samples_py)
+
+
+cpdef object device_read_prm_counters_v1(intptr_t device, PRMCounter_v1 counters):
+    """Read a list of GPU PRM Counters.
+
+    Args:
+        device (intptr_t): Identifer of target GPU device.
+        counters (PRMCounter_v1): Array holding the input parameters as well as the retrieved counter values.
+
+    .. seealso:: `nvmlDeviceReadPRMCounters_v1`
+    """
+    # Unlike in the raw C API, counter_list here is an PRMCounter_v1
+    # AUTO_LOWPP_ARRAY, and we need to wrap it in a nvmlPRMCounterList_v1_t.
+
+    cdef nvmlPRMCounterList_v1_t[1] counter_list
+    counter_list[0].numCounters = len(counters)
+    counter_list[0].counters = <nvmlPRMCounter_v1_t *>counters._get_ptr()
+
+    with nogil:
+        __status__ = nvmlDeviceReadPRMCounters_v1(<Device>device, <nvmlPRMCounterList_v1_t*>counter_list)
+    check_status(__status__)
+
+    return counters
 
 
 ctypedef union __nvmlPRMTLV_v1_value_t:

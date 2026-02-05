@@ -73,6 +73,7 @@ ctypedef nvmlPRMTLV_v1_t PRMTLV_v1
 ctypedef nvmlVgpuSchedulerLogInfo_v2_t VgpuSchedulerLogInfo_v2
 ctypedef nvmlVgpuSchedulerSetState_t VgpuSchedulerSetState
 ctypedef nvmlGpmMetricsGet_t GpmMetricsGet
+ctypedef nvmlPRMCounterList_v1_t PRMCounterList_v1
 ctypedef nvmlWorkloadPowerProfileProfilesInfo_v1_t WorkloadPowerProfileProfilesInfo_v1
 
 

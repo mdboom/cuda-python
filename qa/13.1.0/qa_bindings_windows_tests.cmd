@@ -28,6 +28,7 @@ git status
 git diff
 
 call .\TestVenv\Scripts\activate.bat
+python -VV
 pip list
 
 cd cuda_pathfinder\

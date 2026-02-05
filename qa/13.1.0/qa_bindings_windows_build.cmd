@@ -4,7 +4,7 @@ REM SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. 
 REM SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 
 REM HINT to get started:
-REM     git clone --quiet --depth=1 --branch ctk-next https://github.com/rwgk/cuda-python-private.git ctk-next
+REM     git clone --branch ctk-next https://github.com/rwgk/cuda-python-private.git ctk-next
 REM     cd ctk-next\
 
 set "CUDA_HOME=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v%~1"
@@ -31,8 +31,10 @@ git log -n 1
 git status
 git diff
 
-python -m venv TestVenv
+python3 -VV
+python3 -m venv TestVenv
 call .\TestVenv\Scripts\activate.bat
+python -VV
 python -m pip install --upgrade pip
 
 cd cuda_pathfinder\

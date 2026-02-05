@@ -1358,6 +1358,9 @@ ctypedef struct nvmlRusdSettings_v1_t 'nvmlRusdSettings_v1_t':
     unsigned int version
     unsigned long long pollMask
 
+ctypedef struct nvmlPRMCounterInput_v1_t 'nvmlPRMCounterInput_v1_t':
+    unsigned int localPort
+
 ctypedef struct nvmlVgpuSchedulerStateInfo_v2_t 'nvmlVgpuSchedulerStateInfo_v2_t':
     unsigned int engineId
     unsigned int schedulerPolicy
@@ -1569,6 +1572,11 @@ ctypedef struct nvmlFieldValue_t 'nvmlFieldValue_t':
     nvmlReturn_t nvmlReturn
     nvmlValue_t value
 
+ctypedef struct nvmlPRMCounterValue_v1_t 'nvmlPRMCounterValue_v1_t':
+    nvmlReturn_t status
+    nvmlValueType_t outputType
+    nvmlValue_t outputValue
+
 ctypedef struct nvmlGpuThermalSettings_t 'nvmlGpuThermalSettings_t':
     unsigned int count
     _anon_pod0 sensor[3]
@@ -1719,6 +1727,11 @@ ctypedef struct nvmlVgpuInstancesUtilizationInfo_v1_t 'nvmlVgpuInstancesUtilizat
     unsigned long long lastSeenTimeStamp
     nvmlVgpuInstanceUtilizationInfo_v1_t* vgpuUtilArray
 
+ctypedef struct nvmlPRMCounter_v1_t 'nvmlPRMCounter_v1_t':
+    unsigned int counterId
+    nvmlPRMCounterInput_v1_t inData
+    nvmlPRMCounterValue_v1_t counterValue
+
 ctypedef nvmlUUID_v1_t nvmlUUID_t 'nvmlUUID_t'
 ctypedef nvmlProcessesUtilizationInfo_v1_t nvmlProcessesUtilizationInfo_t 'nvmlProcessesUtilizationInfo_t'
 ctypedef struct nvmlVgpuSchedulerLog_t 'nvmlVgpuSchedulerLog_t':
@@ -1786,6 +1799,10 @@ ctypedef struct nvmlNvLinkInfo_v2_t 'nvmlNvLinkInfo_v2_t':
 
 ctypedef nvmlVgpuProcessesUtilizationInfo_v1_t nvmlVgpuProcessesUtilizationInfo_t 'nvmlVgpuProcessesUtilizationInfo_t'
 ctypedef nvmlVgpuInstancesUtilizationInfo_v1_t nvmlVgpuInstancesUtilizationInfo_t 'nvmlVgpuInstancesUtilizationInfo_t'
+ctypedef struct nvmlPRMCounterList_v1_t 'nvmlPRMCounterList_v1_t':
+    unsigned int numCounters
+    nvmlPRMCounter_v1_t* counters
+
 ctypedef nvmlVgpuSchedulerStateInfo_v1_t nvmlVgpuSchedulerStateInfo_t 'nvmlVgpuSchedulerStateInfo_t'
 ctypedef nvmlVgpuSchedulerLogInfo_v1_t nvmlVgpuSchedulerLogInfo_t 'nvmlVgpuSchedulerLogInfo_t'
 ctypedef nvmlVgpuSchedulerState_v1_t nvmlVgpuSchedulerState_t 'nvmlVgpuSchedulerState_t'
@@ -2143,4 +2160,5 @@ cdef nvmlReturn_t nvmlDeviceReadWritePRM_v1(nvmlDevice_t device, nvmlPRMTLV_v1_t
 cdef nvmlReturn_t nvmlDeviceGetGpuInstanceProfileInfoByIdV(nvmlDevice_t device, unsigned int profileId, nvmlGpuInstanceProfileInfo_v2_t* info) except?_NVMLRETURN_T_INTERNAL_LOADING_ERROR nogil
 cdef nvmlReturn_t nvmlDeviceGetSramUniqueUncorrectedEccErrorCounts(nvmlDevice_t device, nvmlEccSramUniqueUncorrectedErrorCounts_t* errorCounts) except?_NVMLRETURN_T_INTERNAL_LOADING_ERROR nogil
 cdef nvmlReturn_t nvmlDeviceGetUnrepairableMemoryFlag_v1(nvmlDevice_t device, nvmlUnrepairableMemoryStatus_v1_t* unrepairableMemoryStatus) except?_NVMLRETURN_T_INTERNAL_LOADING_ERROR nogil
+cdef nvmlReturn_t nvmlDeviceReadPRMCounters_v1(nvmlDevice_t device, nvmlPRMCounterList_v1_t* counterList) except?_NVMLRETURN_T_INTERNAL_LOADING_ERROR nogil
 cdef nvmlReturn_t nvmlDeviceSetRusdSettings_v1(nvmlDevice_t device, nvmlRusdSettings_v1_t* settings) except?_NVMLRETURN_T_INTERNAL_LOADING_ERROR nogil

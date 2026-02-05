@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 
 # HINT to get started:
-#     git clone --quiet --depth=1 --branch ctk-next https://github.com/rwgk/cuda-python-private.git ctk-next
+#     git clone --branch ctk-next https://github.com/rwgk/cuda-python-private.git ctk-next
 #     cd ctk-next/
 
 if (($# != 1)); then
@@ -32,7 +32,9 @@ git log -n 1
 git status
 git diff
 
-python -m venv TestVenv && . TestVenv/bin/activate && pip install --upgrade pip
+python3 -VV
+python3 -c 'import sys; sys.exit(sys.version_info < (3,10))' || exit 1
+python3 -m venv TestVenv && . TestVenv/bin/activate && python -VV && pip install --upgrade pip
 
 cd cuda_pathfinder/
 pip install -v -e . --group test
