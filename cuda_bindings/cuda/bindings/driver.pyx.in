@@ -16,6 +16,9 @@ from cpython.buffer cimport PyObject_CheckBuffer, PyObject_GetBuffer, PyBuffer_R
 from cpython.bytes cimport PyBytes_FromStringAndSize
 import cuda.bindings.driver
 from libcpp.map cimport map
+from ._bindings cimport cydriver as _cydriver
+
+cdef void *__cuTensorMapEncodeTiled = NULL
 
 _driver = globals()
 include "_lib/utils.pxi"
@@ -24212,8 +24215,10 @@ def cuInit(unsigned int Flags):
     CUresult
         :py:obj:`~.CUDA_SUCCESS`, :py:obj:`~.CUDA_ERROR_INVALID_VALUE`, :py:obj:`~.CUDA_ERROR_INVALID_DEVICE`, :py:obj:`~.CUDA_ERROR_SYSTEM_DRIVER_MISMATCH`, :py:obj:`~.CUDA_ERROR_COMPAT_NOT_SUPPORTED_ON_DEVICE`
     """
+    global __cuTensorMapEncodeTiled
     with nogil:
         err = cydriver.cuInit(Flags)
+    __cuTensorMapEncodeTiled = <void *>_cydriver.get_function()
     return (_dict_CUresult[err],)
 {{endif}}
 
@@ -50051,7 +50056,31 @@ def cuTensorMapEncodeTiled(tensorDataType not None : CUtensorMapDataType, tensor
     cdef cydriver.CUtensorMapL2promotion cyl2Promotion = int(l2Promotion)
     cdef cydriver.CUtensorMapFloatOOBfill cyoobFill = int(oobFill)
     with nogil:
-        err = cydriver.cuTensorMapEncodeTiled(<cydriver.CUtensorMap*>tensorMap._pvt_ptr, cytensorDataType, cytensorRank, cyglobalAddress_ptr, cyglobalDim, cyglobalStrides, cyboxDim, cyelementStrides, cyinterleave, cyswizzle, cyl2Promotion, cyoobFill)
+        err = (<cydriver.CUresult (*)(
+            cydriver.CUtensorMap*, 
+            cydriver.CUtensorMapDataType, 
+            cydriver.cuuint32_t, 
+            void*, 
+            const cydriver.cuuint64_t*, 
+            const cydriver.cuuint64_t*, 
+            const cydriver.cuuint32_t*, 
+            const cydriver.cuuint32_t*, 
+            cydriver.CUtensorMapInterleave, 
+            cydriver.CUtensorMapSwizzle, 
+            cydriver.CUtensorMapL2promotion, 
+            cydriver.CUtensorMapFloatOOBfill) except ?cydriver.CUDA_ERROR_NOT_FOUND nogil> __cuTensorMapEncodeTiled)(
+                <cydriver.CUtensorMap *>tensorMap._pvt_ptr, 
+                cytensorDataType, 
+                cytensorRank, 
+                cyglobalAddress_ptr, 
+                cyglobalDim, 
+                cyglobalStrides, 
+                cyboxDim, 
+                cyelementStrides, 
+                cyinterleave, 
+                cyswizzle, 
+                cyl2Promotion, 
+                cyoobFill)
     if err != cydriver.CUDA_SUCCESS:
         return (_dict_CUresult[err], None)
     return (_dict_CUresult[err], tensorMap)

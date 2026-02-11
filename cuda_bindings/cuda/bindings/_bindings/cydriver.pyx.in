@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 
 # This code was automatically generated with version 13.1.0. Do not modify it directly.
@@ -13,6 +13,9 @@ import os
 import sys
 cimport cuda.bindings._bindings.loader as loader
 import threading
+
+cdef intptr_t get_function() nogil:
+    return <intptr_t><void *>__cuTensorMapEncodeTiled
 
 cdef object __symbol_lock = threading.Lock()
 cdef bint __cuPythonInit = False
