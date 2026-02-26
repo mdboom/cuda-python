@@ -41,6 +41,22 @@ A helper script is available for downloading `linux-64`, `linux-aarch64`, and `w
 
 <img src="ctk-next.drawio.svg" width="400">
 
+### Helper Scripts
+
+The `qa/helpers/` directory contains automation scripts for common CTK update tasks. To use them, first activate the helpers:
+
+```bash
+. qa/helpers/activate_helpers.sh
+```
+
+This adds the helper directory to your `PATH` and provides bash functions for common workflows:
+
+* **cybind updates**: `cybind_header_update.sh` and `run_cybind()` function
+* **cython-gen updates**: `run_cython_gen()` function
+* **enum updates**: `update_cuda_core_enum_explanations.sh`
+
+See the individual sections below for usage details.
+
 ### cython-gen
 
 The [`cuda-python-private:cython-gen`](https://github.com/NVIDIA/cuda-python-private/tree/cython-gen) branch contains
@@ -53,7 +69,7 @@ It includes scripts for:
 
 **Branch naming convention**: For CTK 13.X, create a branch named `cython-gen-next-130X0` (e.g., `cython-gen-next-13020` for CTK 13.2).
 
-**Reference previous versions**: When updating for a new CTK version, archived branches from previous versions are invaluable references:
+**Reference previous versions**: When updating for a new CTK version, archived branches from previous versions are valuable references:
 * Check `archive/cython-gen-next-13010` (or similar) to see how new APIs were added
 * Look at `configs/driver/_driver.py` in the previous branch to understand patterns for:
   - `signature_mapping`: Maps API names to parameter handling types (`SigType`)
@@ -61,8 +77,17 @@ It includes scripts for:
   - `cuda_api_introduced_version`: Records the CTK version each API was introduced
 * **Important**: Don't delete old branches—archive them (e.g., `archive/cython-gen-next-13020`) for future reference
 
-To invoke the top-level script:
+**Update process**:
+
+Use the helper function from the cython-gen repository root:
+```bash
+cd /path/to/cython-gen
+run_cython_gen 13.2 ../ctk-next
 ```
+This automatically creates/updates the virtual environment if needed and runs the full regeneration workflow with proper logging.
+
+Alternatively, you can invoke the script directly:
+```bash
 CUDA_HOME=/usr/local/cuda-13.2 python regenerate.py -o ../ctk-next
 ```
 
@@ -77,21 +102,28 @@ All other library bindings provided by `cuda-bindings` are supported by [`cybind
 
 **Branch naming convention**: For CTK 13.X, create a branch named `cybind-next-130X0` (e.g., `cybind-next-13020` for CTK 13.2).
 
-**Reference previous versions**: Archived branches from previous versions are invaluable:
+**Reference previous versions**: Archived branches from previous versions are valuable references:
 * Check `archive/cybind-next-13010` (or similar) to see how headers were updated
 * Look at config files (e.g., `cybind/assets/configs/config_cufile.py`) to see version update patterns
 * **Important**: Don't delete old branches—archive them (e.g., `archive/cybind-next-13020`) for future reference
 
 **Update process**:
-1. Copy new headers from `/usr/local/cuda-13.X/include/` (or subdirectories) to `cybind/assets/headers/<library>/13.X.0/`
-2. Update version lists in config files (e.g., `cybind/assets/configs/config_cufile.py`)
-3. For `cufile.h`, manual docstring patches may be required (see previous version branches for examples)
 
-After setting up the environment (see cybind documentation), the `cuda-python` bindings can be generated with:
+1. **Update headers**: Use the helper script from the cybind repository root:
+   ```bash
+   cd /path/to/cybind
+   cybind_header_update.sh 13.2
+   ```
+   This copies headers from `/usr/local/cuda-13.2/` and applies necessary patches (e.g., `cufile.h` docstring fixes).
 
-```
-CUDA_PATH=/usr/local/cuda-13.2 python -m cybind -vvv --generate cufile nvjitlink nvml nvvm --output-dir ../ctk-next/cuda_bindings
-```
+2. **Update version lists**: Manually update version lists in config files (e.g., `cybind/assets/configs/config_cufile.py`).
+
+3. **Generate bindings**: Use the helper function from the cybind repository root:
+   ```bash
+   cd /path/to/cybind
+   run_cybind 13.2 ../ctk-next
+   ```
+   This automatically creates/updates the virtual environment if needed and generates bindings with proper logging.
 
 **Common issues when updating cybind**:
 * Docstring parsing errors: Some headers may need manual patches to ensure proper docstring formatting (e.g., adding missing `@param` tags)
@@ -121,24 +153,28 @@ may need to be updated, based on the table shown under the
 
 #### CUDA enums
 
-Two files under `cuda/core/_utils/` need to be updated semi-manually:
+Two files under `cuda/core/_utils/` need to be updated:
 
-* `toolshed/reformat_cuda_enums_as_py.py` → `cuda/core/_utils/driver_cu_result_explanations.py`
-* `toolshed/reformat_cuda_enums_as_py.py` → `cuda/core/_utils/runtime_cuda_error_explanations.py`
+* `cuda/core/_utils/driver_cu_result_explanations.py`
+* `cuda/core/_utils/runtime_cuda_error_explanations.py`
 
 **Update process**:
-1. Run the script on the appropriate header:
-   ```bash
-   python toolshed/reformat_cuda_enums_as_py.py /usr/local/cuda-13.2/include/driver_types.h > /tmp/runtime_enum_output.py
-   python toolshed/reformat_cuda_enums_as_py.py /usr/local/cuda-13.2/include/cuda.h > /tmp/driver_enum_output.py
-   ```
-2. Replace the dictionary in each target file with the generated output (preserve the header comments)
-3. Update the CUDA Toolkit version number in the comment (e.g., from `v13.1.0` to `v13.2.0`)
-4. Verify the files compile: `python -m py_compile <file>`
 
-**Note**: The script automatically detects which enum it's parsing based on the header file. The generated output includes only the dictionary—you need to preserve the file header manually.
+Use the helper script from the ctk-next (or cuda-python) repository root:
+```bash
+cd /path/to/ctk-next
+qa/helpers/update_cuda_core_enum_explanations.sh 13.2
+```
 
-See the instructions in the header of each of the files for additional details.
+This script:
+1. Generates enum explanations using `toolshed/reformat_cuda_enums_as_py.py`
+2. Updates both target files while preserving headers
+3. Updates the CUDA Toolkit version number in comments
+4. Formats files with ruff via pre-commit
+5. Verifies files compile
+6. Reports git diff with preview
+
+The script automatically detects which enum to parse based on the header file and handles all the file manipulation automatically.
 
 ---
 
@@ -180,7 +216,7 @@ This was very helpful for keeping the large-scale changes reasonably easy to rev
 
 ### Reference Previous Version Branches
 
-**Highly recommended**: When updating for a new CTK version, archived branches from previous versions are invaluable references:
+**Highly recommended**: When updating for a new CTK version, archived branches from previous versions are valuable references:
 
 * **cython-gen**: Check `archive/cython-gen-next-13010` (or similar) to see:
   - How new APIs were added to `signature_mapping`
@@ -206,12 +242,12 @@ This was very helpful for keeping the large-scale changes reasonably easy to rev
    - Re-run until generation succeeds
 
 2. **cybind updates**:
-   - Copy headers from new CTK installation
-   - Update config file version lists
-   - Apply any necessary manual patches (check previous version)
-   - Run generator and commit results
+   - Run `cybind_header_update.sh` to copy headers and apply patches
+   - Update config file version lists manually
+   - Run `run_cybind` to generate bindings
+   - Commit results
 
 3. **Enum updates**:
-   - Run reformat script on new headers
-   - Replace dictionaries and update version numbers
-   - Verify compilation and test health checks pass
+   - Run `update_cuda_core_enum_explanations.sh` to update both enum files
+   - Review the git diff output
+   - Commit results

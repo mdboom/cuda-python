@@ -1,0 +1,229 @@
+#!/bin/bash
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
+
+# Helper script to add qa/helpers directory to PATH
+# Usage: . /wrk/forked/ctk-next/qa/helpers/activate_helpers.sh
+
+# Get the directory where this script lives
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Prepend to PATH if not already present
+if [[ ":$PATH:" != *":${SCRIPT_DIR}:"* ]]; then
+    export PATH="${SCRIPT_DIR}:${PATH}"
+    echo "Added ${SCRIPT_DIR} to PATH"
+else
+    echo "${SCRIPT_DIR} is already in PATH"
+fi
+
+# Helper function to validate output directory
+_validate_output_dir() {
+    local OUTPUT_DIR_ARG="$1"
+    local OUTPUT_DIR
+    OUTPUT_DIR="$(realpath "$OUTPUT_DIR_ARG" 2>/dev/null || echo "")"
+    if [ -z "$OUTPUT_DIR" ] || [ ! -d "$OUTPUT_DIR" ]; then
+        echo "ERROR: Output directory does not exist: $OUTPUT_DIR_ARG" >&2
+        echo "  Resolved path: ${OUTPUT_DIR:-<could not resolve>}" >&2
+        return 1
+    fi
+    echo "$OUTPUT_DIR"
+}
+
+# Helper function to ensure log directory is set
+_ensure_log_dir() {
+    if [ -z "${L:-}" ]; then
+        local LOG_DIR="/tmp/${USER}-logs"
+        mkdir -p "$LOG_DIR"
+        export L="$LOG_DIR"
+        echo "Set L=$L"
+    fi
+}
+
+# Helper function to validate CUDA installation
+_validate_cuda_home() {
+    local CTK_VERSION="$1"
+    local CUDA_HOME="/usr/local/cuda-${CTK_VERSION}"
+    if [ ! -d "$CUDA_HOME" ]; then
+        echo "ERROR: CUDA installation not found at $CUDA_HOME" >&2
+        return 1
+    fi
+    echo "$CUDA_HOME"
+}
+
+# Helper function to create fresh virtual environment
+_create_fresh_venv() {
+    local VENV_NAME="$1"
+    local INSTALL_CMD="$2"
+    echo "Creating fresh ${VENV_NAME} virtual environment..."
+    rm -rf "$VENV_NAME"
+    python -m venv "$VENV_NAME"
+    (
+        . "${VENV_NAME}/bin/activate"
+        pip install --upgrade pip
+        eval "$INSTALL_CMD"
+    )
+    echo "Fresh ${VENV_NAME} virtual environment created successfully!"
+}
+
+# Helper function to create log file timestamp
+# Uses timezone offset if not in Los Angeles timezone to reduce the potential for confusion
+_make_log_timestamp() {
+    local TZ_ABBR
+    TZ_ABBR="$(date +%Z 2>/dev/null || echo "")"
+
+    # Check if we're in Los Angeles timezone (PST/PDT)
+    if [[ "$TZ_ABBR" == "PST" ]] || [[ "$TZ_ABBR" == "PDT" ]]; then
+        date "+%Y-%m-%d+%H%M%S"
+    else
+        date "+%Y-%m-%d+%H%M%S%z"
+    fi
+}
+
+# Function to create a fresh cybind virtual environment
+cybind_fresh_venv() {
+    local CYBIND_DIR
+    CYBIND_DIR="$(realpath .)"
+    if [ ! -d "${CYBIND_DIR}/cybind/assets/headers" ]; then
+        echo "ERROR: Not in cybind repository root directory" >&2
+        echo "  Current directory: $CYBIND_DIR" >&2
+        echo "  Expected to find: cybind/assets/headers/" >&2
+        echo "" >&2
+        echo "Please run this function from the cybind repository root directory." >&2
+        return 1
+    fi
+
+    _create_fresh_venv "CybindVenv" "pip install -e ."
+}
+
+# Function to run cybind generation
+run_cybind() {
+    if [ $# -ne 2 ]; then
+        echo "Usage: run_cybind <CTK_VERSION> <OUTPUT_DIR>" >&2
+        echo "Example: run_cybind 13.1 ../cuda-python" >&2
+        echo "Example: run_cybind 13.2 ../ctk-next" >&2
+        return 1
+    fi
+
+    local CTK_VERSION="$1"
+    local OUTPUT_DIR_ARG="$2"
+    local CYBIND_DIR
+    CYBIND_DIR="$(realpath .)"
+
+    # Check that we're in cybind directory
+    if [ ! -d "${CYBIND_DIR}/cybind/assets/headers" ]; then
+        echo "ERROR: Not in cybind repository root directory" >&2
+        echo "  Current directory: $CYBIND_DIR" >&2
+        echo "  Expected to find: cybind/assets/headers/" >&2
+        echo "" >&2
+        echo "Please run this function from the cybind repository root directory." >&2
+        return 1
+    fi
+
+    # Validate output directory exists
+    local OUTPUT_DIR
+    OUTPUT_DIR="$(_validate_output_dir "$OUTPUT_DIR_ARG")" || return 1
+
+    # Validate cuda_bindings subdirectory exists
+    if [ ! -d "${OUTPUT_DIR}/cuda_bindings" ]; then
+        echo "ERROR: cuda_bindings subdirectory not found in output directory" >&2
+        echo "  Output directory: $OUTPUT_DIR" >&2
+        echo "  Expected: ${OUTPUT_DIR}/cuda_bindings/" >&2
+        return 1
+    fi
+
+    _ensure_log_dir
+
+    # Ensure CybindVenv exists
+    if [ ! -d "CybindVenv" ]; then
+        echo "CybindVenv not found. Creating fresh virtual environment..."
+        cybind_fresh_venv || return 1
+    fi
+
+    local CUDA_HOME
+    CUDA_HOME="$(_validate_cuda_home "$CTK_VERSION")" || return 1
+
+    local LOG_FILE="${L}/cybind_generate_cufile_nvjitlink_nvml_nvvm_log_$(_make_log_timestamp).txt"
+    echo "Running cybind generation..."
+    echo "CUDA_HOME: $CUDA_HOME"
+    echo "Output directory: $OUTPUT_DIR/cuda_bindings"
+    echo "Log file: $LOG_FILE"
+    echo ""
+
+    (
+        . CybindVenv/bin/activate
+        CUDA_PATH="$CUDA_HOME" CybindVenv/bin/python -m cybind -vvv --generate cufile nvjitlink nvml nvvm --output-dir "${OUTPUT_DIR}/cuda_bindings" 2>&1 | tee "$LOG_FILE"
+    )
+}
+
+# Function to create a fresh cython-gen virtual environment
+cython_gen_fresh_venv() {
+    local CYTHON_GEN_DIR
+    CYTHON_GEN_DIR="$(realpath .)"
+    if [ ! -f "${CYTHON_GEN_DIR}/regenerate.py" ]; then
+        echo "ERROR: Not in cython-gen repository root directory" >&2
+        echo "  Current directory: $CYTHON_GEN_DIR" >&2
+        echo "  Expected to find: regenerate.py" >&2
+        echo "" >&2
+        echo "Please run this function from the cython-gen repository root directory." >&2
+        return 1
+    fi
+
+    if [ ! -f "${CYTHON_GEN_DIR}/requirements.txt" ]; then
+        echo "ERROR: requirements.txt not found in cython-gen directory" >&2
+        return 1
+    fi
+
+    _create_fresh_venv "CythonGenVenv" "pip install -r requirements.txt"
+}
+
+# Function to run cython-gen regeneration
+run_cython_gen() {
+    if [ $# -ne 2 ]; then
+        echo "Usage: run_cython_gen <CTK_VERSION> <OUTPUT_DIR>" >&2
+        echo "Example: run_cython_gen 13.1 ../cuda-python" >&2
+        echo "Example: run_cython_gen 13.2 ../ctk-next" >&2
+        return 1
+    fi
+
+    local CTK_VERSION="$1"
+    local OUTPUT_DIR_ARG="$2"
+    local CYTHON_GEN_DIR
+    CYTHON_GEN_DIR="$(realpath .)"
+
+    # Check that we're in cython-gen directory
+    if [ ! -f "${CYTHON_GEN_DIR}/regenerate.py" ]; then
+        echo "ERROR: Not in cython-gen repository root directory" >&2
+        echo "  Current directory: $CYTHON_GEN_DIR" >&2
+        echo "  Expected to find: regenerate.py" >&2
+        echo "" >&2
+        echo "Please run this function from the cython-gen repository root directory." >&2
+        return 1
+    fi
+
+    # Validate output directory exists
+    local OUTPUT_DIR
+    OUTPUT_DIR="$(_validate_output_dir "$OUTPUT_DIR_ARG")" || return 1
+
+    _ensure_log_dir
+
+    # Ensure CythonGenVenv exists
+    if [ ! -d "CythonGenVenv" ]; then
+        echo "CythonGenVenv not found. Creating fresh virtual environment..."
+        cython_gen_fresh_venv || return 1
+    fi
+
+    local CUDA_HOME
+    CUDA_HOME="$(_validate_cuda_home "$CTK_VERSION")" || return 1
+
+    local LOG_FILE="${L}/cython-gen_regenerate_log_$(_make_log_timestamp).txt"
+    echo "Running cython-gen regeneration..."
+    echo "CUDA_HOME: $CUDA_HOME"
+    echo "Output directory: $OUTPUT_DIR"
+    echo "Log file: $LOG_FILE"
+    echo ""
+
+    (
+        . CythonGenVenv/bin/activate
+        CUDA_HOME="$CUDA_HOME" CythonGenVenv/bin/python regenerate.py -o "$OUTPUT_DIR" 2>&1 | myt "$LOG_FILE"
+    )
+}

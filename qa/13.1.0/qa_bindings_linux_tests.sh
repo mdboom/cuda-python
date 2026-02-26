@@ -43,9 +43,9 @@ nvidia-smi || {
 set +e # keep going as much as possible
 set -x
 
-git log -n 1
-git status
-git diff
+git --no-pager log -n 1
+git --no-pager status
+git --no-pager diff
 
 if [[ -d ./TestVenv && -z "$VIRTUAL_ENV" ]]; then
     . ./TestVenv/bin/activate

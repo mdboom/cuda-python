@@ -28,9 +28,9 @@ if command -v nproc >/dev/null 2>&1; then
     export CUDA_PYTHON_PARALLEL_LEVEL="$(nproc)"
 fi
 
-git log -n 1
-git status
-git diff
+git --no-pager log -n 1
+git --no-pager status
+git --no-pager diff
 
 python3 -VV
 python3 -c 'import sys; sys.exit(sys.version_info < (3,10))' || exit 1

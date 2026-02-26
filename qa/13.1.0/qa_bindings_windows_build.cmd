@@ -27,9 +27,9 @@ verify >nul
 
 @echo on
 
-git log -n 1
-git status
-git diff
+git --no-pager log -n 1
+git --no-pager status
+git --no-pager diff
 
 python3 -VV
 python3 -m venv TestVenv

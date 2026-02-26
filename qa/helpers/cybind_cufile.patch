@@ -1,0 +1,31 @@
+--- a/cufile.h
++++ b/cufile.h
+@@ -501,6 +501,8 @@
+  * If the driver is not opened, it will return the staged/default properties
+  * If the driver is opened, it will return the current properties
+  *
++ * @param props Properties to get
++ *
+  * @return CU_FILE_SUCCESS on success
+  * @return CU_FILE_INVALID_VALUE if props is NULL
+  *
+@@ -753,12 +755,15 @@
+ CUfileError_t cuFileStreamDeregister(CUstream stream);
+ 
+ /**
+- *@brief
+-
++ *@brief Get the cuFile library version.
++ * 
++ *
++ * @param version Pointer to an integer where the version will be stored.
++ * 
+  * @returns cufile library version.
+  * 
+- * @The version is returned as (1000 major + 10 minor).
+- * @For example, CUFILE 1.7.0 would be represented by 1070.
++ * The version is returned as (1000 major + 10 minor).
++ * For example, CUFILE 1.7.0 would be represented by 1070.
+  * @note  This is useful for applications that need to inquire the library.
+  *
+  * @return CU_FILE_SUCCESS on success

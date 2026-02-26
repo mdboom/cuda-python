@@ -23,9 +23,9 @@ nvidia-smi
 
 reg query "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" /v HwSchMode
 
-git log -n 1
-git status
-git diff
+git --no-pager log -n 1
+git --no-pager status
+git --no-pager diff
 
 call .\TestVenv\Scripts\activate.bat
 python -VV
