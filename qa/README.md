@@ -32,12 +32,12 @@ This directory **does not exist in the public `main` branch**.
 
 "Kitpicks" are CTK release candidates, sometimes referred to as, e.g., "13.2 RC 001". They are hosted here:
 
-[**https://cuda-repo.nvidia.com/release-candidates/kitpicks/cuda-r13-2/13.2.0/**](
-    https://cuda-repo.nvidia.com/release-candidates/kitpicks/cuda-r13-2/13.2.0/)
+[**https://kitmaker-web.nvidia.com/kitpicks/cuda-r13-2/13.2.0/**](
+    https://kitmaker-web.nvidia.com/kitpicks/cuda-r13-2/13.2.0/)
 
-A helper script is available for downloading `linux-64`, `linux-aarch64`, and `win-64` release candidates:
+A helper script is available for downloading `linux-64`, `linux-aarch64`, and `win-64` release candidates (available on PATH after activating helpers):
 
-`qa/helpers/download_from_kitpicks.py --help`
+`download_from_kitpicks.py --help`
 
 <img src="ctk-next.drawio.svg" width="400">
 
@@ -163,7 +163,7 @@ Two files under `cuda/core/_utils/` need to be updated:
 Use the helper script from the ctk-next (or cuda-python) repository root:
 ```bash
 cd /path/to/ctk-next
-qa/helpers/update_cuda_core_enum_explanations.sh 13.2
+update_cuda_core_enum_explanations.sh 13.2
 ```
 
 This script:
@@ -180,10 +180,10 @@ The script automatically detects which enum to parse based on the header file an
 
 ## How to Merge Public `main` into `ctk-next`
 
-To keep `ctk-next` synchronized with the latest public changes, use the helper script:
+To keep `ctk-next` synchronized with the latest public changes, use one of the helper scripts:
 
 ```bash
-qa/helpers/git_merge_public_main.sh
+git_merge_public_main.sh
 ```
 
 This script fetches and merges the current `main` branch from the public `cuda-python` repository into the private `ctk-next` branch.
@@ -191,24 +191,74 @@ It performs a clean merge without having to permanently add a remote.
 
 ## How to Squash-Merge ctk-next Back into Public main
 
-When a new CTK release goes live:
+### Preparing a Preview Branch
 
-1. Wait until the CTK release has been publicly posted.
+Before the CTK release goes live, you can create a preview branch that
+cleanly separates the cython-gen and cybind generated changes from all other
+changes. This makes it easier to review the changes in isolation ahead of
+time, which is especially useful since you cannot create a public PR until
+after the new CTK has been posted publicly. The goal is to be well-prepared
+for a 0-day release of `cuda-bindings`.
 
-2. Shortly after, create a PR in the public `cuda-python` repo that squash-merges all `ctk-next` changes into `main`, excluding the `qa/` directory.
+Use one of the helper scripts:
 
-For reference, the squash-merge PR for the CTK 13.1 release was:
+```bash
+make_squash_merge_into_public_main_preview.sh <branch-name>
+```
 
-[**https://github.com/NVIDIA/cuda-python/pull/1315/commits**](
-    https://github.com/NVIDIA/cuda-python/pull/1315/commits)
+This script:
+1. Creates a new branch based on `public_repo/main` in a separate git worktree
+2. Runs `run_cython_gen` and `run_cybind` to generate fresh bindings
+3. Creates commits for cython-gen and cybind changes separately
+4. Squash-merges your branch, automatically resolving conflicts in generated files
+5. Shows a diff (filtering out hash-only changes) to review "everything else" changes
 
-Note the organization into three initial commits (commit messages slightly modernized here):
+The preview branch allows you to:
+- Review generated changes separately from manual changes
+- Verify that the diff between your branch and the preview is minimal (ideally only hash differences)
+- Prepare the final PR structure ahead of time
 
-* `automatic code-gen changes: driver, runtime, nvrtc` (cython-gen)
-* `automatic code-gen changes: cufile, nvjitlink, nvvm, nvml` (cybind)
-* `accumulated changes from the QA testing period`
+**Important**: Before running the script, ensure that:
+- Your branch has all cython-gen and cybind updates committed
+- The `cython-gen` and `cybind` repositories are git worktrees and clean
+- Your current working tree is clean
 
-This was very helpful for keeping the large-scale changes reasonably easy to review.
+### Copying the Preview Branch to Public Repo
+
+Once the CTK release has been publicly posted, you can copy the preview
+branch into the public repository:
+
+```bash
+cd .../cuda-python
+copy_preview_to_public_branch.sh <preview-worktree-path> <branch-name>
+```
+
+Example:
+```bash
+cd /wrk/forked/cuda-python
+copy_preview_to_public_branch.sh \
+  ../squash_merge_into_public_main_preview_2026-02-28+1250 \
+  cuda_bindings_13.2.0_release
+```
+
+This script:
+1. Validates you're in the public cuda-python repository
+2. Validates the preview worktree exists and is clean
+3. Verifies the preview branch name matches expected pattern
+4. Verifies the preview base matches your current `main` branch
+5. Creates a new branch in the current repository from the preview commits
+6. Does not modify the preview worktree or ctk-next repository
+
+The preview branch is already based on `public_repo/main` and contains three clean commits:
+- `cython-gen updates (automatic, NO MANUAL CHANGES)`
+- `cybind updates (automatic, NO MANUAL CHANGES)`
+- `git merge --squash <branch-name> && git rm -r -f qa/ (NO MANUAL CHANGES)`
+
+After the branch is created, push it using your standard workflow and create
+a PR. After the PR is merged, merge the corresponding cython-gen and cybind
+branches into their respective repositories, e.g.:
+- `cython-gen-next-13020` → merge into `cython-gen` repository
+- `cybind-next-13020` → merge into `cybind` repository
 
 ---
 

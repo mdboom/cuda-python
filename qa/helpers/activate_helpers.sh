@@ -224,6 +224,6 @@ run_cython_gen() {
 
     (
         . CythonGenVenv/bin/activate
-        CUDA_HOME="$CUDA_HOME" CythonGenVenv/bin/python regenerate.py -o "$OUTPUT_DIR" 2>&1 | myt "$LOG_FILE"
+        CUDA_HOME="$CUDA_HOME" CythonGenVenv/bin/python regenerate.py -o "$OUTPUT_DIR" 2>&1 | tee "$LOG_FILE"
     )
 }

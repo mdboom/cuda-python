@@ -18,7 +18,7 @@ USAGE EXAMPLES
    download_from_kitpicks.py 13.1 --latest --all
 
 3) Full URL (auto-arch detection; downloads only the matching file)
-   download_from_kitpicks.py https://cuda-repo.nvidia.com/release-candidates/kitpicks/cuda-r13-1/13.1.0/028/local_installers/
+   download_from_kitpicks.py https://kitmaker-web.nvidia.com/kitpicks/cuda-r13-2/13.2.0/044/local_installers/
 
 4) Full URL, override architecture
    download_from_kitpicks.py https://.../local_installers/ --arch=linux
@@ -49,7 +49,7 @@ from dataclasses import dataclass
 from html.parser import HTMLParser
 from urllib.parse import urljoin
 
-BASE_URL = "https://cuda-repo.nvidia.com/release-candidates/kitpicks"
+BASE_URL = "https://kitmaker-web.nvidia.com/kitpicks"
 
 ARCH_ALIASES = {
     # Windows
@@ -147,51 +147,60 @@ class KitpickRow:
 class KitpickIndexParser(HTMLParser):
     """
     Parser for the version index page listing numeric kitpick subdirectories with
-    an adjacent 'Last Modified' column. Built against the uploaded HTML.  (Rows like:
-      <td><a href="031/">031/</a></td>   <td>2025-11-07 19:02:57</td>
-    )
+    an adjacent 'Last Modified' column.
+
+    Site format:
+      <tr class="file">
+        <td></td>
+        <td>
+          <a href="./042/">
+            <span class="name">042/</span>
+          </a>
+        </td>
+        <td>&mdash;</td>
+        <td class="timestamp hideable">
+          <time datetime="2026-02-24T03:21:17Z">02/24/2026 03:21:17 AM +00:00</time>
+        </td>
+      </tr>
     """
 
     def __init__(self) -> None:
         super().__init__()
-        self._capture_href = False
-        self._capture_date = False
-        self._seen_anchor_in_row = False
+        self._in_file_row = False
         self._current_kitpick: str | None = None
         self._current_date: str | None = None
         self.rows: list[KitpickRow] = []
-        self._td_open_index = -1  # track which column we're in
 
     def handle_starttag(self, tag, attrs):
-        if tag.lower() == "tr":
-            # reset row state
-            self._seen_anchor_in_row = False
+        attrs_dict = dict(attrs)
+
+        # Detect file rows: <tr class="file">
+        if tag.lower() == "tr" and attrs_dict.get("class") == "file":
+            self._in_file_row = True
             self._current_kitpick = None
             self._current_date = None
-            self._td_open_index = -1
 
-        if tag.lower() == "td":
-            self._td_open_index += 1  # 0=name, 1=Last Modified
-
-        if tag.lower() == "a":
-            href = dict(attrs).get("href")
+        # Extract kitpick number from href: <a href="./042/">
+        if tag.lower() == "a" and self._in_file_row:
+            href = attrs_dict.get("href", "")
             if href:
-                m = re.fullmatch(r"(\d{3})\/", href.strip())
+                m = re.search(r"(\d{3})/", href)
                 if m:
-                    self._seen_anchor_in_row = True
                     self._current_kitpick = m.group(1)
 
-    def handle_data(self, data):
-        if self._seen_anchor_in_row and self._td_open_index == 1:
-            # second column's text after the kitpick anchor = last modified
-            txt = data.strip()
-            if txt and txt != "-":
-                # Expect format 'YYYY-MM-DD HH:MM:SS'
-                self._current_date = txt
+        # Extract date from <time datetime="2026-02-24T03:21:17Z">
+        if tag.lower() == "time" and self._in_file_row:
+            datetime_attr = attrs_dict.get("datetime", "")
+            if datetime_attr:
+                # Convert ISO format (2026-02-24T03:21:17Z) to YYYY-MM-DD HH:MM:SS
+                dt_str = datetime_attr.replace("T", " ").replace("Z", "")
+                self._current_date = dt_str
 
     def handle_endtag(self, tag):
-        if tag.lower() == "tr" and self._current_kitpick and self._current_date:
-            self.rows.append(KitpickRow(self._current_kitpick, self._current_date))
+        if tag.lower() == "tr" and self._in_file_row:
+            if self._current_kitpick and self._current_date:
+                self.rows.append(KitpickRow(self._current_kitpick, self._current_date))
+            self._in_file_row = False
 
 
 def fetch_version_kitpicks(version_str: str) -> list[KitpickRow]:
