@@ -94,7 +94,7 @@ def sync_tags(dry_run=False):
                 print(f"  - {tag}")
         else:
             print("  (showing first 20)")
-            for tag in sorted(list(tags_to_push))[:20]:
+            for tag in sorted(tags_to_push)[:20]:
                 print(f"  - {tag}")
             print(f"  ... and {len(tags_to_push) - 20} more")
 
@@ -144,7 +144,7 @@ def show_tags():
 
     print(f"\nCommon tags ({len(common_tags)}):")
     if common_tags:
-        for tag in sorted(list(common_tags))[:20]:
+        for tag in sorted(common_tags)[:20]:
             print(f"  ✓ {tag}")
         if len(common_tags) > 20:
             print(f"  ... and {len(common_tags) - 20} more")
@@ -153,7 +153,7 @@ def show_tags():
 
     print(f"\nTags only on public_repo ({len(only_public)}):")
     if only_public:
-        for tag in sorted(list(only_public))[:20]:
+        for tag in sorted(only_public)[:20]:
             print(f"  → {tag}")
         if len(only_public) > 20:
             print(f"  ... and {len(only_public) - 20} more")
@@ -163,7 +163,7 @@ def show_tags():
 
     print(f"\nTags only on upstream ({len(only_upstream)}):")
     if only_upstream:
-        for tag in sorted(list(only_upstream))[:20]:
+        for tag in sorted(only_upstream)[:20]:
             print(f"  ⚠ {tag}")
         if len(only_upstream) > 20:
             print(f"  ... and {len(only_upstream) - 20} more")

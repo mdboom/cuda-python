@@ -132,6 +132,7 @@ inline-quotes = "double"
 ]
 
 # scripts and build tooling — print is the expected output method
+"qa/**" = ["T201"]
 "toolshed/**" = ["T201"]
 "ci/**" = ["T201"]
 "**/build_hooks.py" = ["T201"]
