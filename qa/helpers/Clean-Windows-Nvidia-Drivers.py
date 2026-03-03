@@ -77,7 +77,7 @@ def disable_windows_auto_driver_updates(dry_run: bool = False) -> None:
     if dry_run:
         return
 
-    rc, out, err = run(cmd)
+    rc, _unused_out, err = run(cmd)
     if rc != 0:
         print("  ERROR setting registry value:")
         print(err)
@@ -109,7 +109,7 @@ def parse_blocks(output: str, key_prefix: str) -> List[Dict[str, str]]:
             key, value = line.split(":", 1)
             current[key.strip()] = value.strip()
         else:
-            # Continuation line – append to last key if any
+            # Continuation line - append to last key if any
             if current:
                 last_key = list(current.keys())[-1]
                 current[last_key] += " " + line.strip()

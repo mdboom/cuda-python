@@ -121,7 +121,7 @@ class FileLinkExtractor(HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag.lower() == "a":
             href = dict(attrs).get("href")
-            if href and (href.endswith(".run") or href.endswith(".exe")):
+            if href and href.endswith((".run", ".exe")):
                 self.links.append(href)
 
 
@@ -406,7 +406,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 def is_url(s: str) -> bool:
-    return s.startswith("http://") or s.startswith("https://")
+    return s.startswith(("http://", "https://"))
 
 
 def handle_listing(version_str: str) -> int:

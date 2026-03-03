@@ -12,8 +12,9 @@ import tempfile
 from contextlib import suppress
 from functools import cache
 
-import cuda.bindings.driver as cuda
 import pytest
+
+import cuda.bindings.driver as cuda
 
 cufile = pytest.importorskip("cuda.bindings.cufile")
 
@@ -1845,7 +1846,7 @@ def test_get_bar_size_in_kb():
     except cufile.cuFileError as e:
         if get_tegra_kind() != "Thor":
             raise
-        pytest.xfail(f"TODO(#9999): Resolve Thor: cuFileError: {str(e)}")
+        pytest.xfail(f"TODO(#9999): Resolve Thor: cuFileError: {e!s}")
 
     # Verify BAR size is a reasonable value
     assert isinstance(bar_size_kb, int), "BAR size should be an integer"
