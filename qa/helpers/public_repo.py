@@ -42,7 +42,7 @@ def run_cmd(cmd, check=True, capture_output=False):
 def ensure_public_repo_remote():
     """Ensure public_repo remote exists, add it if not."""
     try:
-        run_cmd(["remote", "get-url", "public_repo"], check=False, capture_output=True)
+        run_cmd(["remote", "get-url", "public_repo"], capture_output=True)
         print("✓ public_repo remote already exists")
         return True
     except subprocess.CalledProcessError:
