@@ -98,6 +98,10 @@ fi
 if ! git rev-parse --verify public_repo/main >/dev/null 2>&1; then
     echo "ERROR: Preview worktree does not have 'public_repo/main' reference" >&2
     echo "The preview worktree should be based on public_repo/main." >&2
+    echo "" >&2
+    echo "Fix (in the ctk-next repo):" >&2
+    echo "  qa/helpers/public_repo.py sync" >&2
+    echo "  qa/helpers/make_squash_merge_into_public_main_preview.sh <branch-name>" >&2
     exit 1
 fi
 
