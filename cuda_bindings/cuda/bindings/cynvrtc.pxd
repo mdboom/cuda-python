@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 #
-# This code was automatically generated with version 13.2.0, generator version 0.3.1.dev1438+g910163d31.d20260324. Do not modify it directly.
+# This code was automatically generated with version 13.3.0, generator version 0.3.1.dev1630+gadce055ea.d19800101. Do not modify it directly.
 
 from libc.stdint cimport uint32_t, uint64_t
 
@@ -27,6 +27,7 @@ cdef extern from "nvrtc.h":
         NVRTC_ERROR_PCH_CREATE = 15
         NVRTC_ERROR_CANCELLED = 16
         NVRTC_ERROR_TIME_TRACE_FILE_WRITE_FAILED = 17
+        NVRTC_ERROR_BUSY = 18
 
     cdef struct _nvrtcProgram:
         pass
@@ -83,3 +84,9 @@ cdef nvrtcResult nvrtcSetFlowCallback(nvrtcProgram prog, void* callback, void* p
 cdef nvrtcResult nvrtcGetTileIRSize(nvrtcProgram prog, size_t* TileIRSizeRet) except ?NVRTC_ERROR_INVALID_INPUT nogil
 
 cdef nvrtcResult nvrtcGetTileIR(nvrtcProgram prog, char* TileIR) except ?NVRTC_ERROR_INVALID_INPUT nogil
+
+cdef enum: NVRTC_INSTALL_HEADERS_SKIP_IF_EXISTS = 0
+
+cdef enum: NVRTC_INSTALL_HEADERS_FORCE_OVERWRITE = 1
+
+cdef enum: NVRTC_INSTALL_HEADERS_NO_WAIT = 2

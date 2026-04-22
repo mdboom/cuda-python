@@ -884,6 +884,12 @@ Data types used by CUDA Runtime
         This error indicates that the requested operation is not permitted because the stream is in a detached state. This can occur if the green context associated with the stream has been destroyed, limiting the stream's operational capabilities.
 
 
+    .. autoattribute:: cuda.bindings.runtime.cudaError_t.cudaErrorGraphRecaptureFailure
+
+
+        This error indicates that a graph recapture failed and had to be terminated.
+
+
     .. autoattribute:: cuda.bindings.runtime.cudaError_t.cudaErrorUnknown
 
 
@@ -1085,6 +1091,90 @@ Data types used by CUDA Runtime
 
         4 channel unsigned normalized (10-bit, 10-bit, 10-bit, 2-bit) format
 
+
+    .. autoattribute:: cuda.bindings.runtime.cudaChannelFormatKind.cudaChannelFormatKindUnsigned8Packed422
+
+
+        4 channel unsigned 8-bit packed format, with 4:2:2 sampling
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaChannelFormatKind.cudaChannelFormatKindUnsigned8Packed444
+
+
+        4 channel unsigned 8-bit packed format, with 4:4:4 sampling
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaChannelFormatKind.cudaChannelFormatKindUnsigned8SemiPlanar420
+
+
+        3 channel unsigned 8-bit semi-planar format, with 4:2:0 sampling
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaChannelFormatKind.cudaChannelFormatKindUnsigned16SemiPlanar420
+
+
+        3 channel unsigned 16-bit semi-planar format, with 4:2:0 sampling
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaChannelFormatKind.cudaChannelFormatKindUnsigned8SemiPlanar422
+
+
+        3 channel unsigned 8-bit semi-planar format, with 4:2:2 sampling
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaChannelFormatKind.cudaChannelFormatKindUnsigned16SemiPlanar422
+
+
+        3 channel unsigned 16-bit semi-planar format, with 4:2:2 sampling
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaChannelFormatKind.cudaChannelFormatKindUnsigned8SemiPlanar444
+
+
+        3 channel unsigned 8-bit semi-planar format, with 4:4:4 sampling
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaChannelFormatKind.cudaChannelFormatKindUnsigned16SemiPlanar444
+
+
+        3 channel unsigned 16-bit semi-planar format, with 4:4:4 sampling
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaChannelFormatKind.cudaChannelFormatKindUnsigned8Planar420
+
+
+        3 channel unsigned 8-bit planar format, with 4:2:0 sampling
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaChannelFormatKind.cudaChannelFormatKindUnsigned16Planar420
+
+
+        3 channel unsigned 16-bit planar format, with 4:2:0 sampling
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaChannelFormatKind.cudaChannelFormatKindUnsigned8Planar422
+
+
+        3 channel unsigned 8-bit planar format, with 4:2:2 sampling
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaChannelFormatKind.cudaChannelFormatKindUnsigned16Planar422
+
+
+        3 channel unsigned 16-bit planar format, with 4:2:2 sampling
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaChannelFormatKind.cudaChannelFormatKindUnsigned8Planar444
+
+
+        3 channel unsigned 8-bit planar format, with 4:4:4 sampling
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaChannelFormatKind.cudaChannelFormatKindUnsigned16Planar444
+
+
+        3 channel unsigned 16-bit planar format, with 4:4:4 sampling
+
 .. autoclass:: cuda.bindings.runtime.cudaMemoryType
 
     .. autoattribute:: cuda.bindings.runtime.cudaMemoryType.cudaMemoryTypeUnregistered
@@ -1178,6 +1268,25 @@ Data types used by CUDA Runtime
 
 
         Stream is part of a capture sequence that has been invalidated, but not terminated
+
+.. autoclass:: cuda.bindings.runtime.cudaGraphRecaptureStatus
+
+    .. autoattribute:: cuda.bindings.runtime.cudaGraphRecaptureStatus.cudaGraphRecaptureEligibleForUpdate
+
+
+        Node is eligible for update in an instantiated graph.
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaGraphRecaptureStatus.cudaGraphRecaptureIneligibleForUpdate
+
+
+        Parameter changes in the node cannot be applied to an instantiated graph.
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaGraphRecaptureStatus.cudaGraphRecaptureError
+
+
+        Error while attempting to recapture the node. The recapture will be ended regardless of the return value from the callback.
 
 .. autoclass:: cuda.bindings.runtime.cudaStreamCaptureMode
 
@@ -1577,6 +1686,25 @@ Data types used by CUDA Runtime
 
 
         Block compressed 7
+
+.. autoclass:: cuda.bindings.runtime.cudaSharedMemoryMode
+
+    .. autoattribute:: cuda.bindings.runtime.cudaSharedMemoryMode.cudaSharedMemoryModeDefault
+
+
+        The default to use for allowing non-portable shared memory size on launch - uses current function attributes for :py:obj:`~.cudaFuncAttributeMaxDynamicSharedMemorySize`
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaSharedMemoryMode.cudaSharedMemoryModeRequirePortable
+
+
+        Specifies that the shared memory size requested must be a portable size within :py:obj:`~.cudaDevAttrMaxSharedMemoryPerBlock`
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaSharedMemoryMode.cudaSharedMemoryModeAllowNonPortable
+
+
+        Specifies that the shared memory size requested may be a non-portable size up to :py:obj:`~.cudaDevAttrMaxSharedMemoryPerBlockOptin`
 
 .. autoclass:: cuda.bindings.runtime.cudaFuncAttribute
 
@@ -2675,6 +2803,18 @@ Data types used by CUDA Runtime
         Link between the device and the host supports only some native atomic operations
 
 
+    .. autoattribute:: cuda.bindings.runtime.cudaDeviceAttr.cudaDevAttrAtomicReductionSupported
+
+
+        Device supports atomic reduction operations in stream batch memory operations
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaDeviceAttr.cudaDevAttrCigStreamsSupported
+
+
+        Device supports CIG streams
+
+
     .. autoattribute:: cuda.bindings.runtime.cudaDeviceAttr.cudaDevAttrMax
 
 .. autoclass:: cuda.bindings.runtime.cudaMemPoolAttr
@@ -3596,6 +3736,12 @@ Data types used by CUDA Runtime
                                            call :py:obj:`~.cudaGraphSetConditional` from device code.
 
 
+    .. autoattribute:: cuda.bindings.runtime.cudaGraphNodeType.cudaGraphNodeTypeReserved16
+
+
+        Reserved.
+
+
     .. autoattribute:: cuda.bindings.runtime.cudaGraphNodeType.cudaGraphNodeTypeCount
 
 .. autoclass:: cuda.bindings.runtime.cudaGraphChildGraphNodeOwnership
@@ -3921,25 +4067,6 @@ Data types used by CUDA Runtime
 
         Specifies that the cluster size requested may be a non-portable size
 
-.. autoclass:: cuda.bindings.runtime.cudaSharedMemoryMode
-
-    .. autoattribute:: cuda.bindings.runtime.cudaSharedMemoryMode.cudaSharedMemoryModeDefault
-
-
-        The default to use for allowing non-portable shared memory size on launch - uses current function attributes for :py:obj:`~.cudaFuncAttributeMaxDynamicSharedMemorySize`
-
-
-    .. autoattribute:: cuda.bindings.runtime.cudaSharedMemoryMode.cudaSharedMemoryModeRequirePortable
-
-
-        Specifies that the shared memory size requested must be a portable size within :py:obj:`~.cudaDevAttrMaxSharedMemoryPerBlock`
-
-
-    .. autoattribute:: cuda.bindings.runtime.cudaSharedMemoryMode.cudaSharedMemoryModeAllowNonPortable
-
-
-        Specifies that the shared memory size requested may be a non-portable size up to :py:obj:`~.cudaDevAttrMaxSharedMemoryPerBlockOptin`
-
 .. autoclass:: cuda.bindings.runtime.cudaLaunchAttributeID
 
     .. autoattribute:: cuda.bindings.runtime.cudaLaunchAttributeID.cudaLaunchAttributeIgnore
@@ -4101,6 +4228,26 @@ Data types used by CUDA Runtime
 
 
     .. autoattribute:: cuda.bindings.runtime.cudaLogLevel.cudaLogLevelWarning
+
+.. autoclass:: cuda.bindings.runtime.cudaFabricOpStatusSource
+
+    .. autoattribute:: cuda.bindings.runtime.cudaFabricOpStatusSource.cudaFabricOpStatusSourceMbarrierV1
+
+
+        1B-aligned 1B-wide status from an mbarrier.layout::v1
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaFabricOpStatusSource.cudaFabricOpStatusSourceMax
+
+.. autoclass:: cuda.bindings.runtime.cudaFabricOpStatusInfo
+
+    .. autoattribute:: cuda.bindings.runtime.cudaFabricOpStatusInfo.cudaFabricOpStatusInfoSuccess
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaFabricOpStatusInfo.cudaFabricOpStatusInfoLast
+
+
+    .. autoattribute:: cuda.bindings.runtime.cudaFabricOpStatusInfo.cudaFabricOpStatusInfoMax
 
 .. autoclass:: cuda.bindings.runtime.cudaSurfaceBoundaryMode
 
@@ -5298,7 +5445,9 @@ Stream Management
 
 This section describes the stream management functions of the CUDA runtime application programming interface.
 
+.. autoclass:: cuda.bindings.runtime.cudaGraphRecaptureCallbackData
 .. autoclass:: cuda.bindings.runtime.cudaStreamCallback_t
+.. autoclass:: cuda.bindings.runtime.cudaGraphRecaptureCallback_t
 .. autofunction:: cuda.bindings.runtime.cudaStreamCreate
 .. autofunction:: cuda.bindings.runtime.cudaStreamCreateWithFlags
 .. autofunction:: cuda.bindings.runtime.cudaStreamCreateWithPriority
@@ -5317,6 +5466,7 @@ This section describes the stream management functions of the CUDA runtime appli
 .. autofunction:: cuda.bindings.runtime.cudaStreamQuery
 .. autofunction:: cuda.bindings.runtime.cudaStreamAttachMemAsync
 .. autofunction:: cuda.bindings.runtime.cudaStreamBeginCapture
+.. autofunction:: cuda.bindings.runtime.cudaStreamBeginRecaptureToGraph
 .. autofunction:: cuda.bindings.runtime.cudaStreamBeginCaptureToGraph
 .. autofunction:: cuda.bindings.runtime.cudaThreadExchangeStreamCaptureMode
 .. autofunction:: cuda.bindings.runtime.cudaStreamEndCapture
