@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 #
-# This code was automatically generated across versions from 12.9.1 to 13.2.0, generator version 0.3.1.dev1568+g289771de9.d20260413. Do not modify it directly.
+# This code was automatically generated across versions from 12.9.1 to 13.2.0, generator version 0.3.1.dev1438+g910163d31.d20260324. Do not modify it directly.
 
 cimport cython  # NOQA
 
@@ -1903,97 +1903,66 @@ class NvmlError(Exception):
 
 class UninitializedError(NvmlError):
     pass
-
 class InvalidArgumentError(NvmlError):
     pass
-
 class NotSupportedError(NvmlError):
     pass
-
 class NoPermissionError(NvmlError):
     pass
-
 class AlreadyInitializedError(NvmlError):
     pass
-
 class NotFoundError(NvmlError):
     pass
-
 class InsufficientSizeError(NvmlError):
     pass
-
 class InsufficientPowerError(NvmlError):
     pass
-
 class DriverNotLoadedError(NvmlError):
     pass
-
 class TimeoutError(NvmlError):
     pass
-
 class IrqIssueError(NvmlError):
     pass
-
 class LibraryNotFoundError(NvmlError):
     pass
-
 class FunctionNotFoundError(NvmlError):
     pass
-
 class CorruptedInforomError(NvmlError):
     pass
-
 class GpuIsLostError(NvmlError):
     pass
-
 class ResetRequiredError(NvmlError):
     pass
-
 class OperatingSystemError(NvmlError):
     pass
-
 class LibRmVersionMismatchError(NvmlError):
     pass
-
 class InUseError(NvmlError):
     pass
-
 class MemoryError(NvmlError):
     pass
-
 class NoDataError(NvmlError):
     pass
-
 class VgpuEccNotSupportedError(NvmlError):
     pass
-
 class InsufficientResourcesError(NvmlError):
     pass
-
 class FreqNotSupportedError(NvmlError):
     pass
-
 class ArgumentVersionMismatchError(NvmlError):
     pass
-
 class DeprecatedError(NvmlError):
     pass
-
 class NotReadyError(NvmlError):
     pass
-
 class GpuNotFoundError(NvmlError):
     pass
-
 class InvalidStateError(NvmlError):
     pass
-
 class ResetTypeNotSupportedError(NvmlError):
     pass
-
 class UnknownError(NvmlError):
     pass
-
 cdef object _nvml_error_factory(int status):
     cdef object pystatus = status
     if status == 1:

@@ -1,4 +1,4 @@
-.. SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+.. SPDX-FileCopyrightText: Copyright (c) 2021-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 .. SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 
 -------
@@ -599,7 +599,7 @@ Data types used by CUDA Runtime
     .. autoattribute:: cuda.bindings.runtime.cudaError_t.cudaErrorLaunchTimeout
 
 
-        This indicates that the device kernel took too long to execute. This can only occur if timeouts are enabled - see the device attribute :py:obj:`~.cudaDevAttrKernelExecTimeout` for more information. This leaves the process in an inconsistent state and any further CUDA work will return the same error. To continue using CUDA, the process must be terminated and relaunched.
+        This indicates that the device kernel took too long to execute. This can only occur if timeouts are enabled - see the device attribute cudaDevAttrKernelExecTimeout for more information. This leaves the process in an inconsistent state and any further CUDA work will return the same error. To continue using CUDA, the process must be terminated and relaunched.
 
 
     .. autoattribute:: cuda.bindings.runtime.cudaError_t.cudaErrorLaunchIncompatibleTexturing
@@ -5252,6 +5252,7 @@ This section describes the device management functions of the CUDA runtime appli
 .. autofunction:: cuda.bindings.runtime.cudaDeviceSynchronize
 .. autofunction:: cuda.bindings.runtime.cudaDeviceSetLimit
 .. autofunction:: cuda.bindings.runtime.cudaDeviceGetLimit
+.. autofunction:: cuda.bindings.runtime.cudaDeviceGetTexture1DLinearMaxWidth
 .. autofunction:: cuda.bindings.runtime.cudaDeviceGetCacheConfig
 .. autofunction:: cuda.bindings.runtime.cudaDeviceGetStreamPriorityRange
 .. autofunction:: cuda.bindings.runtime.cudaDeviceSetCacheConfig
@@ -5262,6 +5263,7 @@ This section describes the device management functions of the CUDA runtime appli
 .. autofunction:: cuda.bindings.runtime.cudaIpcGetMemHandle
 .. autofunction:: cuda.bindings.runtime.cudaIpcOpenMemHandle
 .. autofunction:: cuda.bindings.runtime.cudaIpcCloseMemHandle
+.. autofunction:: cuda.bindings.runtime.cudaDeviceFlushGPUDirectRDMAWrites
 .. autofunction:: cuda.bindings.runtime.cudaDeviceRegisterAsyncNotification
 .. autofunction:: cuda.bindings.runtime.cudaDeviceUnregisterAsyncNotification
 .. autofunction:: cuda.bindings.runtime.cudaGetDeviceCount
@@ -5330,6 +5332,7 @@ This section describes the event management functions of the CUDA runtime applic
 .. autofunction:: cuda.bindings.runtime.cudaEventCreate
 .. autofunction:: cuda.bindings.runtime.cudaEventCreateWithFlags
 .. autofunction:: cuda.bindings.runtime.cudaEventRecord
+.. autofunction:: cuda.bindings.runtime.cudaEventRecordWithFlags
 .. autofunction:: cuda.bindings.runtime.cudaEventQuery
 .. autofunction:: cuda.bindings.runtime.cudaEventSynchronize
 .. autofunction:: cuda.bindings.runtime.cudaEventDestroy
@@ -5418,6 +5421,8 @@ Some functions have overloaded C++ API template versions documented separately i
 .. autofunction:: cuda.bindings.runtime.cudaArrayGetPlane
 .. autofunction:: cuda.bindings.runtime.cudaArrayGetMemoryRequirements
 .. autofunction:: cuda.bindings.runtime.cudaMipmappedArrayGetMemoryRequirements
+.. autofunction:: cuda.bindings.runtime.cudaArrayGetSparseProperties
+.. autofunction:: cuda.bindings.runtime.cudaMipmappedArrayGetSparseProperties
 .. autofunction:: cuda.bindings.runtime.cudaMemcpy
 .. autofunction:: cuda.bindings.runtime.cudaMemcpyPeer
 .. autofunction:: cuda.bindings.runtime.cudaMemcpy2D
@@ -5730,8 +5735,10 @@ This section describes the graph management functions of CUDA runtime applicatio
 .. autofunction:: cuda.bindings.runtime.cudaGraphKernelNodeGetAttribute
 .. autofunction:: cuda.bindings.runtime.cudaGraphKernelNodeSetAttribute
 .. autofunction:: cuda.bindings.runtime.cudaGraphAddMemcpyNode
+.. autofunction:: cuda.bindings.runtime.cudaGraphAddMemcpyNode1D
 .. autofunction:: cuda.bindings.runtime.cudaGraphMemcpyNodeGetParams
 .. autofunction:: cuda.bindings.runtime.cudaGraphMemcpyNodeSetParams
+.. autofunction:: cuda.bindings.runtime.cudaGraphMemcpyNodeSetParams1D
 .. autofunction:: cuda.bindings.runtime.cudaGraphAddMemsetNode
 .. autofunction:: cuda.bindings.runtime.cudaGraphMemsetNodeGetParams
 .. autofunction:: cuda.bindings.runtime.cudaGraphMemsetNodeSetParams
@@ -5741,6 +5748,25 @@ This section describes the graph management functions of CUDA runtime applicatio
 .. autofunction:: cuda.bindings.runtime.cudaGraphAddChildGraphNode
 .. autofunction:: cuda.bindings.runtime.cudaGraphChildGraphNodeGetGraph
 .. autofunction:: cuda.bindings.runtime.cudaGraphAddEmptyNode
+.. autofunction:: cuda.bindings.runtime.cudaGraphAddEventRecordNode
+.. autofunction:: cuda.bindings.runtime.cudaGraphEventRecordNodeGetEvent
+.. autofunction:: cuda.bindings.runtime.cudaGraphEventRecordNodeSetEvent
+.. autofunction:: cuda.bindings.runtime.cudaGraphAddEventWaitNode
+.. autofunction:: cuda.bindings.runtime.cudaGraphEventWaitNodeGetEvent
+.. autofunction:: cuda.bindings.runtime.cudaGraphEventWaitNodeSetEvent
+.. autofunction:: cuda.bindings.runtime.cudaGraphAddExternalSemaphoresSignalNode
+.. autofunction:: cuda.bindings.runtime.cudaGraphExternalSemaphoresSignalNodeGetParams
+.. autofunction:: cuda.bindings.runtime.cudaGraphExternalSemaphoresSignalNodeSetParams
+.. autofunction:: cuda.bindings.runtime.cudaGraphAddExternalSemaphoresWaitNode
+.. autofunction:: cuda.bindings.runtime.cudaGraphExternalSemaphoresWaitNodeGetParams
+.. autofunction:: cuda.bindings.runtime.cudaGraphExternalSemaphoresWaitNodeSetParams
+.. autofunction:: cuda.bindings.runtime.cudaGraphAddMemAllocNode
+.. autofunction:: cuda.bindings.runtime.cudaGraphMemAllocNodeGetParams
+.. autofunction:: cuda.bindings.runtime.cudaGraphAddMemFreeNode
+.. autofunction:: cuda.bindings.runtime.cudaGraphMemFreeNodeGetParams
+.. autofunction:: cuda.bindings.runtime.cudaDeviceGraphMemTrim
+.. autofunction:: cuda.bindings.runtime.cudaDeviceGetGraphMemAttribute
+.. autofunction:: cuda.bindings.runtime.cudaDeviceSetGraphMemAttribute
 .. autofunction:: cuda.bindings.runtime.cudaGraphClone
 .. autofunction:: cuda.bindings.runtime.cudaGraphNodeFindInClone
 .. autofunction:: cuda.bindings.runtime.cudaGraphNodeGetType
@@ -5758,13 +5784,23 @@ This section describes the graph management functions of CUDA runtime applicatio
 .. autofunction:: cuda.bindings.runtime.cudaGraphRemoveDependencies
 .. autofunction:: cuda.bindings.runtime.cudaGraphDestroyNode
 .. autofunction:: cuda.bindings.runtime.cudaGraphInstantiate
+.. autofunction:: cuda.bindings.runtime.cudaGraphInstantiateWithFlags
 .. autofunction:: cuda.bindings.runtime.cudaGraphInstantiateWithParams
 .. autofunction:: cuda.bindings.runtime.cudaGraphExecGetFlags
 .. autofunction:: cuda.bindings.runtime.cudaGraphExecKernelNodeSetParams
 .. autofunction:: cuda.bindings.runtime.cudaGraphExecMemcpyNodeSetParams
+.. autofunction:: cuda.bindings.runtime.cudaGraphExecMemcpyNodeSetParams1D
 .. autofunction:: cuda.bindings.runtime.cudaGraphExecMemsetNodeSetParams
 .. autofunction:: cuda.bindings.runtime.cudaGraphExecHostNodeSetParams
+.. autofunction:: cuda.bindings.runtime.cudaGraphExecChildGraphNodeSetParams
+.. autofunction:: cuda.bindings.runtime.cudaGraphExecEventRecordNodeSetEvent
+.. autofunction:: cuda.bindings.runtime.cudaGraphExecEventWaitNodeSetEvent
+.. autofunction:: cuda.bindings.runtime.cudaGraphExecExternalSemaphoresSignalNodeSetParams
+.. autofunction:: cuda.bindings.runtime.cudaGraphExecExternalSemaphoresWaitNodeSetParams
+.. autofunction:: cuda.bindings.runtime.cudaGraphNodeSetEnabled
+.. autofunction:: cuda.bindings.runtime.cudaGraphNodeGetEnabled
 .. autofunction:: cuda.bindings.runtime.cudaGraphExecUpdate
+.. autofunction:: cuda.bindings.runtime.cudaGraphUpload
 .. autofunction:: cuda.bindings.runtime.cudaGraphLaunch
 .. autofunction:: cuda.bindings.runtime.cudaGraphExecDestroy
 .. autofunction:: cuda.bindings.runtime.cudaGraphDestroy
