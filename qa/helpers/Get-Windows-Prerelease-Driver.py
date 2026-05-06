@@ -33,12 +33,17 @@ This will:
         under SANDBAGS_ROOT.
 
   * In both cases:
-      - Locate the nested directory:
+      - Probe a small set of known GeForce/UDA layouts, preferring the
+        no-GFE/public variants when available. This currently includes:
+            UDA\GeforceWeb_1\Public\International\Display.Driver
             UDA\UAS_UDA_GQS_NoGFE\Display.Driver
-      - Copy that entire Display.Driver tree into the current user's
+            UDA\GeforceWeb\Public\International\Display.Driver
+            UDA\GeforceWeb\Private\International\Display.Driver
+            UDA\UAS_UDA_GQS_GFE\Display.Driver
+      - Copy the first matching Display.Driver tree into the current user's
         Downloads folder as:
 
-            <version>-UAS_UDA_GQS_NoGFE-Display.Driver
+            <version>-<layout>-Display.Driver
 
 On success, the script prints an example pnputil command you can run
 next to install the driver.
@@ -49,6 +54,7 @@ import os
 import re
 import shutil
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 # Use SANDBAGS_ROOT environment variable if set and non-empty, otherwise use default path
@@ -58,8 +64,40 @@ SANDBAGS_ROOT = Path(
 
 SANDBAGS_ROOT_TIP = "Tip: You can set SANDBAGS_ROOT via an environment variable to use a different path."
 
-# Relative path from the sandbag directory to Display.Driver.
-REL_DISPLAY_DRIVER = Path("UDA") / "UAS_UDA_GQS_NoGFE" / "Display.Driver"
+
+@dataclass(frozen=True)
+class DriverLayout:
+    """Known sandbag layout for a driver package and its install INF."""
+
+    relative_display_driver: Path
+    install_inf_name: str
+
+
+# Known relative paths from the sandbag directory to the GeForce Display.Driver
+# tree. Prefer the no-GFE/public variants first to preserve the helper's
+# previous behavior, then fall back to GFE/private variants when needed.
+DISPLAY_DRIVER_LAYOUTS: tuple[DriverLayout, ...] = (
+    DriverLayout(
+        Path("UDA") / "GeforceWeb_1" / "Public" / "International" / "Display.Driver",
+        "nv_dispi.inf",
+    ),
+    DriverLayout(
+        Path("UDA") / "UAS_UDA_GQS_NoGFE" / "Display.Driver",
+        "nv_dispi.inf",
+    ),
+    DriverLayout(
+        Path("UDA") / "GeforceWeb" / "Public" / "International" / "Display.Driver",
+        "nv_dispi.inf",
+    ),
+    DriverLayout(
+        Path("UDA") / "GeforceWeb" / "Private" / "International" / "Display.Driver",
+        "nv_dispig.inf",
+    ),
+    DriverLayout(
+        Path("UDA") / "UAS_UDA_GQS_GFE" / "Display.Driver",
+        "nv_dispig.inf",
+    ),
+)
 
 
 class ScriptError(Exception):
@@ -226,12 +264,104 @@ def get_downloads_dir() -> Path:
     return downloads
 
 
-def copy_display_driver(sandbag_dir: Path, downloads_dir: Path) -> Path:
+def format_layout_label(layout: DriverLayout) -> str:
+    """
+    Build a readable destination label from the selected layout.
+
+    Examples:
+      - UDA/UAS_UDA_GQS_NoGFE/Display.Driver -> UAS_UDA_GQS_NoGFE
+      - UDA/GeforceWeb_1/Public/International/Display.Driver ->
+        GeforceWeb_1-Public-International
+    """
+    parts = layout.relative_display_driver.parts
+    if len(parts) < 3:
+        raise ScriptError(f"Unexpected layout path format: {layout.relative_display_driver}")
+    return "-".join(parts[1:-1])
+
+
+def find_display_driver_source(sandbag_dir: Path) -> tuple[DriverLayout, Path]:
+    """
+    Resolve the first known Display.Driver layout present in the sandbag.
+
+    Returns the selected layout metadata and the full source path.
+    """
+    attempted_paths: list[Path] = []
+
+    for layout in DISPLAY_DRIVER_LAYOUTS:
+        src_display_driver = sandbag_dir / layout.relative_display_driver
+        attempted_paths.append(src_display_driver)
+        if not src_display_driver.exists():
+            continue
+        if not src_display_driver.is_dir():
+            raise ScriptError(
+                "Expected Display.Driver to be a directory, but it is not.\n"
+                f"Path: {src_display_driver}"
+            )
+        return layout, src_display_driver
+
+    version_part = sandbag_dir.name.split("-", 1)[0]
+    major_version = version_part.split(".", 1)[0] if version_part else ""
+    hint = ""
+    if major_version:
+        script_name = Path(sys.argv[0]).name if sys.argv else "Get-Windows-Prerelease-Driver.py"
+        hint = f"\n\nTip: To see all available versions, try:\n  python {script_name} {major_version}.*"
+
+    attempted_paths_text = "\n".join(f"  {path}" for path in attempted_paths)
+    raise ScriptError(
+        "Display.Driver directory not found.\n"
+        "Tried paths:\n"
+        f"{attempted_paths_text}"
+        f"{hint}"
+    )
+
+
+def find_install_inf(src_display_driver: Path, layout: DriverLayout) -> Path:
+    """
+    Locate the install INF for the selected layout.
+
+    The layout supplies the expected filename. If that exact filename is
+    missing but there is exactly one `nv_disp*.inf`, use it as a fallback.
+    """
+    install_inf = src_display_driver / layout.install_inf_name
+    if install_inf.exists():
+        if not install_inf.is_file():
+            raise ScriptError(f"Expected install INF to be a file, but it is not.\nPath: {install_inf}")
+        return install_inf
+
+    fallback_infs = sorted(
+        path for path in src_display_driver.glob("nv_disp*.inf") if path.is_file()
+    )
+    if len(fallback_infs) == 1:
+        return fallback_infs[0]
+
+    if not fallback_infs:
+        raise ScriptError(
+            "Install INF not found.\n"
+            f"Expected file:\n  {install_inf}\n"
+            f"Under directory:\n  {src_display_driver}"
+        )
+
+    available_fallbacks = "\n".join(f"  {path.name}" for path in fallback_infs)
+    raise ScriptError(
+        "Could not determine which install INF to use.\n"
+        f"Expected file:\n  {install_inf}\n"
+        "Available nv_disp*.inf files:\n"
+        f"{available_fallbacks}"
+    )
+
+
+def copy_display_driver(
+    sandbag_dir: Path,
+    downloads_dir: Path,
+    layout: DriverLayout,
+    src_display_driver: Path,
+) -> tuple[Path, str]:
     """
     Copy the Display.Driver directory from the given sandbag directory into
     the Downloads directory with the requested naming scheme.
 
-    Returns the full path to the newly created destination directory.
+    Returns the full path to the newly created destination directory and the
+    selected install INF filename.
     """
     # Extract the version string from the sandbag directory name,
     # e.g. '591.34-sandbag' -> '591.34'.
@@ -241,24 +371,11 @@ def copy_display_driver(sandbag_dir: Path, downloads_dir: Path) -> Path:
             f"Unexpected sandbag directory name format: {sandbag_dir.name}\nExpected something like '591.34-sandbag'."
         )
     version_str = name_parts[0]
-
-    src_display_driver = sandbag_dir / REL_DISPLAY_DRIVER
-    if not src_display_driver.exists():
-        # Extract major version for helpful hint
-        major_version = name_parts[0].split(".")[0]
-
-        hint = ""
-        if major_version:
-            script_name = Path(sys.argv[0]).name if sys.argv else "Get-Windows-Prerelease-Driver.py"
-            hint = f"\n\nTip: To see all available versions, try:\n  python {script_name} {major_version}.*"
-
-        raise ScriptError(f"Display.Driver directory not found.\nExpected path:\n  {src_display_driver}{hint}")
-    if not src_display_driver.is_dir():
-        raise ScriptError(f"Expected Display.Driver to be a directory, but it is not.\nPath: {src_display_driver}")
+    install_inf = find_install_inf(src_display_driver, layout)
 
     # Build destination directory name:
-    #   "<version>-UAS_UDA_GQS_NoGFE-Display.Driver"
-    build_flavor = REL_DISPLAY_DRIVER.parent.name  # 'UAS_UDA_GQS_NoGFE'
+    #   "<version>-<layout>-Display.Driver"
+    build_flavor = format_layout_label(layout)
     dest_name = f"{version_str}-{build_flavor}-Display.Driver"
     dest_dir = downloads_dir / dest_name
 
@@ -274,7 +391,7 @@ def copy_display_driver(sandbag_dir: Path, downloads_dir: Path) -> Path:
     except OSError as exc:
         raise ScriptError(f"Failed to copy from:\n  {src_display_driver}\nto:\n  {dest_dir}\nError: {exc}") from exc
 
-    return dest_dir
+    return dest_dir, install_inf.name
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -282,7 +399,7 @@ def main(argv: list[str] | None = None) -> int:
         description=(
             "Find the latest or a specific prerelease sandbag build for a "
             "given driver version and copy its "
-            "UDA/UAS_UDA_GQS_NoGFE/Display.Driver directory into the "
+            "preferred GeForce/UDA Display.Driver directory into the "
             "current user's Downloads folder."
         )
     )
@@ -331,8 +448,11 @@ def main(argv: list[str] | None = None) -> int:
         print("Using sandbag directory:", flush=True)
         print(f"    {sandbag_dir}", flush=True)
 
+        layout, src_display_driver = find_display_driver_source(sandbag_dir)
+        print("Using driver layout:", flush=True)
+        print(f"    {layout.relative_display_driver}", flush=True)
+
         # Show the full source path before starting the copy
-        src_display_driver = sandbag_dir / REL_DISPLAY_DRIVER
         print("Copying from:", flush=True)
         print(f"    {src_display_driver}", flush=True)
 
@@ -340,7 +460,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Using Downloads directory:", flush=True)
         print(f"    {downloads_dir}", flush=True)
 
-        dest_dir = copy_display_driver(sandbag_dir, downloads_dir)
+        dest_dir, install_inf_name = copy_display_driver(sandbag_dir, downloads_dir, layout, src_display_driver)
     except ScriptError as exc:
         print("ERROR:", exc, file=sys.stderr)
         return 1
@@ -351,7 +471,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"    {dest_dir_str}", flush=True)
     print()
     print("Next step (pnputil command):", flush=True)
-    print(f'  pnputil /add-driver "{dest_dir_str}\\nv_dispi.inf" /install', flush=True)
+    print(f'  pnputil /add-driver "{dest_dir_str}\\{install_inf_name}" /install', flush=True)
 
     return 0
 
