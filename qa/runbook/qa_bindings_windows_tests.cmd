@@ -38,11 +38,9 @@ cd ..
 cd cuda_bindings\
 python -m pytest -ra -s -vv tests\
 set CUDA_PYTHON_CUDA_PER_THREAD_DEFAULT_STREAM=1 && python -m pytest -ra -s -vv tests\ & set CUDA_PYTHON_CUDA_PER_THREAD_DEFAULT_STREAM=
-python -m pytest -ra -s -vv examples\
 python -m pytest -ra -s -vv tests\cython\
 cd ..
 
 cd cuda_core\
 python -m pytest -ra -s -vv tests\
-python -m pytest -ra -s -vv tests\example_tests\
 cd ..

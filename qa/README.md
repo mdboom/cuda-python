@@ -57,6 +57,16 @@ This adds the helper directory to your `PATH` and provides bash functions for co
 
 See the individual sections below for usage details.
 
+### Runbook
+
+The `qa/runbook/` directory contains Linux and Windows build/test command
+scripts that serve as a human-readable runbook during pre-release testing and
+handoff.
+
+These scripts are used directly for validation before handing `ctk-next` to
+the QA team, and they also act as a reference for equivalent steps in the QA
+team's own automation systems.
+
 ### cython-gen
 
 The [`cuda-python-private:cython-gen`](https://github.com/NVIDIA/cuda-python-private/tree/cython-gen) branch contains
