@@ -293,10 +293,7 @@ def find_display_driver_source(sandbag_dir: Path) -> tuple[DriverLayout, Path]:
         if not src_display_driver.exists():
             continue
         if not src_display_driver.is_dir():
-            raise ScriptError(
-                "Expected Display.Driver to be a directory, but it is not.\n"
-                f"Path: {src_display_driver}"
-            )
+            raise ScriptError(f"Expected Display.Driver to be a directory, but it is not.\nPath: {src_display_driver}")
         return layout, src_display_driver
 
     version_part = sandbag_dir.name.split("-", 1)[0]
@@ -307,12 +304,7 @@ def find_display_driver_source(sandbag_dir: Path) -> tuple[DriverLayout, Path]:
         hint = f"\n\nTip: To see all available versions, try:\n  python {script_name} {major_version}.*"
 
     attempted_paths_text = "\n".join(f"  {path}" for path in attempted_paths)
-    raise ScriptError(
-        "Display.Driver directory not found.\n"
-        "Tried paths:\n"
-        f"{attempted_paths_text}"
-        f"{hint}"
-    )
+    raise ScriptError(f"Display.Driver directory not found.\nTried paths:\n{attempted_paths_text}{hint}")
 
 
 def find_install_inf(src_display_driver: Path, layout: DriverLayout) -> Path:
@@ -328,17 +320,13 @@ def find_install_inf(src_display_driver: Path, layout: DriverLayout) -> Path:
             raise ScriptError(f"Expected install INF to be a file, but it is not.\nPath: {install_inf}")
         return install_inf
 
-    fallback_infs = sorted(
-        path for path in src_display_driver.glob("nv_disp*.inf") if path.is_file()
-    )
+    fallback_infs = sorted(path for path in src_display_driver.glob("nv_disp*.inf") if path.is_file())
     if len(fallback_infs) == 1:
         return fallback_infs[0]
 
     if not fallback_infs:
         raise ScriptError(
-            "Install INF not found.\n"
-            f"Expected file:\n  {install_inf}\n"
-            f"Under directory:\n  {src_display_driver}"
+            f"Install INF not found.\nExpected file:\n  {install_inf}\nUnder directory:\n  {src_display_driver}"
         )
 
     available_fallbacks = "\n".join(f"  {path.name}" for path in fallback_infs)

@@ -119,6 +119,10 @@ Bundled Headers Installation
 
 NVRTC defines the following types and functions for bundled headers installation and management.
 
+.. autoclass:: cuda.bindings.nvrtc.nvrtcBundledHeadersInfo
+.. autofunction:: cuda.bindings.nvrtc.nvrtcInstallBundledHeaders
+.. autofunction:: cuda.bindings.nvrtc.nvrtcGetBundledHeadersInfo
+.. autofunction:: cuda.bindings.nvrtc.nvrtcRemoveBundledHeaders
 .. autoattribute:: cuda.bindings.nvrtc.NVRTC_INSTALL_HEADERS_SKIP_IF_EXISTS
 
     Flags for nvrtcInstallBundledHeaders.Skip installation if version marker exists and version matches. This is the default behavior when flags=0.

@@ -51,9 +51,10 @@ The `qa/helpers/` directory contains automation scripts for common CTK update ta
 
 This adds the helper directory to your `PATH` and provides bash functions for common workflows:
 
-* **cybind updates**: `cybind_header_update.sh` and `run_cybind()` function
-* **cython-gen updates**: `run_cython_gen()` function
-* **enum updates**: `update_cuda_core_enum_explanations.sh`
+* **public-main sync and merge**: `public_repo.py`, `git_merge_public_main.sh`
+* **native cybind updates**: `cybind_header_update.sh` and `run_cybind_native()`
+* **driver/runtime/nvrtc updates**: `run_cybind_cython_gen()`
+* **preview/public-branch helpers**: `make_squash_merge_into_public_main_preview.sh`, `copy_preview_to_public_branch.sh`
 
 See the individual sections below for usage details.
 
@@ -67,77 +68,110 @@ These scripts are used directly for validation before handing `ctk-next` to
 the QA team, and they also act as a reference for equivalent steps in the QA
 team's own automation systems.
 
-### cython-gen
+## Updating Bindings via `cybind`
 
-The [`cuda-python-private:cython-gen`](https://github.com/NVIDIA/cuda-python-private/tree/cython-gen) branch contains
-custom auto-generation scripts and configuration files for generating `driver`, `runtime`, and `nvrtc` bindings.
-It includes scripts for:
+The current source of truth for both legacy (`driver`, `runtime`, `nvrtc`) and
+native (`cufile`, `nvjitlink`, `nvml`, `nvvm`, `nvfatbin`) generation is
+[`cybind`](https://gitlab-master.nvidia.com/leof/cybind/).
 
-* Fetching and processing CUDA headers.
-* Generating documentation configurations.
-* Creating Python bindings for CUDA driver, runtime, and NVRTC code.
+The old standalone `cython-gen` repository, older docs that refer to it, and
+GitLab MR 345 are now historical references only. Start from a current
+`cybind` checkout first.
 
-**Branch naming convention**: For CTK 13.X, create a branch named `cython-gen-next-130X0` (e.g., `cython-gen-next-13020` for CTK 13.2).
+### Legacy libraries: `driver`, `runtime`, `nvrtc`
 
-**Reference previous versions**: When updating for a new CTK version, archived branches from previous versions are valuable references:
-* Check `archive/cython-gen-next-13010` (or similar) to see how new APIs were added
-* Look at `configs/driver/_driver.py` in the previous branch to understand patterns for:
-  - `signature_mapping`: Maps API names to parameter handling types (`SigType`)
-  - `structure_mapping`: Maps structures with pointer members to parameter handling
-  - `cuda_api_introduced_version`: Records the CTK version each API was introduced
-* **Important**: Don't delete old branches—archive them (e.g., `archive/cython-gen-next-13020`) for future reference
+`run_cybind_cython_gen()` drives the legacy generator that now lives under
+`cybind/legacy_cython_gen/`.
 
-**Update process**:
+Use the helper from the `cybind` repository root:
 
-Use the helper function from the cython-gen repository root:
 ```bash
-cd /path/to/cython-gen
-run_cython_gen 13.2 ../ctk-next
-```
-This automatically creates/updates the virtual environment if needed and runs the full regeneration workflow with proper logging.
-
-Alternatively, you can invoke the script directly:
-```bash
-CUDA_HOME=/usr/local/cuda-13.2 python regenerate.py -o ../ctk-next
+cd /path/to/cybind
+run_cybind_cython_gen 13.3.0 ../ctk-next
 ```
 
-**Common issues when updating cython-gen**:
-* Missing API signatures: The script will report missing entries in `signature_mapping`. Add them to `configs/driver/_driver.py` (or `runtime/_runtime.py`, `nvrtc/_nvrtc.py`).
-* Missing `_ptsz` variants: Some APIs have per-thread stream zero variants (e.g., `cuMemcpyWithAttributesAsync_ptsz`). These also need entries in `cuda_api_introduced_version`.
-* Structure mappings: If a structure contains pointer members, add it to `structure_mapping` with the appropriate parameter handling type.
+This helper requires the CTK target version in `<major>.<minor>.<patch>` form
+and writes into `../ctk-next/cuda_bindings`.
 
-### cybind
+You can also invoke `cybind` directly:
 
-All other library bindings provided by `cuda-bindings` are supported by [`cybind`](https://gitlab-master.nvidia.com/leof/cybind/).
+```bash
+python -m cybind -vvv --ctk-target-version 13.3.0 --generate driver runtime nvrtc --output-dir ../ctk-next/cuda_bindings
+```
 
-**Branch naming convention**: For CTK 13.X, create a branch named `cybind-next-130X0` (e.g., `cybind-next-13020` for CTK 13.2).
+If you need to refresh the local legacy headers from an installed toolkit, do it
+from the `cybind` repository root:
 
-**Reference previous versions**: Archived branches from previous versions are valuable references:
-* Check `archive/cybind-next-13010` (or similar) to see how headers were updated
-* Look at config files (e.g., `cybind/assets/configs/config_cufile.py`) to see version update patterns
-* **Important**: Don't delete old branches—archive them (e.g., `archive/cybind-next-13020`) for future reference
+```bash
+python -m cybind -vvv --fetch driver runtime nvrtc \
+  --local-path /usr/local/cuda-13.3/include \
+  --local-version 13.3.0
+```
 
-**Update process**:
+Common issues when updating `driver`/`runtime`/`nvrtc`:
 
-1. **Update headers**: Use the helper script from the cybind repository root:
-   ```bash
-   cd /path/to/cybind
-   cybind_header_update.sh 13.2
-   ```
-   This copies headers from `/usr/local/cuda-13.2/` and applies necessary patches (e.g., `cufile.h` docstring fixes).
+* Local fetches for a new CTK version need the requested version to be accepted
+  by the legacy generator first (for example in
+  `cybind/legacy_cython_gen/main.py`)
+* Missing `signature_mapping` or `cuda_api_introduced_version` entries in
+  `cybind/legacy_cython_gen/configs/`
+* Missing `_ptsz` variants for new driver APIs
+* New structures or typedef-backed anonymous structs that need additional
+  pointer-handling or parser fixes
 
-2. **Update version lists**: Manually update version lists in config files (e.g., `cybind/assets/configs/config_cufile.py`).
+### Native libraries: `cufile`, `nvjitlink`, `nvml`, `nvvm`, `nvfatbin`
 
-3. **Generate bindings**: Use the helper function from the cybind repository root:
-   ```bash
-   cd /path/to/cybind
-   run_cybind 13.2 ../ctk-next
-   ```
-   This automatically creates/updates the virtual environment if needed and generates bindings with proper logging.
+The native generator path covers `cufile`, `nvjitlink`, `nvml`, `nvvm`, and
+`nvfatbin`.
 
-**Common issues when updating cybind**:
-* Docstring parsing errors: Some headers may need manual patches to ensure proper docstring formatting (e.g., adding missing `@param` tags)
-* Missing version entries: Don't forget to update the `versions` list in each library's config file
+For a new CTK version, the most reliable flow is:
+
+1. Add the new version to the relevant `versions` lists in
+   `cybind/assets/configs/` before attempting any local fetch commands.
+2. Fetch headers from the installed toolkit with `cybind --fetch`.
+3. Apply or refresh any header patches that still matter (for example the
+   `cufile` patch that keeps doc quality consistent).
+4. Regenerate bindings with `run_cybind_native`.
+5. Run `pre-commit run --all-files` in `ctk-next` before reviewing the final
+   diff.
+
+Example local fetch commands from the `cybind` repository root:
+
+```bash
+cd /path/to/cybind
+
+python -m cybind -vvv --fetch cufile nvjitlink nvml nvfatbin \
+  --local-path /usr/local/cuda-13.3/include \
+  --local-version 13.3.0
+
+python -m cybind -vvv --fetch nvvm \
+  --local-path /usr/local/cuda-13.3/nvvm/include \
+  --local-version 13.3.0
+```
+
+Then regenerate:
+
+```bash
+cd /path/to/cybind
+run_cybind_native 13.3.0 ../ctk-next
+```
+
+Or invoke `cybind` directly:
+
+```bash
+python -m cybind -vvv --generate cufile nvjitlink nvml nvvm nvfatbin --output-dir ../ctk-next/cuda_bindings
+```
+
+Notes:
+
+* `run_cybind_native()` now includes `nvfatbin`.
+* `cybind_header_update.sh` is still useful as a convenience wrapper for a few
+  manual header copies and the `cufile` patch, but the canonical bring-up flow
+  for a new CTK is `python -m cybind --fetch ... --local-path ... --local-version ...`.
+* `nvvm` uses a nonstandard local header layout under `nvvm/include`, so it
+  needs its own fetch command.
+* New generated files may still need a follow-up `pre-commit` normalization
+  pass (for example EOF or trailing-whitespace fixes in generated `nvml.pyx`).
 
 ### Manual updates
 
@@ -161,65 +195,57 @@ The `_ptx_to_cuda` dictionary in
 may need to be updated, based on the table shown under the
 [PTX Release Notes](http://sw-mobile-docs/CUDA/GPGPU/parallel-thread-execution/index.html#release-notes).
 
-#### CUDA enums
-
-Two files under `cuda/core/_utils/` need to be updated:
-
-* `cuda/core/_utils/driver_cu_result_explanations.py`
-* `cuda/core/_utils/runtime_cuda_error_explanations.py`
-
-**Update process**:
-
-Use the helper script from the ctk-next (or cuda-python) repository root:
-```bash
-cd /path/to/ctk-next
-update_cuda_core_enum_explanations.sh 13.2
-```
-
-This script:
-1. Generates enum explanations using `toolshed/reformat_cuda_enums_as_py.py`
-2. Updates both target files while preserving headers
-3. Updates the CUDA Toolkit version number in comments
-4. Formats files with ruff via pre-commit
-5. Verifies files compile
-6. Reports git diff with preview
-
-The script automatically detects which enum to parse based on the header file and handles all the file manipulation automatically.
+`update_cuda_core_enum_explanations.sh` still exists, but enum explanation
+refreshes are usually a follow-up cleanup in the public repository rather than
+part of the normal `ctk-next` pre-release bring-up flow.
 
 ---
 
 ## How to Merge Public `main` into `ctk-next`
 
-To keep `ctk-next` synchronized with the latest public changes, use one of the helper scripts:
+Recommended flow:
 
 ```bash
-git_merge_public_main.sh
+git checkout -b "ctk-next-merge-main-$(date +%Y-%m-%d+%H%M)"
+qa/helpers/public_repo.py sync
+qa/helpers/git_merge_public_main.sh
 ```
 
-This script fetches and merges the current `main` branch from the public `cuda-python` repository into the private `ctk-next` branch.
-It performs a clean merge without having to permanently add a remote.
+Notes:
+
+* `public_repo.py sync` keeps the `public_repo` remote, the private
+  `public-main` branch, and tags aligned with the public repository.
+* `git_merge_public_main.sh` is still the correct entry point for merging the
+  public `main` branch into `ctk-next`.
+* The merge helper fetches `main`, shows incoming commits, prompts before
+  merging, and auto-resolves conflicts only in auto-generated files.
+* Start from a clean branch/worktree and expect `qa/` itself to remain
+  untouched by this merge step.
+* After the helper finishes, review any remaining conflicts or merge diff and
+  regenerate generated files only if the merge actually requires it.
 
 ## How to Squash-Merge ctk-next Back into Public main
 
 ### Preparing a Preview Branch
 
 Before the CTK release goes live, you can create a preview branch that
-cleanly separates the cython-gen and cybind generated changes from all other
+cleanly separates the legacy and native cybind-generated changes from all other
 changes. This makes it easier to review the changes in isolation ahead of
 time, which is especially useful since you cannot create a public PR until
 after the new CTK has been posted publicly. The goal is to be well-prepared
 for a 0-day release of `cuda-bindings`.
 
-Use one of the helper scripts:
+Start by syncing public refs, then create the preview:
 
 ```bash
-make_squash_merge_into_public_main_preview.sh <branch-name>
+qa/helpers/public_repo.py sync
+qa/helpers/make_squash_merge_into_public_main_preview.sh <branch-name>
 ```
 
 This script:
 1. Creates a new branch based on `public_repo/main` in a separate git worktree
-2. Runs `run_cython_gen` and `run_cybind` to generate fresh bindings
-3. Creates commits for cython-gen and cybind changes separately
+2. Runs `run_cybind_cython_gen` and `run_cybind_native` to generate fresh bindings
+3. Creates commits for legacy and native cybind changes separately
 4. Squash-merges your branch, automatically resolving conflicts in generated files
 5. Shows a diff (filtering out hash-only changes) to review "everything else" changes
 
@@ -228,10 +254,15 @@ The preview branch allows you to:
 - Verify that the diff between your branch and the preview is minimal (ideally only hash differences)
 - Prepare the final PR structure ahead of time
 
-**Important**: Before running the script, ensure that:
-- Your branch has all cython-gen and cybind updates committed
-- The `cython-gen` and `cybind` repositories are git worktrees and clean
-- Your current working tree is clean
+Important:
+
+* Your branch should already contain the manual changes you want to preview.
+* Keep `ctk-next` and the sibling `cybind` checkout clean before running the
+  helper.
+* The helper currently still contains some stale implementation details,
+  including an old sibling-`cython-gen` checkout check and release-specific
+  version literals. Refresh those assumptions before relying on it for a new
+  CTK cycle.
 
 ### Copying the Preview Branch to Public Repo
 
@@ -248,7 +279,7 @@ Example:
 cd /wrk/forked/cuda-python
 copy_preview_to_public_branch.sh \
   ../squash_merge_into_public_main_preview_2026-02-28+1250 \
-  cuda_bindings_13.2.0_release
+  cuda_bindings_13.3.0_release
 ```
 
 This script:
@@ -260,54 +291,26 @@ This script:
 6. Does not modify the preview worktree or ctk-next repository
 
 The preview branch is already based on `public_repo/main` and contains three clean commits:
-- `cython-gen updates (automatic, NO MANUAL CHANGES)`
+- `driver/runtime/nvrtc updates via cybind (automatic, NO MANUAL CHANGES)`
 - `cybind updates (automatic, NO MANUAL CHANGES)`
 - `git merge --squash <branch-name> && git rm -r -f qa/ (NO MANUAL CHANGES)`
 
 After the branch is created, push it using your standard workflow and create
-a PR. After the PR is merged, merge the corresponding cython-gen and cybind
-branches into their respective repositories, e.g.:
-- `cython-gen-next-13020` → merge into `cython-gen` repository
-- `cybind-next-13020` → merge into `cybind` repository
+a PR. After the PR is merged, merge the corresponding `cybind` branch into
+your `cybind` repository as needed. The older separate `cython-gen`
+follow-up is stale.
 
 ---
 
 ## Tips for Future CTK Updates
 
-### Reference Previous Version Branches
-
-**Highly recommended**: When updating for a new CTK version, archived branches from previous versions are valuable references:
-
-* **cython-gen**: Check `archive/cython-gen-next-13010` (or similar) to see:
-  - How new APIs were added to `signature_mapping`
-  - How `_ptsz` variants were handled
-  - Patterns for `structure_mapping` and `cuda_api_introduced_version`
-
-* **cybind**: Check `archive/cybind-next-13010` (or similar) to see:
-  - Which headers were updated
-  - Manual patches that were applied (e.g., `cufile.h` docstring fixes)
-  - Config file version update patterns
-
-**Branch archiving**: After completing a CTK release:
-1. Archive the working branches instead of deleting them
-2. Use naming like `archive/cython-gen-next-13020` and `archive/cybind-next-13020`
-3. These archived branches serve as templates for future updates
-
-### Common Workflow Patterns
-
-1. **cython-gen updates**:
-   - Run `regenerate.py` to identify missing configurations
-   - Reference previous version branch to understand patterns
-   - Add missing entries to config files
-   - Re-run until generation succeeds
-
-2. **cybind updates**:
-   - Run `cybind_header_update.sh` to copy headers and apply patches
-   - Update config file version lists manually
-   - Run `run_cybind` to generate bindings
-   - Commit results
-
-3. **Enum updates**:
-   - Run `update_cuda_core_enum_explanations.sh` to update both enum files
-   - Review the git diff output
-   - Commit results
+* Start with current `cybind` `main`; older docs, the old standalone
+  `cython-gen` repo, and MR 345 are no longer the primary source of truth.
+* Archived `cybind-next-*` branches are still useful references for config
+  version bumps, header patches, and generator-side fixes.
+* The patch sets under `upstream/ctk-release-automation` and
+  `upstream/ctkn-go-rewrite` can still be useful when a new CTK adds APIs or
+  unusual header layout changes, but compare them against current `cybind`
+  first because many older fixes are already absorbed.
+* After generation, validate the result with the scripts in `qa/runbook/` and
+  run `pre-commit` before treating the diff as final.

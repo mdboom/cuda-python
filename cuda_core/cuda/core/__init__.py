@@ -28,8 +28,16 @@ _import_versioned_module()
 del _import_versioned_module
 
 
-from cuda.core import system, utils
+from cuda.core import checkpoint, system, utils
+from cuda.core._context import Context, ContextOptions
 from cuda.core._device import Device
+from cuda.core._device_resources import (
+    DeviceResources,
+    SMResource,
+    SMResourceOptions,
+    WorkqueueResource,
+    WorkqueueResourceOptions,
+)
 from cuda.core._event import Event, EventOptions
 from cuda.core._graphics import GraphicsResource
 from cuda.core._launch_config import LaunchConfig
@@ -49,10 +57,6 @@ from cuda.core._memory import (
     VirtualMemoryResource,
     VirtualMemoryResourceOptions,
 )
-from cuda.core._memoryview import (
-    StridedMemoryView,
-    args_viewable_as_strided_memory,
-)
 from cuda.core._module import Kernel, ObjectCode
 from cuda.core._program import Program, ProgramOptions
 from cuda.core._stream import (
@@ -62,12 +66,10 @@ from cuda.core._stream import (
     StreamOptions,
 )
 from cuda.core._tensor_map import TensorMapDescriptor, TensorMapDescriptorOptions
-from cuda.core.graph import (
-    Condition,
-    Graph,
-    GraphAllocOptions,
-    GraphBuilder,
-    GraphCompleteOptions,
-    GraphDebugPrintOptions,
-    GraphDef,
-)
+
+# isort: split
+# Must come after the cuda.core._* extension imports above: loading graph
+# earlier interacts badly with the merged-wheel __path__ rewrite and leaves
+# Graph/GraphBuilder/GraphCompleteOptions/GraphDebugPrintOptions missing from
+# cuda.core.graph.
+import cuda.core.graph

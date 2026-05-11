@@ -599,7 +599,7 @@ Data types used by CUDA Runtime
     .. autoattribute:: cuda.bindings.runtime.cudaError_t.cudaErrorLaunchTimeout
 
 
-        This indicates that the device kernel took too long to execute. This can only occur if timeouts are enabled - see the device attribute cudaDevAttrKernelExecTimeout for more information. This leaves the process in an inconsistent state and any further CUDA work will return the same error. To continue using CUDA, the process must be terminated and relaunched.
+        This indicates that the device kernel took too long to execute. This can only occur if timeouts are enabled - see the device attribute :py:obj:`~.cudaDevAttrKernelExecTimeout` for more information. This leaves the process in an inconsistent state and any further CUDA work will return the same error. To continue using CUDA, the process must be terminated and relaunched.
 
 
     .. autoattribute:: cuda.bindings.runtime.cudaError_t.cudaErrorLaunchIncompatibleTexturing

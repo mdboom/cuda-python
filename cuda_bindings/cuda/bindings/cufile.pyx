@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 #
-# This code was automatically generated across versions from 12.9.1 to 13.3.0, generator version 0.3.1.dev1630+gadce055ea.d19800101. Do not modify it directly.
+# This code was automatically generated across versions from 12.9.1 to 13.3.0, generator version 0.3.1.dev1676+gc7678f804. Do not modify it directly.
 
 cimport cython  # NOQA
 from libc cimport errno
@@ -2940,7 +2940,7 @@ cpdef driver_get_properties(intptr_t props):
     """Gets the Driver session properties If the driver is not opened, it will return the staged/default properties If the driver is opened, it will return the current properties.
 
     Args:
-        props (intptr_t): .
+        props (intptr_t): Properties to get.
 
     .. seealso:: `cuFileDriverGetProperties`
     """
@@ -3057,10 +3057,10 @@ cpdef stream_deregister(intptr_t stream):
 
 
 cpdef int get_version() except? 0:
-    """@The version is returned as (1000 major + 10 minor). @For example, CUFILE 1.7.0 would be represented by 1070.
+    """Get the cuFile library version.
 
     Returns:
-        int: .
+        int: Pointer to an integer where the version will be stored.
 
     .. seealso:: `cuFileGetVersion`
     """

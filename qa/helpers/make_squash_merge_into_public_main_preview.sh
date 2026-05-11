@@ -119,7 +119,7 @@ if ! (
 fi
 echo "    ✓ cybind is clean"
 
-# Source activate_helpers.sh to get run_cython_gen and run_cybind functions
+# Source activate_helpers.sh to get run_cybind_cython_gen and run_cybind_native functions
 # This must be done before switching branches, since qa/ won't exist in the new branch
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f "${SCRIPT_DIR}/activate_helpers.sh" ]; then
@@ -156,9 +156,9 @@ git worktree add -b "$PREVIEW_BRANCH" "$WORKTREE_PATH" public_repo/main
 
 cd "$WORKTREE_PATH"
 
-cd "$PARENT_DIR/cython-gen/"
+cd "$PARENT_DIR/cybind"
 git clean -fdx
-run_cython_gen 13.2 "$WORKTREE_PATH"
+run_cybind_cython_gen 13.2.0 "$WORKTREE_PATH"
 cd "$WORKTREE_PATH"
 # Run pre-commit twice: first run may exit non-zero (auto-fixes), second must succeed
 set +e
@@ -169,11 +169,11 @@ if [ $PRE_COMMIT_EXIT -ne 0 ]; then
     echo "Exit code from first pre-commit run was $PRE_COMMIT_EXIT, rerunning..."
     pre-commit run --all-files
 fi
-git commit -a -m 'cython-gen updates (automatic, NO MANUAL CHANGES)'
+git commit -a -m 'driver/runtime/nvrtc updates via cybind (automatic, NO MANUAL CHANGES)'
 
 cd "$PARENT_DIR/cybind"
 git clean -fdx
-run_cybind 13.2 "$WORKTREE_PATH"
+run_cybind_native 13.2.0 "$WORKTREE_PATH"
 cd "$WORKTREE_PATH"
 # Run pre-commit twice: first run may exit non-zero (auto-fixes), second must succeed
 set +e

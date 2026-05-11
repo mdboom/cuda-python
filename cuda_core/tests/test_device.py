@@ -38,7 +38,7 @@ def test_to_system_device(deinit_cuda):
 
     system_device = device.to_system_device()
     assert isinstance(system_device, SystemDevice)
-    assert system_device.uuid == device.uuid
+    assert system_device.uuid_without_prefix == device.uuid
 
     # Technically, this test will only work with PCI devices, but are there
     # non-PCI devices we need to support?
@@ -63,7 +63,7 @@ def test_device_repr(deinit_cuda):
 def test_device_alloc(deinit_cuda):
     device = Device()
     device.set_current()
-    buffer = device.allocate(1024)
+    buffer = device.allocate(1024, stream=device.default_stream)
     device.sync()
     assert buffer.handle != 0
     assert buffer.size == 1024
@@ -73,7 +73,7 @@ def test_device_alloc(deinit_cuda):
 def test_device_alloc_zero_bytes(deinit_cuda):
     device = Device()
     device.set_current()
-    buffer = device.allocate(0)
+    buffer = device.allocate(0, stream=device.default_stream)
     device.sync()
     assert buffer.handle >= 0
     assert buffer.size == 0

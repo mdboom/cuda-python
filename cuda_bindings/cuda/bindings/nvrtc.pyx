@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 
-# This code was automatically generated with version 13.3.0, generator version 0.3.1.dev1630+gadce055ea.d19800101. Do not modify it directly.
+# This code was automatically generated with version 13.3.0, generator version 0.3.1.dev1676+gc7678f804. Do not modify it directly.
 from typing import Any, Optional
 import cython
 import ctypes
@@ -136,6 +136,183 @@ cdef class nvrtcProgram:
         return <void_ptr>self._pvt_ptr[0]
     def getPtr(self):
         return <void_ptr>self._pvt_ptr
+
+cdef class anon_struct0:
+    """
+    Attributes
+    ----------
+
+    available : int
+
+
+
+    compressedSize : size_t
+
+
+
+    uncompressedSize : size_t
+
+
+
+    cudaVersionMajor : int
+
+
+
+    cudaVersionMinor : int
+
+
+
+    numFiles : unsigned int
+
+
+
+    Methods
+    -------
+    getPtr()
+        Get memory address of class instance
+    """
+    def __cinit__(self, void_ptr _ptr):
+        self._pvt_ptr = <cynvrtc.nvrtcBundledHeadersInfo *>_ptr
+
+    def __init__(self, void_ptr _ptr):
+        pass
+    def __dealloc__(self):
+        pass
+    def getPtr(self):
+        return <void_ptr>self._pvt_ptr
+    def __repr__(self):
+        if self._pvt_ptr is not NULL:
+            str_list = []
+
+            try:
+                str_list += ['available : ' + str(self.available)]
+            except ValueError:
+                str_list += ['available : <ValueError>']
+
+
+            try:
+                str_list += ['compressedSize : ' + str(self.compressedSize)]
+            except ValueError:
+                str_list += ['compressedSize : <ValueError>']
+
+
+            try:
+                str_list += ['uncompressedSize : ' + str(self.uncompressedSize)]
+            except ValueError:
+                str_list += ['uncompressedSize : <ValueError>']
+
+
+            try:
+                str_list += ['cudaVersionMajor : ' + str(self.cudaVersionMajor)]
+            except ValueError:
+                str_list += ['cudaVersionMajor : <ValueError>']
+
+
+            try:
+                str_list += ['cudaVersionMinor : ' + str(self.cudaVersionMinor)]
+            except ValueError:
+                str_list += ['cudaVersionMinor : <ValueError>']
+
+
+            try:
+                str_list += ['numFiles : ' + str(self.numFiles)]
+            except ValueError:
+                str_list += ['numFiles : <ValueError>']
+
+            return '\n'.join(str_list)
+        else:
+            return ''
+
+    @property
+    def available(self):
+        return self._pvt_ptr[0].available
+    @available.setter
+    def available(self, int available):
+        self._pvt_ptr[0].available = available
+
+
+    @property
+    def compressedSize(self):
+        return self._pvt_ptr[0].compressedSize
+    @compressedSize.setter
+    def compressedSize(self, size_t compressedSize):
+        self._pvt_ptr[0].compressedSize = compressedSize
+
+
+    @property
+    def uncompressedSize(self):
+        return self._pvt_ptr[0].uncompressedSize
+    @uncompressedSize.setter
+    def uncompressedSize(self, size_t uncompressedSize):
+        self._pvt_ptr[0].uncompressedSize = uncompressedSize
+
+
+    @property
+    def cudaVersionMajor(self):
+        return self._pvt_ptr[0].cudaVersionMajor
+    @cudaVersionMajor.setter
+    def cudaVersionMajor(self, int cudaVersionMajor):
+        self._pvt_ptr[0].cudaVersionMajor = cudaVersionMajor
+
+
+    @property
+    def cudaVersionMinor(self):
+        return self._pvt_ptr[0].cudaVersionMinor
+    @cudaVersionMinor.setter
+    def cudaVersionMinor(self, int cudaVersionMinor):
+        self._pvt_ptr[0].cudaVersionMinor = cudaVersionMinor
+
+
+    @property
+    def numFiles(self):
+        return self._pvt_ptr[0].numFiles
+    @numFiles.setter
+    def numFiles(self, unsigned int numFiles):
+        self._pvt_ptr[0].numFiles = numFiles
+
+
+cdef class nvrtcBundledHeadersInfo(anon_struct0):
+    """
+    Attributes
+    ----------
+
+    available : int
+
+
+
+    compressedSize : size_t
+
+
+
+    uncompressedSize : size_t
+
+
+
+    cudaVersionMajor : int
+
+
+
+    cudaVersionMinor : int
+
+
+
+    numFiles : unsigned int
+
+
+
+    Methods
+    -------
+    getPtr()
+        Get memory address of class instance
+    """
+    def __cinit__(self, void_ptr _ptr = 0):
+        if _ptr == 0:
+            self._pvt_ptr = <cynvrtc.nvrtcBundledHeadersInfo *>&self._pvt_val
+        else:
+            self._pvt_ptr = <cynvrtc.nvrtcBundledHeadersInfo *>_ptr
+
+    def __init__(self, void_ptr _ptr = 0):
+        pass
 
 @cython.embedsignature(True)
 def nvrtcGetErrorString(result not None : nvrtcResult):
@@ -1051,6 +1228,136 @@ def nvrtcGetTileIR(prog, char* TileIR):
     return (_nvrtcResult(err),)
 
 @cython.embedsignature(True)
+def nvrtcInstallBundledHeaders(char* installPath, unsigned int flags):
+    """ nvrtcInstallBundledHeaders extracts CUDA headers bundled with NVRTC to a specified directory for use during compilation.
+
+    NVRTC bundles a set of CUDA Toolkit headers and CUDA C++ Core Libraries
+    (CCCL) within libnvrtc-builtins. This function extracts these headers
+    to the specified directory, allowing NVRTC programs to compile without
+    requiring a separate CUDA Toolkit installation. The bundled headers
+    match those available in the CUDA Toolkit plus CCCL libraries.
+
+    After extraction, users can compile kernels by passing appropriate
+    include paths (such as "-I<installPath>" and "-I<installPath>/cccl") to
+    nvrtcCompileProgram.
+
+    A version marker file (.nvrtc_headers_version) is created in the
+    installation directory to track the installed version.
+
+    This function is thread-safe and process-safe. Concurrent calls from
+    multiple threads or processes will be serialized using file locking. By
+    default, the function waits for the lock; use
+    NVRTC_INSTALL_HEADERS_NO_WAIT to return immediately with
+    NVRTC_ERROR_BUSY if another process holds the lock.
+
+    Parameters
+    ----------
+    installPath : bytes
+        Path where headers should be extracted (UTF-8 encoded). The
+        directory will be created if it doesn't exist.
+    flags : unsigned int
+        NVRTC_INSTALL_HEADERS_* flags:
+
+    Returns
+    -------
+    nvrtcResult
+        - :py:obj:`~.NVRTC_SUCCESS`
+        - :py:obj:`~.NVRTC_ERROR_INVALID_INPUT` (invalid path or conflicting flags like SKIP_IF_EXISTS | FORCE_OVERWRITE)
+        - :py:obj:`~.NVRTC_ERROR_BUILTIN_OPERATION_FAILURE` (extraction failed or version mismatch)
+        - :py:obj:`~.NVRTC_ERROR_BUSY` (lock held by another process and NVRTC_INSTALL_HEADERS_NO_WAIT was specified)
+    errorLog : bytes
+        Optional pointer to receive detailed error message on failure. If
+        non-NULL, `*errorLog` will be set to point to a string describing
+        the error cause. Note: subsequent API calls from the same thread
+        may overwrite this message. May be NULL if error details are not
+        needed.
+
+    See Also
+    --------
+    :py:obj:`~.nvrtcCompileProgram`
+
+    Notes
+    -----
+    Use NVRTC_INSTALL_HEADERS_SKIP_IF_EXISTS to avoid reinstalling if headers already exist. Use NVRTC_INSTALL_HEADERS_FORCE_OVERWRITE to guarantee consistency by clearing the directory first.
+    """
+    cdef const char* errorLog = NULL
+    with nogil:
+        err = cynvrtc.nvrtcInstallBundledHeaders(installPath, flags, &errorLog)
+    if err != cynvrtc.NVRTC_SUCCESS:
+        return (_nvrtcResult(err), None)
+    return (_nvrtcResult_SUCCESS, <bytes>errorLog if errorLog != NULL else None)
+
+@cython.embedsignature(True)
+def nvrtcGetBundledHeadersInfo():
+    """ nvrtcGetBundledHeadersInfo queries information about the bundled headers without extracting them.
+
+    This function allows users to determine if bundled headers are
+    available and get size estimates before calling
+    nvrtcInstallBundledHeaders.
+
+    Returns
+    -------
+    nvrtcResult
+        - :py:obj:`~.NVRTC_SUCCESS`
+        - :py:obj:`~.NVRTC_ERROR_INVALID_INPUT` (info is NULL)
+        - :py:obj:`~.NVRTC_ERROR_BUILTIN_OPERATION_FAILURE` (failed to query bundled headers)
+    info : :py:obj:`~.nvrtcBundledHeadersInfo`
+        Pointer to structure to receive header information.
+    errorLog : bytes
+        Optional pointer to receive detailed error message on failure. If
+        non-NULL, `*errorLog` will be set to point to a string describing
+        the error cause. Note: subsequent API calls from the same thread
+        may overwrite this message. May be NULL if error details are not
+        needed.
+    """
+    cdef nvrtcBundledHeadersInfo info = nvrtcBundledHeadersInfo()
+    cdef const char* errorLog = NULL
+    with nogil:
+        err = cynvrtc.nvrtcGetBundledHeadersInfo(<cynvrtc.nvrtcBundledHeadersInfo*>info._pvt_ptr, &errorLog)
+    if err != cynvrtc.NVRTC_SUCCESS:
+        return (_nvrtcResult(err), None, None)
+    return (_nvrtcResult_SUCCESS, info, <bytes>errorLog if errorLog != NULL else None)
+
+@cython.embedsignature(True)
+def nvrtcRemoveBundledHeaders(char* installPath):
+    """ nvrtcRemoveBundledHeaders removes previously installed bundled headers.
+
+    This function removes the headers installed by
+    nvrtcInstallBundledHeaders, helping users manage disk space. It
+    recursively removes all files and subdirectories within the
+    installation directory.
+
+    Parameters
+    ----------
+    installPath : bytes
+        Path where headers were previously installed. Must be the same path
+        used with nvrtcInstallBundledHeaders.
+
+    Returns
+    -------
+    nvrtcResult
+        - :py:obj:`~.NVRTC_SUCCESS`
+        - :py:obj:`~.NVRTC_ERROR_INVALID_INPUT` (invalid path)
+        - :py:obj:`~.NVRTC_ERROR_BUILTIN_OPERATION_FAILURE` (removal failed)
+    errorLog : bytes
+        Optional pointer to receive detailed error message on failure. If
+        non-NULL, `*errorLog` will be set to point to a string describing
+        the error cause. Note: subsequent API calls from the same thread
+        may overwrite this message. May be NULL if error details are not
+        needed.
+
+    Notes
+    -----
+    This function will remove ALL contents of the specified directory, not just files installed by NVRTC. Use with caution.
+    """
+    cdef const char* errorLog = NULL
+    with nogil:
+        err = cynvrtc.nvrtcRemoveBundledHeaders(installPath, &errorLog)
+    if err != cynvrtc.NVRTC_SUCCESS:
+        return (_nvrtcResult(err), None)
+    return (_nvrtcResult_SUCCESS, <bytes>errorLog if errorLog != NULL else None)
+
+@cython.embedsignature(True)
 def sizeof(objType):
     """ Returns the size of provided CUDA Python structure in bytes
 
@@ -1067,4 +1374,7 @@ def sizeof(objType):
 
     if objType == nvrtcProgram:
         return sizeof(cynvrtc.nvrtcProgram)
+
+    if objType == nvrtcBundledHeadersInfo:
+        return sizeof(cynvrtc.nvrtcBundledHeadersInfo)
     raise TypeError("Unknown type: " + str(objType))
