@@ -51,12 +51,61 @@ The `qa/helpers/` directory contains automation scripts for common CTK update ta
 
 This adds the helper directory to your `PATH` and provides bash functions for common workflows:
 
+* **initial checkout setup**: `git_clone_source_trees.sh`
 * **public-main sync and merge**: `public_repo.py`, `git_merge_public_main.sh`
 * **native cybind updates**: `cybind_header_update.sh` and `run_cybind_native()`
 * **driver/runtime/nvrtc updates**: `run_cybind_cython_gen()`
 * **preview/public-branch helpers**: `make_squash_merge_into_public_main_preview.sh`, `copy_preview_to_public_branch.sh`
 
 See the individual sections below for usage details.
+
+### Initial Checkout Setup
+
+If you are starting from a scratch directory on a new workstation and do not
+have `ctk-next` checked out yet, the shortest bootstrap is a one-liner via an
+authenticated `gh` session:
+
+```bash
+gh api -H "Accept: application/vnd.github.raw" "/repos/NVIDIA/cuda-python-private/contents/qa/helpers/git_clone_source_trees.sh?ref=ctk-next" > ./git_clone_source_trees.sh
+```
+
+Alternatively, navigate to
+
+* https://github.com/NVIDIA/cuda-python-private/blob/ctk-next/qa/helpers/git_clone_source_trees.sh
+
+and download the same file from the GitHub UI.
+
+Make the script executable with:
+
+```bash
+chmod +x ./git_clone_source_trees.sh
+```
+
+After you use the helper to create the standard sibling checkouts, the
+canonical copy will also be available under
+`ctk-next/qa/helpers/git_clone_source_trees.sh`.
+
+To create the standard sibling checkouts in one step, use:
+
+```bash
+git_clone_source_trees.sh [--gitlab-username <name>] [--tolerate-missing-forks] \
+  <github-username> [cuda-python|ctk-next|cybind ...]
+```
+
+With no repo names, the helper clones all three repositories and configures
+`upstream` and `origin` remotes for each checkout. Existing directories are
+reported and skipped so you can re-run it safely.
+
+Before cloning anything, the helper checks that required fork remotes exist for
+repositories that do not already exist locally. If any are missing, it stops
+and enumerates them. To continue anyway, pass `--tolerate-missing-forks`.
+When a selected repo already exists locally, the helper says that the fork
+check is being skipped because the clone phase will skip that repo too. A
+fully skipped run therefore does not validate the supplied usernames.
+
+For `cybind`, the GitLab fork namespace defaults to `$USER`. If your GitLab
+namespace differs from your workstation username, pass
+`--gitlab-username <name>`.
 
 ### Runbook
 
