@@ -160,7 +160,7 @@ run_cybind_native() {
     local CUDA_HOME
     CUDA_HOME="$(_validate_cuda_home "$CTK_VERSION")" || return 1
 
-    local LOG_FILE="${L}/cybind_generate_cufile_nvjitlink_nvml_nvvm_nvfatbin_log_$(_make_log_timestamp).txt"
+    local LOG_FILE="${L}/run_cybind_native_$(_make_log_timestamp).txt"
     echo "Running cybind generation..."
     echo "CTK target version: $CTK_VERSION"
     echo "CUDA_HOME: $CUDA_HOME"
@@ -170,7 +170,7 @@ run_cybind_native() {
 
     (
         . CybindVenv/bin/activate
-        CUDA_PATH="$CUDA_HOME" CybindVenv/bin/python -m cybind -vvv --generate cufile nvjitlink nvml nvvm nvfatbin --output-dir "${OUTPUT_DIR}/cuda_bindings" 2>&1 | tee "$LOG_FILE"
+        CUDA_PATH="$CUDA_HOME" CybindVenv/bin/python -m cybind -vvv --generate cudla cufile nvfatbin nvjitlink nvml nvvm --output-dir "${OUTPUT_DIR}/cuda_bindings" 2>&1 | tee "$LOG_FILE"
     )
 }
 
