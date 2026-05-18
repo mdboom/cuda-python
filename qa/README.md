@@ -56,6 +56,7 @@ This adds the helper directory to your `PATH` and provides bash functions for co
 * **native cybind updates**: `cybind_header_update.sh` and `run_cybind_native()`
 * **driver/runtime/nvrtc updates**: `run_cybind_cython_gen()`
 * **preview/public-branch helpers**: `make_squash_merge_into_public_main_preview.sh`, `copy_preview_to_public_branch.sh`
+* **NVBugs release tracking**: `ctk-next_nvbug_rc.sh`
 
 See the individual sections below for usage details.
 
@@ -348,6 +349,43 @@ After the branch is created, push it using your standard workflow and create
 a PR. After the PR is merged, merge the corresponding `cybind` branch into
 your `cybind` repository as needed. The older separate `cython-gen`
 follow-up is stale.
+
+---
+
+## NVBugs Workflow
+
+At the start of each SWQA test cycle, expect two related NVBugs:
+
+* The SWQA team opens a **test-plan review and sign-off** bug, usually with a
+  subject like `[Test Plan Review and Sign Off]: CUDA Python 13.3 Test Plan
+  Review and sign off`.
+* The CUDA Python team opens a **release tracking** bug, usually with a subject
+  like `Release of CUDA Python 13.3.0`.
+
+Recommended flow for the CUDA Python team:
+
+1. Wait until the SWQA test-plan review bug appears, then use that as the
+   anchor for the new cycle.
+2. Clone the `Release of CUDA Python` bug from the previous test cycle. Update
+   all CTK and CUDA Python version numbers, and replace the test-plan review
+   link with the new SWQA bug. Also update `See Also` links so the two current
+   cycle bugs point at each other instead of stale prior-cycle bugs.
+3. Reset the release bug description for the new cycle:
+   * Remove all entries under `ctk-next updates (newest-to-oldest):`.
+   * Create the new `cuda.bindings_M.N_committed` keyword at
+     https://nvbugswb.nvidia.com/NVBugs5/Request.aspx?dvid=1 and update the
+     keyword instructions to use it.
+   * Retain all entries under `Open bugs`.
+   * Remove all entries under `Closed bugs`.
+4. Do the required `cybind` and `ctk-next` bring-up work for the new CTK
+   version, following the sections in this README.
+5. Each time a change is merged into `ctk-next`, add a new first item under
+   `ctk-next updates (newest-to-oldest):` in the release bug. Use
+   `qa/helpers/ctk-next_nvbug_rc.sh` to format the item for copy-pasting.
+6. Track SWQA follow-up bugs in the release bug's `Open bugs` and
+   `Closed bugs` sections. The volume is usually small enough to manage
+   manually during the cycle; formalizing this would be a useful future
+   improvement.
 
 ---
 
