@@ -386,6 +386,10 @@ Recommended flow for the CUDA Python team:
    `Closed bugs` sections. The volume is usually small enough to manage
    manually during the cycle; formalizing this would be a useful future
    improvement.
+7. After the CTK is public and the corresponding CUDA Python packages are
+   released, notify SWQA in the release tracking bug. This is their signal to
+   start post-release validation. Keep the release tracking bug open until SWQA
+   reports that post-release validation is complete.
 
 ---
 
