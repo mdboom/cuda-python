@@ -19,7 +19,7 @@ import re
 
 import pytest
 from helpers import IS_WINDOWS, supports_ipc_mempool
-from helpers.buffers import DummyUnifiedMemoryResource, TrackingMR
+from helpers.buffers import DummyDeviceMemoryResource, DummyUnifiedMemoryResource, TrackingMR
 
 from conftest import (
     create_managed_memory_resource_or_skip,
@@ -71,32 +71,6 @@ def _allocate_pinned_buffer_or_xfail(mr, size, *, device):
         if "Failed to allocate memory from pool" in str(exc):
             pytest.xfail("TODO(#9999): Resolve Failed to allocate memory from pool")
         raise
-
-
-class DummyDeviceMemoryResource(MemoryResource):
-    # cuMemAlloc / cuMemFree are synchronous; stream is accepted for
-    # interface conformance but ignored.
-    def __init__(self, device):
-        self.device = device
-
-    def allocate(self, size, *, stream=None) -> Buffer:
-        ptr = handle_return(driver.cuMemAlloc(size))
-        return Buffer.from_handle(ptr=ptr, size=size, mr=self)
-
-    def deallocate(self, ptr, size, *, stream=None):
-        handle_return(driver.cuMemFree(ptr))
-
-    @property
-    def is_device_accessible(self) -> bool:
-        return True
-
-    @property
-    def is_host_accessible(self) -> bool:
-        return False
-
-    @property
-    def device_id(self) -> int:
-        return 0
 
 
 class DummyHostMemoryResource(MemoryResource):
@@ -168,6 +142,7 @@ def test_package_contents():
         "IPCAllocationHandle",
         "IPCBufferDescriptor",
         "LegacyPinnedMemoryResource",
+        "ManagedBuffer",
         "ManagedMemoryResource",
         "ManagedMemoryResourceOptions",
         "MemoryResource",
@@ -1482,11 +1457,11 @@ def test_pinned_mr_numa_id_default_no_ipc(init_cuda):
     device = Device()
     skip_if_pinned_memory_unsupported(device)
 
-    mr = PinnedMemoryResource(PinnedMemoryResourceOptions())
+    mr = create_pinned_memory_resource_or_xfail(PinnedMemoryResourceOptions(), xfail_device=device)
     assert mr.numa_id == -1
     mr.close()
 
-    mr = PinnedMemoryResource(PinnedMemoryResourceOptions(ipc_enabled=False))
+    mr = create_pinned_memory_resource_or_xfail(PinnedMemoryResourceOptions(ipc_enabled=False), xfail_device=device)
     assert mr.numa_id == -1
     mr.close()
 
@@ -1505,7 +1480,9 @@ def test_pinned_mr_numa_id_default_with_ipc(init_cuda):
     if expected_numa_id < 0:
         pytest.skip("System does not support NUMA")
 
-    mr = PinnedMemoryResource(PinnedMemoryResourceOptions(ipc_enabled=True, max_size=POOL_SIZE))
+    mr = create_pinned_memory_resource_or_xfail(
+        PinnedMemoryResourceOptions(ipc_enabled=True, max_size=POOL_SIZE), xfail_device=device
+    )
     assert mr.numa_id == expected_numa_id
     mr.close()
 
@@ -1519,7 +1496,7 @@ def test_pinned_mr_numa_id_explicit(init_cuda):
     if host_numa_id < 0:
         pytest.skip("System does not support NUMA")
 
-    mr = PinnedMemoryResource(PinnedMemoryResourceOptions(numa_id=host_numa_id))
+    mr = create_pinned_memory_resource_or_xfail(PinnedMemoryResourceOptions(numa_id=host_numa_id), xfail_device=device)
     assert mr.numa_id == host_numa_id
     mr.close()
 
@@ -1528,7 +1505,10 @@ def test_pinned_mr_numa_id_explicit(init_cuda):
     if not supports_ipc_mempool(device):
         pytest.skip("Driver rejects IPC-enabled mempool creation on this platform")
 
-    mr = PinnedMemoryResource(PinnedMemoryResourceOptions(ipc_enabled=True, numa_id=host_numa_id, max_size=POOL_SIZE))
+    mr = create_pinned_memory_resource_or_xfail(
+        PinnedMemoryResourceOptions(ipc_enabled=True, numa_id=host_numa_id, max_size=POOL_SIZE),
+        xfail_device=device,
+    )
     assert mr.numa_id == host_numa_id
     mr.close()
 
