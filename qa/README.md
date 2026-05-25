@@ -289,7 +289,7 @@ Start by syncing public refs, then create the preview:
 
 ```bash
 qa/helpers/public_repo.py sync
-qa/helpers/make_squash_merge_into_public_main_preview.sh <branch-name>
+qa/helpers/make_squash_merge_into_public_main_preview.sh <branch-name> <ctk-version>
 ```
 
 This script:
@@ -309,10 +309,10 @@ Important:
 * Your branch should already contain the manual changes you want to preview.
 * Keep `ctk-next` and the sibling `cybind` checkout clean before running the
   helper.
-* The helper currently still contains some stale implementation details,
-  including an old sibling-`cython-gen` checkout check and release-specific
-  version literals. Refresh those assumptions before relying on it for a new
-  CTK cycle.
+* Before running the helper, refresh the sibling `cybind` checkout using the
+  same branch you used for CTK bring-up. For example: update `cybind` `main`,
+  switch back to the release branch, merge `main`, and recreate the cybind venv
+  with `cybind_fresh_venv` if needed.
 
 ### Copying the Preview Branch to Public Repo
 
@@ -340,10 +340,14 @@ This script:
 5. Creates a new branch in the current repository from the preview commits
 6. Does not modify the preview worktree or ctk-next repository
 
-The preview branch is already based on `public_repo/main` and contains three clean commits:
-- `driver/runtime/nvrtc updates via cybind (automatic, NO MANUAL CHANGES)`
-- `cybind updates (automatic, NO MANUAL CHANGES)`
+The preview branch is already based on `public_repo/main` and contains up to
+three clean commits:
+- `run_cybind_cython_gen <ctk-version> ../ctk-next (NO MANUAL CHANGES)`
+- `run_cybind_native <ctk-version> ../ctk-next (NO MANUAL CHANGES)`
 - `git merge --squash <branch-name> && git rm -r -f qa/ (NO MANUAL CHANGES)`
+
+If either cybind regeneration step is a no-op, the corresponding generated
+commit is omitted.
 
 After the branch is created, push it using your standard workflow and create
 a PR. After the PR is merged, merge the corresponding `cybind` branch into

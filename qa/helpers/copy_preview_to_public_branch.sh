@@ -101,7 +101,7 @@ if ! git rev-parse --verify public_repo/main >/dev/null 2>&1; then
     echo "" >&2
     echo "Fix (in the ctk-next repo):" >&2
     echo "  qa/helpers/public_repo.py sync" >&2
-    echo "  qa/helpers/make_squash_merge_into_public_main_preview.sh <branch-name>" >&2
+    echo "  qa/helpers/make_squash_merge_into_public_main_preview.sh <branch-name> <ctk-version>" >&2
     exit 1
 fi
 
@@ -184,6 +184,4 @@ echo "Next steps:"
 echo "1. Review the branch: git log main..$BRANCH_NAME"
 echo "2. Push the branch using your standard workflow"
 echo "3. Create a Pull Request from branch '$BRANCH_NAME' to 'main'"
-echo "4. After the PR is merged, merge the cython-gen and cybind branches, e.g.:"
-echo "   - cython-gen-next-13020"
-echo "   - cybind-next-13020"
+echo "4. After the PR is merged, merge the corresponding cybind branch as needed."

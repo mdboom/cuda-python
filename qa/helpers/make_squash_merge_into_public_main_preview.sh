@@ -6,21 +6,22 @@
 # Create a squash-merge preview branch for merging a branch into public main.
 #
 # Usage:
-#   qa/helpers/make_squash_merge_into_public_main_preview.sh <branch-name>
+#   qa/helpers/make_squash_merge_into_public_main_preview.sh <branch-name> <ctk-version>
 #
 # IMPORTANT: Before creating the squash-merge preview, ensure that there are
-# no missing cython-gen updates and no missing cybind updates on the branch.
+# no missing legacy or native cybind updates on the branch.
 
 set -euo pipefail
 
-# Check that exactly one argument is provided
-if [ $# -ne 1 ]; then
-    echo "ERROR: Exactly one argument required (branch-name)" >&2
-    echo "Usage: $0 <branch-name>" >&2
+# Check that exactly two arguments are provided
+if [ $# -ne 2 ]; then
+    echo "ERROR: Exactly two arguments required (branch-name and ctk-version)" >&2
+    echo "Usage: $0 <branch-name> <ctk-version>" >&2
     exit 1
 fi
 
 BRANCH_NAME="$1"
+CTK_TARGET_VERSION="$2"
 
 # Check that we're in a git repository
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -70,6 +71,30 @@ check_clean_tree() {
     fi
 }
 
+run_pre_commit_until_clean() {
+    # First run may exit non-zero after auto-fixing files; the second must pass.
+    set +e
+    pre-commit run --all-files
+    PRE_COMMIT_EXIT=$?
+    set -e
+    if [ $PRE_COMMIT_EXIT -ne 0 ]; then
+        echo "Exit code from first pre-commit run was $PRE_COMMIT_EXIT, rerunning..."
+        pre-commit run --all-files
+    fi
+}
+
+commit_if_changed() {
+    local message="$1"
+
+    if [ -z "$(git status --porcelain)" ]; then
+        echo "No changes for: $message"
+        return
+    fi
+
+    git add -A
+    git commit -m "$message"
+}
+
 # Find ctk-next repo root (where .git is)
 CTK_NEXT_ROOT=$(git rev-parse --show-toplevel)
 PARENT_DIR=$(dirname "$CTK_NEXT_ROOT")
@@ -80,25 +105,6 @@ echo "Checking that all repos are clean..."
 echo "  Checking ctk-next..."
 check_clean_tree "ctk-next"
 echo "    ✓ ctk-next is clean"
-
-if [ ! -d "$PARENT_DIR/cython-gen" ]; then
-    echo "ERROR: cython-gen directory not found at $PARENT_DIR/cython-gen" >&2
-    exit 1
-fi
-
-echo "  Checking cython-gen..."
-if ! (
-    cd "$PARENT_DIR/cython-gen"
-    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        echo "ERROR: cython-gen is not a git work tree" >&2
-        exit 1
-    fi
-    check_clean_tree "cython-gen"
-); then
-    echo "ERROR: cython-gen check failed (see error above)" >&2
-    exit 1
-fi
-echo "    ✓ cython-gen is clean"
 
 if [ ! -d "$PARENT_DIR/cybind" ]; then
     echo "ERROR: cybind directory not found at $PARENT_DIR/cybind" >&2
@@ -157,37 +163,19 @@ git worktree add -b "$PREVIEW_BRANCH" "$WORKTREE_PATH" public_repo/main
 cd "$WORKTREE_PATH"
 
 cd "$PARENT_DIR/cybind"
-git clean -fdx
-run_cybind_cython_gen 13.2.0 "$WORKTREE_PATH"
+run_cybind_cython_gen "$CTK_TARGET_VERSION" "$WORKTREE_PATH"
 cd "$WORKTREE_PATH"
-# Run pre-commit twice: first run may exit non-zero (auto-fixes), second must succeed
-set +e
-pre-commit run --all-files
-PRE_COMMIT_EXIT=$?
-set -e
-if [ $PRE_COMMIT_EXIT -ne 0 ]; then
-    echo "Exit code from first pre-commit run was $PRE_COMMIT_EXIT, rerunning..."
-    pre-commit run --all-files
-fi
-git commit -a -m 'driver/runtime/nvrtc updates via cybind (automatic, NO MANUAL CHANGES)'
+run_pre_commit_until_clean
+commit_if_changed "run_cybind_cython_gen $CTK_TARGET_VERSION ../ctk-next (NO MANUAL CHANGES)"
 
 cd "$PARENT_DIR/cybind"
-git clean -fdx
-run_cybind_native 13.2.0 "$WORKTREE_PATH"
+run_cybind_native "$CTK_TARGET_VERSION" "$WORKTREE_PATH"
 cd "$WORKTREE_PATH"
-# Run pre-commit twice: first run may exit non-zero (auto-fixes), second must succeed
-set +e
-pre-commit run --all-files
-PRE_COMMIT_EXIT=$?
-set -e
-if [ $PRE_COMMIT_EXIT -ne 0 ]; then
-    echo "Exit code from first pre-commit run was $PRE_COMMIT_EXIT, rerunning..."
-    pre-commit run --all-files
-fi
-git commit -a -m 'cybind updates (automatic, NO MANUAL CHANGES)'
+run_pre_commit_until_clean
+commit_if_changed "run_cybind_native $CTK_TARGET_VERSION ../ctk-next (NO MANUAL CHANGES)"
 
 # Get list of generated files BEFORE squash merge (from the branch we're merging)
-# This automatically finds all cython-gen and cybind generated files
+# This automatically finds legacy and native cybind-generated files
 echo
 echo "Identifying generated files in $BRANCH_NAME..."
 GENERATED_FILES_IN_BRANCH=$(git grep -l -e 'This code was automatically generated with version' -e 'This code was automatically generated across versions from' "$BRANCH_NAME" 2>/dev/null | cut -d: -f2- | grep -v '\.sh$' | sort -u || true)
