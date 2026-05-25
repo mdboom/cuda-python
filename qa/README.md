@@ -405,3 +405,130 @@ Recommended flow for the CUDA Python team:
   first because many older fixes are already absorbed.
 * After generation, validate the result with the scripts in `qa/runbook/` and
   run `pre-commit` before treating the diff as final.
+
+---
+
+## Agent Instructions for Manipulating the Release Tracking NVBug
+
+This section captures details learned while updating the CUDA Python 13.3
+release tracking bug and its linked SWQA bugs. Expand it as future NVBugs
+workflows become clearer.
+
+### Marking Linked Bugs as QV2C
+
+When a linked SWQA bug is fixed in `ctk-next` and should move from
+`Dev - Open - To fix` to `QA - Open - Verify to close`:
+
+1. Fetch the current linked bug details before updating anything.
+2. Confirm the bug is actually fixed and should be marked `QV2C`. Do not mark
+   bugs that are intentionally deferred, still open, or tracked with a keyword
+   such as `cuda.bindings_next`.
+3. Identify the SWQA person to notify from the bug details. Usually this is the
+   requester or QA engineer, but follow the human's instruction if they name a
+   different person.
+4. Use an HTML mention in the comment so the user is clickable in NVBugs:
+
+   ```html
+   <span>[<a alt="USER_KEY" class="mention">@Display Name (NTACCOUNT)</a>]&nbsp;Comment text here.<br class="ckLineBrkCmt"><br class="ckLineBrkCmt">Marking this bug as V2C.</span>
+   ```
+
+   Get `USER_KEY`, `Display Name`, and `NTACCOUNT` from the fetched bug details
+   (`Requester`, `QAEngineer`, `ARB`, and corresponding `*NTAccount` fields).
+   Plain text such as `[@Display Name (NTACCOUNT)]` may not become clickable.
+5. Update the bug with:
+   * `bug_action`: `QA - Open - Verify to close`
+   * `disposition`: `Bug - Fixed`
+   * `comment`: the prepared comment
+   * `comment_notification`: `true`
+   * `is_send_notification`: `true`
+   * `confirm_update`: `true`
+6. Preserve fields that the NVBugs save path may otherwise rewrite. In
+   particular, pass the current `qa_engineer` and `geographic_origin` when
+   they are present. Without this, the save may change QA engineer or blank the
+   geographic origin.
+7. Be cautious with `version_fixed_after`. It behaves inconsistently across
+   bugs. Leave the current value alone unless the save is rejected or a human
+   specifically asks for a value; `n/a` works for some bugs, but others may
+   force a version-list choice.
+8. Refetch the bug afterward and verify:
+   * the comment was added once and is authored by the authenticated user,
+   * the mention is clickable HTML,
+   * bug action and disposition are correct,
+   * notification was requested on the save,
+   * unexpected field changes did not occur.
+
+Comments added through the MaaS NVBugs MCP server are posted as the
+authenticated user, and the server appends its standard watermark.
+
+### Updating the Release Tracking Bug Description
+
+The umbrella `Release of CUDA Python X.Y.Z` bug is a coordination artifact, so
+description-only housekeeping should normally be saved without notification.
+
+When updating the `Open bugs` list after linked bugs move to V2C:
+
+1. Fetch the current release tracking bug description immediately before
+   editing.
+2. Change only the intended status markers, for example `DO2F` -> `QV2C`.
+3. Save with notifications disabled (`is_send_notification=false` and
+   `comment_notification=false`).
+4. Refetch the bug and verify the status markers and comment count.
+
+When a linked bug is verified and closed:
+
+1. Fetch the linked bug first and confirm `BugAction.Value` is
+   `QA - Closed - Verified`. Check the close comment if a human referenced one.
+2. In the release tracking bug, move the complete line from `Open bugs` to
+   `Closed bugs`.
+3. Change the status marker from `QV2C` to green `QCV`, preserving the compact
+   `nvbugs/ID` link, owner, and synopsis text.
+4. Save the release tracking bug without notification, then refetch and verify
+   the bug appears exactly once, under `Closed bugs`.
+
+### Verifying Release Tracking Bug State
+
+Use this workflow to verify that the release tracking bug accurately reflects
+the linked SWQA bugs:
+
+1. Fetch the release tracking bug and parse every entry under both `Open bugs`
+   and `Closed bugs`.
+2. For each linked bug, fetch current NVBugs details and compare the release
+   tracking status marker with the bug's `BugAction.Value`:
+   * `DO2F` must match `Dev - Open - To fix`.
+   * `QV2C` must match `QA - Open - Verify to close`.
+   * `QCV` must match `QA - Closed - Verified`.
+3. For entries under `Open bugs`, also compare `CustomKeywords` with the
+   keyword instructions embedded in the release tracking bug description. Each
+   open bug should carry the appropriate release keyword, for example
+   `cuda.bindings_M.N_committed` for bugs blocking the current cuda-bindings
+   release, or `cuda.bindings_next` for confirmed non-blocking follow-up bugs.
+4. Treat closed bugs primarily as a closure check. They should still be
+   `QA - Closed - Verified`; they do not necessarily need to keep the open-bug
+   release keywords.
+5. Report a compact table with bug ID, release marker, actual bug action, and
+   relevant keyword status. Call out mismatches explicitly before making any
+   updates.
+
+Use these readability conventions when maintaining the bug lists:
+
+* Prefer compact visible NVBugs links such as `nvbugs/6180109`, backed by
+  hyperlinks to `https://nvbugspro.nvidia.com/bug/6180109`.
+* Keep status labels color-coded:
+  * red `DO2F` = `Dev - Open - To fix`
+  * orange `QV2C` = `QA - Open - Verify to close`
+  * green `QCV` = `QA - Closed - Verified`
+* Keep a small legend near the end of the description so humans can decode the
+  abbreviated labels without leaving the release tracking bug.
+
+NVBugs description formatting is fragile through the MCP update path:
+
+* If a description containing HTML is saved with raw newline characters, the web
+  UI may collapse all line breaks.
+* If both raw newlines and `<br />` tags are submitted, the web UI may display
+  too many blank lines.
+* If line breaks need repair, submit compact HTML using `<br />` tags without
+  embedded newline characters. Refetch afterward to confirm the visual structure
+  is back to the intended one.
+* Description updates through MaaS may append the standard MCP watermark to the
+  description. Avoid repeated description saves when a manual web edit would be
+  cleaner.
