@@ -256,7 +256,7 @@ part of the normal `ctk-next` pre-release bring-up flow.
 Recommended flow:
 
 ```bash
-git checkout -b "ctk-next-merge-main-$(date +%Y-%m-%d+%H%M)"
+git switch -c "merge-public-main-$(date +%Y-%m-%d+%H%M)"
 qa/helpers/public_repo.py sync
 qa/helpers/git_merge_public_main.sh
 ```
