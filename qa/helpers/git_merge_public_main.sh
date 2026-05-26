@@ -82,8 +82,8 @@ if [[ -z "$current_branch" ]]; then
     exit 1
 fi
 
-if [[ "$current_branch" != ctk-next-merge-main* ]]; then
-    echo "Warning: current branch is '$current_branch', not starting with 'ctk-next-merge-main'." >&2
+if [[ "$current_branch" != merge-public-main* ]]; then
+    echo "Warning: current branch is '$current_branch', not starting with 'merge-public-main'." >&2
     echo "Continue anyway? [y/N]"
     if [[ "$CONFIRM" == "yes" ]]; then
         read -r ans
@@ -124,7 +124,7 @@ if ! git merge-base --is-ancestor FETCH_HEAD HEAD 2>/dev/null &&
 fi
 
 # Get list of auto-generated files BEFORE merge (from HEAD)
-# This automatically finds all cython-gen and cybind generated files
+# This automatically finds legacy and native generated files
 # Exclude .sh files to avoid matching this script itself
 echo
 echo "Identifying auto-generated files..."
