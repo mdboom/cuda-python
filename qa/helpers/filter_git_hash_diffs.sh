@@ -3,11 +3,12 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 #
-# Filter git diff output to remove hunks that only contain hash changes.
+# Filter git diff output to remove hunks that only contain generated metadata
+# version/hash drift.
 #
-# This script filters out diffs where the only difference is in generator version
-# hashes (e.g., "generator version 13.2.0rc2.dev255+g5e025362c" vs
-# "generator version 13.2.0rc2.dev258+g3a642beac").
+# This script filters out diffs where the only difference is in generated
+# "across versions" metadata lines, including generator version hashes, or
+# SPDX copyright header drift.
 #
 # Usage:
 #   git diff | qa/helpers/filter_git_hash_diffs.sh
@@ -28,7 +29,7 @@ BEGIN {
 /^diff --git/ {
     # New file diff - process previous file/hunk first
     if (in_hunk) {
-        if (!is_hash_only_hunk(minus_lines, plus_lines)) {
+        if (!is_generated_metadata_only_hunk(minus_lines, plus_lines)) {
             if (in_file) {
                 printf "%s", file_header
                 in_file = 0
@@ -59,7 +60,7 @@ BEGIN {
 /^@@ / {
     # Start of a new hunk - process previous hunk first
     if (in_hunk) {
-        if (!is_hash_only_hunk(minus_lines, plus_lines)) {
+        if (!is_generated_metadata_only_hunk(minus_lines, plus_lines)) {
             if (in_file) {
                 printf "%s", file_header
                 in_file = 0
@@ -99,7 +100,7 @@ in_hunk {
 END {
     # Process final hunk/file
     if (in_hunk) {
-        if (!is_hash_only_hunk(minus_lines, plus_lines)) {
+        if (!is_generated_metadata_only_hunk(minus_lines, plus_lines)) {
             if (in_file) {
                 printf "%s", file_header
             }
@@ -110,8 +111,8 @@ END {
     # Note: We do not exit with error code here - let the caller decide
     # what to do when all output is filtered
 }
-function is_hash_only_hunk(minus_lines, plus_lines) {
-    # If no changes, not a hash-only hunk
+function is_generated_metadata_only_hunk(minus_lines, plus_lines) {
+    # If no changes, not a metadata-only hunk
     if (minus_lines == "" && plus_lines == "") {
         return 0
     }
@@ -130,27 +131,33 @@ function is_hash_only_hunk(minus_lines, plus_lines) {
         # Remove the leading - or +
         gsub(/^-/, "", minus_line)
         gsub(/^\+/, "", plus_line)
-        # Check if this is a hash-only change
-        if (!is_hash_only_pair(minus_line, plus_line)) {
+        # Check if this is expected generated metadata drift.
+        if (!is_expected_metadata_pair(minus_line, plus_line)) {
             return 0
         }
     }
     return 1
 }
-function is_hash_only_pair(minus_line, plus_line) {
-    # Check if both lines contain "generator version" or "automatically generated"
-    if (minus_line !~ /generator version|automatically generated/) {
+function is_expected_metadata_pair(minus_line, plus_line) {
+    return is_generated_metadata_pair(minus_line, plus_line) || is_spdx_copyright_pair(minus_line, plus_line)
+}
+function is_generated_metadata_pair(minus_line, plus_line) {
+    # Check if both lines are generated "across versions" metadata lines.
+    if (minus_line !~ /^# This code was automatically generated across versions from .*generator version /) {
         return 0
     }
-    if (plus_line !~ /generator version|automatically generated/) {
+    if (plus_line !~ /^# This code was automatically generated across versions from .*generator version /) {
         return 0
     }
-    # Remove the hash part (dev[0-9]+[+-]g[0-9a-f]+) from both lines
-    minus_no_hash = minus_line
-    plus_no_hash = plus_line
-    gsub(/dev[0-9]+[+-]g[0-9a-f]+/, "HASH", minus_no_hash)
-    gsub(/dev[0-9]+[+-]g[0-9a-f]+/, "HASH", plus_no_hash)
-    # If they are identical after removing hashes, it is a hash-only change
-    return (minus_no_hash == plus_no_hash)
+    return 1
+}
+function is_spdx_copyright_pair(minus_line, plus_line) {
+    if (minus_line !~ /^# SPDX-FileCopyrightText: /) {
+        return 0
+    }
+    if (plus_line !~ /^# SPDX-FileCopyrightText: /) {
+        return 0
+    }
+    return 1
 }
 '

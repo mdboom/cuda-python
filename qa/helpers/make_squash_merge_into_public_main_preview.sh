@@ -22,6 +22,7 @@ fi
 
 BRANCH_NAME="$1"
 CTK_TARGET_VERSION="$2"
+HASH_DRIFT_COMMIT_MESSAGE="cybind-generated version hash drift (NO MANUAL CHANGES)"
 
 # Check that we're in a git repository
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -93,6 +94,114 @@ commit_if_changed() {
 
     git add -A
     git commit -m "$message"
+}
+
+staged_file_has_generated_version_hash_drift() {
+    local file="$1"
+
+    git diff --cached --unified=0 -- "$file" | awk '
+    function is_generated_version_line(line) {
+        return line ~ /^[-+]# This code was automatically generated across versions from .*generator version .*dev[0-9]+[+-]g[0-9a-f]+/
+    }
+    is_generated_version_line($0) {
+        if (substr($0, 1, 1) == "-") {
+            minus_count++
+        } else {
+            plus_count++
+        }
+    }
+    END {
+        if (minus_count == 0 || minus_count != plus_count) {
+            exit 1
+        }
+    }'
+}
+
+staged_generated_version_hash_drift_files() {
+    local file
+
+    while IFS= read -r -d "" file; do
+        if staged_file_has_generated_version_hash_drift "$file"; then
+            printf "%s\0" "$file"
+        fi
+    done < <(git diff --cached --name-only -z --)
+}
+
+validate_generated_version_hash_drift_commit() {
+    local commit="$1"
+    local validation_output
+    local validation_exit
+
+    set +e
+    validation_output=$(git show --format= --unified=0 "$commit" | awk '
+    function is_generated_version_line(line) {
+        return line ~ /^[-+]# This code was automatically generated across versions from .*generator version .*dev[0-9]+[+-]g[0-9a-f]+/
+    }
+    function is_spdx_copyright_line(line) {
+        return line ~ /^[-+]# SPDX-FileCopyrightText: /
+    }
+    function is_allowed_metadata_line(line) {
+        return is_generated_version_line(line) || is_spdx_copyright_line(line)
+    }
+    function reset_hunk() {
+        minus_count = 0
+        plus_count = 0
+    }
+    function flush_hunk() {
+        if (minus_count != plus_count) {
+            print current_file ": unmatched generated version metadata line(s)"
+            bad = 1
+        }
+        reset_hunk()
+    }
+    BEGIN {
+        current_file = "<unknown>"
+        reset_hunk()
+    }
+    /^diff --git / {
+        flush_hunk()
+        current_file = $0
+        next
+    }
+    /^\+\+\+ b\// {
+        current_file = substr($0, 7)
+        next
+    }
+    /^@@ / {
+        flush_hunk()
+        next
+    }
+    /^(index |--- |\+\+\+ |new file mode|deleted file mode|similarity index|rename from|rename to)/ {
+        next
+    }
+    /^[-+]/ {
+        if (!is_allowed_metadata_line($0)) {
+            print current_file ": unexpected changed line"
+            print "  " $0
+            bad = 1
+            next
+        }
+        if (substr($0, 1, 1) == "-") {
+            minus_count++
+        } else {
+            plus_count++
+        }
+        next
+    }
+    END {
+        flush_hunk()
+        exit bad
+    }')
+    validation_exit=$?
+    set -e
+
+    if [ $validation_exit -ne 0 ]; then
+        echo "ERROR: Commit $commit ($HASH_DRIFT_COMMIT_MESSAGE) contains unexpected changes." >&2
+        echo "Please review that commit manually before using this preview branch." >&2
+        echo >&2
+        echo "$validation_output" | sed "s/^/  /" >&2
+        return 1
+    fi
 }
 
 # Find ctk-next repo root (where .git is)
@@ -256,7 +365,51 @@ if [[ $MERGE_EXIT -ne 0 ]]; then
 fi
 
 git rm -r -f qa/
-git commit -m "git merge --squash $BRANCH_NAME && git rm -r -f qa/ (NO MANUAL CHANGES)"
+
+HASH_DRIFT_FILES=()
+mapfile -d "" HASH_DRIFT_FILES < <(staged_generated_version_hash_drift_files)
+HASH_DRIFT_COMMIT=""
+if [ ${#HASH_DRIFT_FILES[@]} -ne 0 ]; then
+    echo
+    echo "Splitting generated version hash drift into a separate commit..."
+    printf "  %s\n" "${HASH_DRIFT_FILES[@]}"
+
+    git reset --quiet
+    git add -- "${HASH_DRIFT_FILES[@]}"
+    git commit -m "$HASH_DRIFT_COMMIT_MESSAGE"
+    HASH_DRIFT_COMMIT=$(git rev-parse HEAD)
+else
+    echo
+    echo "No generated version hash drift files found."
+fi
+
+FINAL_SQUASH_COMMIT=""
+TRANSFER_PATCH="$PARENT_DIR/${PREVIEW_BRANCH}_non_gen_transfer.patch"
+BEFORE_FINAL_COMMIT=$(git rev-parse HEAD)
+git add -A
+commit_if_changed "git merge --squash $BRANCH_NAME && git rm -r -f qa/ (NO MANUAL CHANGES)"
+AFTER_FINAL_COMMIT=$(git rev-parse HEAD)
+if [ "$AFTER_FINAL_COMMIT" != "$BEFORE_FINAL_COMMIT" ]; then
+    FINAL_SQUASH_COMMIT="$AFTER_FINAL_COMMIT"
+    git show --format= --binary "$FINAL_SQUASH_COMMIT" >"$TRANSFER_PATCH"
+    echo
+    echo "Non-generated transfer patch written to:"
+    echo "  $TRANSFER_PATCH"
+else
+    echo
+    echo "No final squash commit was created; no non-generated transfer patch written."
+fi
+
+HASH_DRIFT_VALIDATION_EXIT=0
+if [ -n "$HASH_DRIFT_COMMIT" ]; then
+    echo
+    echo "Validating generated version hash drift commit..."
+    if validate_generated_version_hash_drift_commit "$HASH_DRIFT_COMMIT"; then
+        echo "  $HASH_DRIFT_COMMIT contains only expected generated version hash changes"
+    else
+        HASH_DRIFT_VALIDATION_EXIT=1
+    fi
+fi
 
 # Show diff, filtering out hash-only changes
 echo
@@ -266,8 +419,8 @@ if [ -z "$DIFF_OUTPUT" ]; then
     echo "  (no differences)"
 else
     # Filter out hunks that only contain hash changes
-    # Use the reusable filter script
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    # Use the reusable filter script from the original checkout; qa/ has been
+    # removed from the preview worktree by this point.
     FILTER_SCRIPT="$SCRIPT_DIR/filter_git_hash_diffs.sh"
 
     if [ ! -f "$FILTER_SCRIPT" ]; then
@@ -288,8 +441,18 @@ else
 fi
 
 echo
+echo "Preview branch commit stack:"
+git log --oneline --reverse public_repo/main..HEAD
+
+echo
 echo "The new branch is ready under $(realpath "$WORKTREE_PATH")"
 echo
 echo "Hint: To clean up the worktree later:"
 echo "  cd $CTK_NEXT_ROOT"
 echo "  git worktree remove $WORKTREE_PATH"
+
+if [ $HASH_DRIFT_VALIDATION_EXIT -ne 0 ]; then
+    echo >&2
+    echo "ERROR: Preview branch was created, but the generated version hash drift commit needs review." >&2
+    exit 1
+fi

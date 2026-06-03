@@ -55,7 +55,7 @@ This adds the helper directory to your `PATH` and provides bash functions for co
 * **public-main sync and merge**: `public_repo.py`, `git_merge_public_main.sh`
 * **native cybind updates**: `cybind_header_update.sh` and `run_cybind_native()`
 * **driver/runtime/nvrtc updates**: `run_cybind_cython_gen()`
-* **preview/public-branch helpers**: `make_squash_merge_into_public_main_preview.sh`, `copy_preview_to_public_branch.sh`
+* **preview/public-branch helper**: `make_squash_merge_into_public_main_preview.sh`
 * **NVBugs release tracking**: `ctk-next_nvbug_rc.sh`
 
 See the individual sections below for usage details.
@@ -274,7 +274,7 @@ Notes:
 * After the helper finishes, review any remaining conflicts or merge diff and
   regenerate generated files only if the merge actually requires it.
 
-## How to Squash-Merge ctk-next Back into Public main
+## How to Transfer ctk-next Back to Public main
 
 ### Preparing a Preview Branch
 
@@ -292,17 +292,19 @@ qa/helpers/public_repo.py sync
 qa/helpers/make_squash_merge_into_public_main_preview.sh <branch-name> <ctk-version>
 ```
 
-This script:
+The preview helper:
 1. Creates a new branch based on `public_repo/main` in a separate git worktree
 2. Runs `run_cybind_cython_gen` and `run_cybind_native` to generate fresh bindings
 3. Creates commits for legacy and native cybind changes separately
 4. Squash-merges your branch, automatically resolving conflicts in generated files
-5. Shows a diff (filtering out hash-only changes) to review "everything else" changes
+5. Splits generated version/hash metadata drift into a separate review commit
+6. Writes a transfer patch for the final non-generated squash commit
+7. Shows a diff, filtering expected metadata drift, to review remaining differences
 
 The preview branch allows you to:
 - Review generated changes separately from manual changes
-- Verify that the diff between your branch and the preview is minimal (ideally only hash differences)
-- Prepare the final PR structure ahead of time
+- Verify that the diff between your branch and the preview is minimal
+- Prepare the public release branch structure ahead of time
 
 Important:
 
@@ -314,45 +316,74 @@ Important:
   switch back to the release branch, merge `main`, and recreate the cybind venv
   with `cybind_fresh_venv` if needed.
 
-### Copying the Preview Branch to Public Repo
-
-Once the CTK release has been publicly posted, you can copy the preview
-branch into the public repository:
-
-```bash
-cd .../cuda-python
-copy_preview_to_public_branch.sh <preview-worktree-path> <branch-name>
-```
-
-Example:
-```bash
-cd /wrk/forked/cuda-python
-copy_preview_to_public_branch.sh \
-  ../squash_merge_into_public_main_preview_2026-02-28+1250 \
-  cuda_bindings_13.3.0_release
-```
-
-This script:
-1. Validates you're in the public cuda-python repository
-2. Validates the preview worktree exists and is clean
-3. Verifies the preview branch name matches expected pattern
-4. Verifies the preview base matches your current `main` branch
-5. Creates a new branch in the current repository from the preview commits
-6. Does not modify the preview worktree or ctk-next repository
-
-The preview branch is already based on `public_repo/main` and contains up to
-three clean commits:
+The preview branch contains up to four clean commits:
 - `run_cybind_cython_gen <ctk-version> ../ctk-next (NO MANUAL CHANGES)`
 - `run_cybind_native <ctk-version> ../ctk-next (NO MANUAL CHANGES)`
+- `cybind-generated version hash drift (NO MANUAL CHANGES)`
 - `git merge --squash <branch-name> && git rm -r -f qa/ (NO MANUAL CHANGES)`
 
 If either cybind regeneration step is a no-op, the corresponding generated
-commit is omitted.
+commit is omitted. If there are no generated version/hash metadata files to
+split out, the hash-drift commit is omitted. The helper validates the
+hash-drift commit after creating the full preview stack; if that commit
+contains anything other than expected generated
+`# This code was automatically generated across versions from ...`
+metadata changes or SPDX copyright header drift, the preview branch is left
+in place for review and the helper exits non-zero.
 
-After the branch is created, push it using your standard workflow and create
-a PR. After the PR is merged, merge the corresponding `cybind` branch into
-your `cybind` repository as needed. The older separate `cython-gen`
-follow-up is stale.
+The helper also writes a transfer patch for the final non-generated squash
+commit next to the preview worktree:
+
+```bash
+../squash_merge_into_public_main_preview_<timestamp>_non_gen_transfer.patch
+```
+
+If you need to recreate that patch manually, generate it from the final squash
+commit in the preview worktree:
+
+```bash
+git -C ../squash_merge_into_public_main_preview_<timestamp> \
+  show --format= --binary <final-squash-commit> \
+  > ../squash_merge_into_public_main_preview_<timestamp>_non_gen_transfer.patch
+```
+
+### Release-Day Public Branch
+
+After the CTK release is public, recreate the release branch directly in the
+public `cuda-python` checkout instead of copying the preview branch. This keeps
+the public PR history clean while reusing the previewed non-generated changes:
+
+```bash
+cd .../cuda-python
+git switch main
+git pull --ff-only
+git switch -c ctk13030
+
+cd ../cybind
+run_cybind_cython_gen 13.3.0 ../cuda-python
+cd ../cuda-python
+pre-commit run --all-files
+git add -A
+git commit -m "run_cybind_cython_gen 13.3.0 ../cuda-python (NO MANUAL CHANGES)"
+
+cd ../cybind
+run_cybind_native 13.3.0 ../cuda-python
+cd ../cuda-python
+pre-commit run --all-files
+git add -A
+git commit -m "run_cybind_native 13.3.0 ../cuda-python (NO MANUAL CHANGES)"
+
+git apply --index ../squash_merge_into_public_main_preview_<timestamp>_non_gen_transfer.patch
+git commit -m "Apply ctk-next non-generated release changes"
+```
+
+Review and finish the public-only release work after this point, including
+release notes, `.github/`, and `ci/` changes for the final CTK source locations,
+then run the public CI.
+
+After the public release branch is ready, push it using your standard workflow
+and create a PR. After the PR is merged, merge the corresponding `cybind`
+branch into your `cybind` repository as needed.
 
 ---
 
