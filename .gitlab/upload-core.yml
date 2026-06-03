@@ -1,0 +1,20 @@
+upload_cuda_core:
+  stage: upload
+
+  tags: [cuda-obi-linux-amd64-cpu-32]
+
+  image: ubuntu:24.04
+
+  needs:
+    - job: build_cuda_core
+      artifacts: true
+    - job: test_cuda_core_cpu
+      artifacts: false
+    - job: test_cuda_core_gpu
+      artifacts: false
+
+  before_script:
+    - . $CI_PROJECT_DIR/.gitlab/scripts/install_upload_deps.sh
+
+  script:
+    - . $CI_PROJECT_DIR/.gitlab/scripts/wheels_upload.sh core

@@ -1,0 +1,35 @@
+# Control when the pipeline is created
+workflow:
+  rules:
+    # 1) MR updated (opened / new commits pushed to MR source branch)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: always
+    # 2) MR merged -> merge commit pushed to the target branch
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == "ctk-next"'
+      when: always
+    # 3) Manual trigger from GitLab UI ("Run pipeline" button)
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: always
+    - when: never
+
+stages:
+  - build
+  - test
+  - upload
+
+variables:
+  # Pin CTK build version for build + upload jobs across all components.
+  # Override via project/group CI/CD variable to bump.
+  DEFAULT_CUDA_BUILD_VER: "13.3.0"
+
+include:
+  - local: .gitlab/build-bindings.yml
+  - local: .gitlab/upload-bindings.yml
+  - local: .gitlab/build-pathfinder.yml
+  - local: .gitlab/upload-pathfinder.yml
+  - local: .gitlab/build-python.yml
+  - local: .gitlab/upload-python.yml
+  - local: .gitlab/build-core.yml
+  - local: .gitlab/upload-core.yml
+  - local: .gitlab/test-install.yml
+  - local: .gitlab/test-gpu.yml

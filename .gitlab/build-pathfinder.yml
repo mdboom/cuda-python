@@ -1,0 +1,17 @@
+build_cuda_pathfinder:
+  stage: build
+
+  tags: [cuda-obi-linux-amd64-cpu-32]
+
+  image: quay.io/pypa/manylinux_2_28_x86_64
+
+  variables:
+    GIT_DEPTH: "0"
+
+  script:
+    - ${CI_PROJECT_DIR}/.gitlab/scripts/wheels_build_pathfinder.sh
+
+  artifacts:
+    paths:
+      - final-dist-pathfinder/
+    expire_in: 1 day

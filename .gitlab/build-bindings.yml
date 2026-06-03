@@ -1,0 +1,34 @@
+build_cuda_bindings:
+  stage: build
+  parallel:
+    matrix:
+      - PY_VER: ["3.10", "3.14"]
+
+  tags: [cuda-obi-linux-amd64-cpu-32]
+
+  image: quay.io/pypa/manylinux_2_28_x86_64
+
+  variables:
+    GIT_DEPTH: "0"
+    CUDA_HOME: "${CI_PROJECT_DIR}/cuda_toolkit"
+    CUDA_PATH: "${CI_PROJECT_DIR}/cuda_toolkit"
+    # DEFAULT_CUDA_BUILD_VER is set at the pipeline level in .gitlab-ci.yml.
+
+  needs:
+    - job: build_cuda_pathfinder
+      artifacts: true
+
+  before_script:
+    - export PY_VER_MAJOR=$(echo "${PY_VER}" | tr -d '.')
+    - . ${CI_PROJECT_DIR}/.gitlab/scripts/install_build_deps.sh
+
+  script:
+    - export PY_VER="${PY_VER}"
+    - . ${CI_PROJECT_DIR}/.gitlab/scripts/setup_build_env.sh
+    - ${CI_PROJECT_DIR}/.gitlab/scripts/wheels_build.sh
+
+  artifacts:
+    paths:
+      - final-dist-bindings/
+    expire_in: 1 day
+

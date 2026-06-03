@@ -1,0 +1,28 @@
+build_cuda_python:
+  stage: build
+
+  tags: [cuda-obi-linux-amd64-cpu-32]
+
+  image: quay.io/pypa/manylinux_2_28_x86_64
+
+  variables:
+    GIT_DEPTH: "0"
+
+  needs:
+    # Pure ordering only - cuda_python is the umbrella meta-package; build it after
+    # the other components so the artifact represents a complete set. artifacts: false
+    # means "wait for completion, don't download artifacts" (build is --no-deps).
+    - job: build_cuda_bindings
+      artifacts: false
+    - job: build_cuda_core
+      artifacts: false
+    - job: build_cuda_pathfinder
+      artifacts: false
+
+  script:
+    - ${CI_PROJECT_DIR}/.gitlab/scripts/wheels_build_python.sh
+
+  artifacts:
+    paths:
+      - final-dist-python/
+    expire_in: 1 day
