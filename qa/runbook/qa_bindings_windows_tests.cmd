@@ -14,6 +14,16 @@ if not exist "%CUDA_HOME%\" (
 echo CUDA_HOME="%CUDA_HOME%"
 set "CUDA_PATH=%CUDA_HOME%"
 
+set "TARGET_ARCH=%PROCESSOR_ARCHITECTURE%"
+if /i "%PROCESSOR_ARCHITEW6432%"=="ARM64" set "TARGET_ARCH=ARM64"
+echo TARGET_ARCH="%TARGET_ARCH%"
+if /i "%TARGET_ARCH%"=="ARM64" (
+  set "PYTHON_PLATFORM=win-arm64"
+) else (
+  set "PYTHON_PLATFORM=win-amd64"
+)
+echo PYTHON_PLATFORM="%PYTHON_PLATFORM%"
+
 REM Keep going as much as possible
 verify >nul
 
@@ -29,6 +39,11 @@ git --no-pager diff
 
 call .\TestVenv\Scripts\activate.bat
 python -VV
+python -c "import sys, sysconfig; p = sysconfig.get_platform(); print('Python platform:', p); sys.exit(p != '%PYTHON_PLATFORM%')"
+if errorlevel 1 (
+  echo FATAL: TestVenv Python does not match target platform "%PYTHON_PLATFORM%".
+  exit /b 1
+)
 pip list
 
 cd cuda_pathfinder\
