@@ -47,19 +47,20 @@ def test_current_clock_freqs(all_devices):
 
 def test_grid_licensable_features(all_devices):
     for device in all_devices:
-        features = nvml.device_get_grid_licensable_features_v4(device)
-        assert isinstance(features, nvml.GridLicensableFeatures)
-        # #define NVML_GRID_LICENSE_FEATURE_MAX_COUNT 3
-        assert len(features.grid_licensable_features) <= 3
-        assert not hasattr(features, "licensable_features_count")
+        with unsupported_before(device, None):
+            features = nvml.device_get_grid_licensable_features_v4(device)
+            assert isinstance(features, nvml.GridLicensableFeatures)
+            # #define NVML_GRID_LICENSE_FEATURE_MAX_COUNT 3
+            assert len(features.grid_licensable_features) <= 3
+            assert not hasattr(features, "licensable_features_count")
 
-        for feature in features.grid_licensable_features:
-            nvml.GridLicenseFeatureCode(feature.feature_code)
-            assert isinstance(feature.feature_state, int)
-            assert isinstance(feature.license_info, str)
-            assert isinstance(feature.product_name, str)
-            assert isinstance(feature.feature_enabled, int)
-            nvml.GridLicenseExpiry(feature.license_expiry)
+            for feature in features.grid_licensable_features:
+                nvml.GridLicenseFeatureCode(feature.feature_code)
+                assert isinstance(feature.feature_state, int)
+                assert isinstance(feature.license_info, str)
+                assert isinstance(feature.product_name, str)
+                assert isinstance(feature.feature_enabled, int)
+                nvml.GridLicenseExpiry(feature.license_expiry)
 
 
 def test_get_handle_by_uuidv(all_devices):
