@@ -58,8 +58,15 @@ def test_device_get_handle_by_uuid(ngpus, uuids):
     assert len(handles) == ngpus
 
 
-def test_device_get_handle_by_pci_bus_id(ngpus, pci_info):
-    handles = [nvml.device_get_handle_by_pci_bus_id_v2(pci_info[i].bus_id) for i in range(ngpus)]
+def test_device_get_handle_by_pci_bus_id(ngpus):
+    pci_infos = []
+    for i in range(ngpus):
+        handle = nvml.device_get_handle_by_index_v2(i)
+        with unsupported_before(handle, None):
+            pci_info = nvml.device_get_pci_info_v3(handle)
+            pci_infos.append(pci_info)
+    assert len(pci_infos) == ngpus
+    handles = [nvml.device_get_handle_by_pci_bus_id_v2(pci_infos[i].bus_id) for i in range(ngpus)]
     assert len(handles) == ngpus
 
 
