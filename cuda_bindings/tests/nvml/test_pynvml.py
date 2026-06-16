@@ -101,9 +101,13 @@ def test_device_get_p2p_status(handles, index):
     for h1 in handles:
         for h2 in handles:
             if h1 is not h2:
-                with unsupported_before(h1, None), unsupported_before(h2, None):
+                try:
                     status = nvml.device_get_p2p_status(h1, h2, index)
-                    assert nvml.GpuP2PStatus.P2P_STATUS_OK <= status <= nvml.GpuP2PStatus.P2P_STATUS_UNKNOWN
+                except nvml.InvalidArgumentError:
+                    # Some devices may not support all indices, and may
+                    # raise InvalidArgumentError for unsupported ones.
+                    continue
+                assert nvml.GpuP2PStatus.P2P_STATUS_OK <= status <= nvml.GpuP2PStatus.P2P_STATUS_UNKNOWN
 
 
 # [Skipping] pynvml.nvmlDeviceGetName
