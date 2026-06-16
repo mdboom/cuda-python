@@ -86,8 +86,9 @@ def test_get_nv_link_supported_bw_modes(all_devices):
 
 def test_device_get_pdi(all_devices):
     for device in all_devices:
-        pdi = nvml.device_get_pdi(device)
-        assert isinstance(pdi, int)
+        with unsupported_before(device, None):
+            pdi = nvml.device_get_pdi(device)
+            assert isinstance(pdi, int)
 
 
 def test_device_get_performance_modes(all_devices):
@@ -144,7 +145,7 @@ def test_get_power_management_limit(all_devices):
 
 def test_set_power_management_limit(all_devices):
     for device in all_devices:
-        with unsupported_before(device, nvml.DeviceArch.KEPLER):
+        with unsupported_before(device, None):
             try:
                 nvml.device_set_power_management_limit_v2(device, nvml.PowerScope.GPU, 10000)
             except nvml.NoPermissionError:

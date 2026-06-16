@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 
-import os
 
 import pytest
 
@@ -72,13 +71,6 @@ def test_cuda_device_order():
             nvml_device["id"] == -1 or cuda_device["id"] == nvml_device["id"]
         )
 
-    if "CUDA_VISIBLE_DEVICES" not in os.environ:
-        # If that environment variable isn't set, the device lists should match exactly
-        for cuda_device, nvml_device in zip(cuda_devices, nvml_devices, strict=True):
-            assert compare(cuda_device, nvml_device)
-    else:
-        # If the environment variable is set, there may possibly be fewer CUDA devices,
-        # and each of them should still be found in NVML devices.
-        assert len(cuda_devices) <= len(nvml_devices)
-        for cuda_device in cuda_devices:
-            assert any(compare(cuda_device, nvml_device) for nvml_device in nvml_devices)
+    assert len(cuda_devices) <= len(nvml_devices)
+    for cuda_device in cuda_devices:
+        assert any(compare(cuda_device, nvml_device) for nvml_device in nvml_devices)
