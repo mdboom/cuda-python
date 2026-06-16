@@ -28,8 +28,9 @@ def cuda_version_less_than(target):
 
 def test_device_capabilities(all_devices):
     for device in all_devices:
-        capabilities = nvml.device_get_capabilities(device)
-        assert isinstance(capabilities, int)
+        with unsupported_before(device, None):
+            capabilities = nvml.device_get_capabilities(device)
+            assert isinstance(capabilities, int)
 
 
 def test_clk_mon_status_t():
