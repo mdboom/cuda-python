@@ -19,10 +19,15 @@ def get_nvml_device_names():
         for idx in range(num_devices):
             handle = nvml.device_get_handle_by_index_v2(idx)
             name = nvml.device_get_name(handle)
-            info = nvml.device_get_pci_info_v3(handle)
-            assert isinstance(info.bus, int)
+            try:
+                info = nvml.device_get_pci_info_v3(handle)
+            except nvml.NotSupportedError:
+                bus_id = -1
+            else:
+                bus_id = info.bus
+            assert isinstance(bus_id, int)
             assert isinstance(name, str)
-            result.append({"name": name, "id": info.bus})
+            result.append({"name": name, "id": bus_id})
 
     return result
 
@@ -62,12 +67,18 @@ def test_cuda_device_order():
         pytest.skip("Skipping test on Thor, which has non-standard device naming")
         return
 
+    def compare(cuda_device, nvml_device):
+        return cuda_device["name"] == nvml_device["name"] and (
+            nvml_device["id"] == -1 or cuda_device["id"] == nvml_device["id"]
+        )
+
     if "CUDA_VISIBLE_DEVICES" not in os.environ:
         # If that environment variable isn't set, the device lists should match exactly
-        assert cuda_devices == nvml_devices, "CUDA and NVML device lists do not match"
+        for cuda_device, nvml_device in zip(cuda_devices, nvml_devices, strict=True):
+            assert compare(cuda_device, nvml_device)
     else:
         # If the environment variable is set, there may possibly be fewer CUDA devices,
         # and each of them should still be found in NVML devices.
         assert len(cuda_devices) <= len(nvml_devices)
         for cuda_device in cuda_devices:
-            assert cuda_device in nvml_devices, f"CUDA device {cuda_device} not found in NVML device list"
+            assert any(compare(cuda_device, nvml_device) for nvml_device in nvml_devices)
