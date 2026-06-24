@@ -132,13 +132,21 @@ def test_numa_node_id():
 
 
 def test_device_cuda_compute_capability():
+    checked_devices = 0
     for device in system.Device.get_all_devices():
-        cuda_compute_capability = device.cuda_compute_capability
+        try:
+            cuda_compute_capability = device.cuda_compute_capability
+        except nvml.NotSupportedError:
+            # N1X exposes DLA/NPU devices through NVML. They are system
+            # devices, but they do not have a CUDA compute capability.
+            continue
+        checked_devices += 1
         assert isinstance(cuda_compute_capability, tuple)
         assert len(cuda_compute_capability) == 2
         assert all(isinstance(i, int) for i in cuda_compute_capability)
         assert 3 <= cuda_compute_capability[0] <= 99
         assert 0 <= cuda_compute_capability[1] <= 9
+    assert checked_devices > 0
 
 
 def test_device_memory():
@@ -818,5 +826,5 @@ def test_uuid():
     for device in system.Device.get_all_devices():
         uuid = device.uuid
         assert isinstance(uuid, str)
-        assert uuid.startswith(("GPU-", "MIG-"))
+        assert uuid.startswith(("GPU-", "MIG-", "DLA-"))
         assert uuid == device.uuid
