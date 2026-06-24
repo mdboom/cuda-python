@@ -428,6 +428,180 @@ Recommended flow for the CUDA Python team:
 
 ---
 
+## DVS-SC Nightly Testing
+
+This section summarizes what we currently know about the DVS-SC nightly testing
+workflow for CUDA Python and `ctk-next`. It is intended to give CUDA Python
+developers enough context to understand DVS-SC bug reports and to ask better
+follow-up questions when test behavior is unclear.
+
+According to a June 16, 2026 Slack DM summary from Mingyan, it is reasonable to
+call this "nightly testing in DVS-SC", although each active line is launched
+about three times per week. DVS-SC pulls the latest `ctk-next` for each
+launch. At that time, their active coverage included unreleased CTK 13.3.1,
+unreleased CTK 13.4.0, and the next integration/release line using CUDA
+`gpgpu` with driver `bugfix_main`, then corresponding roughly to CTK 13.5.
+
+At a high level, DVS-SC packages a CUDA Toolkit build, a display driver, and a
+fresh `ctk-next` checkout into a DVS test package. The main source-based CUDA
+Python functional suite initializes a conda environment and then runs
+`python_low_level_binding_tests.py` phases such as `unit_test`, `cuda_core`,
+and `Numba`. The performance suite uses the same general package context, but
+switches to a benchmark conda environment and runs the cuda-bindings pyperf
+benchmarks under `benchmarks/cuda_bindings`.
+
+`python_low_level_binding_tests.py` is the CUDA Python-specific test driver in
+the DVS-SC test bundle. It is the part most similar to a script a CUDA Python
+developer might write locally: create or refresh a conda environment, install
+the current `ctk-next` checkout and dependencies, then run selected validation
+phases. The functional suite uses it for phases such as `unit_test`,
+`cuda_core`, and `Numba`; the performance suite uses it to run cuda-bindings
+pyperf benchmarks.
+
+DVS-SC calls that Python driver from a `.trs` file. The `.trs` file is the DVS
+runner recipe, not CUDA Python test code: it declares environment variables,
+timeouts, setup and cleanup steps, and the commands to run. For example,
+`python_low_level_binding_tests.trs` sets `CONDA_HOME` and `CUDA_HOME`, invokes
+`python_low_level_binding_tests.py --init`, then invokes
+`python_low_level_binding_tests.py --test ...` for the selected phase. In
+short, the Python file owns the CUDA Python setup and test logic, while the
+`.trs` file owns the DVS orchestration around it.
+
+For day-to-day `ctk-next` work, the most important takeaway is that DVS-SC
+nightly testing is external validation of our current `ctk-next` branch against
+pre-release CTK and driver lines. The DVS-SC harness itself lives in Perforce,
+not in this repository. We should treat it as downstream automation that can
+expose gaps in `ctk-next`, especially around generated bindings, CUDA library
+availability, Windows/WSL behavior, cuda-core integration, numba-cuda
+interaction, and benchmark coverage.
+
+The notes below are agent-facing reference material. A recommended way to
+learn more is to point an agent at this file, then ask follow-up questions. For
+deeper investigation, configure the agent with access to internal search and
+source connectors such as Glean and Perforce MCP.
+
+### Agent-facing DVS-SC Notes
+
+Known source context:
+
+* DVS-SC CUDA 13.4 build configuration example:
+  `//sw/automation/dvs/config/rel/sc/cuda_13.4/Release_Linux_AMD64_py.lowlevel.binding.txt`
+* DVS-SC CUDA 13.4 full test package configuration example:
+  `//sw/automation/dvs/config/rel/sc/cuda_13.4/packages/Release_Linux_AMD64_py.lowlevel.binding.tests.fulltestpkg_Linux.txt`
+* DVS-SC CUDA 13.4 functional suite:
+  `//sw/automation/dvs/tests/r13.4/python_low_level_binding_tests/python_low_level_binding_tests.trs`
+* DVS-SC CUDA 13.4 performance suite:
+  `//sw/automation/dvs/tests/r13.4/python_low_level_binding_tests/python_low_level_binding_perf_tests.trs`
+
+The same test directory pattern exists across recent release lines:
+
+* `//sw/automation/dvs/tests/r13.0/python_low_level_binding_tests/`
+* `//sw/automation/dvs/tests/r13.1/python_low_level_binding_tests/`
+* `//sw/automation/dvs/tests/r13.2/python_low_level_binding_tests/`
+* `//sw/automation/dvs/tests/r13.3/python_low_level_binding_tests/`
+* `//sw/automation/dvs/tests/r13.4/python_low_level_binding_tests/`
+
+Useful Swarm entry points:
+
+* https://p4sw-swarm.nvidia.com/files/sw/automation/dvs/tests/r13.0/python_low_level_binding_tests
+* https://p4sw-swarm.nvidia.com/files/sw/automation/dvs/tests/r13.1/python_low_level_binding_tests
+* https://p4sw-swarm.nvidia.com/files/sw/automation/dvs/tests/r13.2/python_low_level_binding_tests
+* https://p4sw-swarm.nvidia.com/files/sw/automation/dvs/tests/r13.3/python_low_level_binding_tests
+* https://p4sw-swarm.nvidia.com/files/sw/automation/dvs/tests/r13.4/python_low_level_binding_tests
+
+The r13.4 DVS-SC test directory is a flat test bundle. The most relevant files
+for `ctk-next` are:
+
+* `python_low_level_binding_tests.trs`: main functional DVS-SC launcher. It
+  sets `CONDA_HOME`, `CUDA_HOME`, and `PYTHON_BIN`, marks the
+  `generator/cuda-python-private` checkout safe for Git, runs
+  `python_low_level_binding_tests.py --init`, then runs `unit_test`,
+  `cuda_core`, re-runs `--init`, runs `Numba`, and finally removes the conda
+  environment.
+* `python_low_level_binding_perf_tests.trs`: performance launcher. It sets GPU
+  clocks to P0, swaps in `python_low_level_binding_benchmark_tests.yml` as the
+  active conda environment file, runs `--init`, runs `--test benchmark`, then
+  parses pyperf output into DVS multi-result performance lines.
+* `python_low_level_binding_tests.py`: source-branch validation logic. It
+  initializes the conda environment and runs cuda-pathfinder, cuda-bindings,
+  cuda-core, numba-cuda, RMM, and benchmark phases depending on the `.trs`
+  entry point.
+* `python_low_level_binding_tests.yml`: functional conda environment seed,
+  currently Python `>=3.10,<=3.14` plus `cffi`.
+* `python_low_level_binding_benchmark_tests.yml`: benchmark conda environment
+  seed, currently fixed to Python `3.12` plus `cffi`.
+* `parse_benchmark.py`: converts pyperf benchmark output into DVS-SC
+  multi-result performance format.
+* `cufile.h`: vendored cuFile header copied into `CUDA_HOME/include` by the
+  DVS-SC test driver so cuda-bindings can compile and test cuFile coverage.
+  Treat this as a DVS-side dependency/workaround, not as a `ctk-next` source
+  file.
+
+Other `.trs` variants in the r13.4 directory are useful context but are less
+central to normal `ctk-next` nightly interpretation:
+
+* `python_low_level_binding_wsl_tests.trs`: WSL-focused suite. It runs
+  `--init`, `unit_test`, and `cuda_core`, but not Numba or benchmark.
+* `python_low_level_binding_tests_bc.trs`: backward-compatibility style suite.
+  It runs `--init --bc`, `unit_test`, and `samples`; Numba is commented out.
+* `python_low_level_binding_tests_enhance_fwd.trs`: enhanced-forward variant.
+  It runs `--init`, `unit_test`, and `samples`; Numba is commented out.
+
+The Windows installer validation files appear to be package-install validation
+rather than the main source-branch `ctk-next` nightly path:
+
+* `python_low_level_binding_win_install_tests.trs`: Windows installer matrix
+  for conda and wheel install/uninstall/version/example checks across Python
+  3.9 through 3.13.
+* `python_low_level_binding_win_install_tests.py`: implementation of that
+  installer validation.
+* `python_low_level_binding_pkg.py` and `py_lowlevel_config.json`: helper flow
+  for generating CUDA Python package install commands. In the r13.4 copy
+  inspected, `py_lowlevel_config.json` still referenced CUDA `12.8.0`, so do
+  not assume these files describe current `ctk-next` source-branch nightly
+  behavior without rechecking DVS-SC.
+* `wget.exe`: Windows utility bundled for DVS package/install workflows.
+
+When investigating DVS-SC nightly failures, start by identifying which `.trs`
+suite ran, then inspect the commands it invokes. For ctk-next source-branch
+bugs, the usual path is from the `.trs` file into
+`python_low_level_binding_tests.py`, then into the failing phase:
+
+* `unit_test`: cuda-pathfinder and cuda-bindings unit tests, including
+  per-thread default stream and Cython tests.
+* `cuda_core`: cuda-core tests and example tests, with extra handling for
+  Python version, CUDA library paths, `CUDA_VISIBLE_DEVICES`, and numba-cuda
+  interference.
+* `Numba`: numba-cuda clone/install/test flow, with additional dependency,
+  test-binary, and cuda-bindings restoration logic.
+* `benchmark`: cuda-bindings pyperf benchmarks under
+  `benchmarks/cuda_bindings`, parsed by `parse_benchmark.py`.
+
+The script evolved significantly between r13.0 and r13.4. The largest change
+was from r13.1 to r13.2, where the file grew from about 500 lines to about
+1,000 lines. That change added much stronger Windows, WSL, cuda-core,
+numba-cuda, optional-library, and pytest-result handling. The r13.3 and r13.4
+copies of `python_low_level_binding_tests.py` are byte-for-byte identical in
+the inspected Perforce sync.
+
+For a deeper agent-assisted investigation:
+
+1. Read this section and the `qa/runbook/` scripts to understand the CUDA
+   Python team's side of the handoff.
+2. Use Perforce MCP or `p4` to inspect the relevant
+   `//sw/automation/dvs/tests/<line>/python_low_level_binding_tests/` suite.
+3. Use Perforce MCP or `p4` to inspect the corresponding
+   `//sw/automation/dvs/config/rel/sc/cuda_<version>/` build/package
+   configuration if the question is about packaging, scheduling, platform
+   matrix, or CTK/driver selection.
+4. Use Glean or Confluence search for DVS-SC documentation when the question
+   is about DVS runner semantics, `.trs` fields, scheduled launches, ownership,
+   or dashboards.
+5. Use Slack only for conversational context and current-human interpretation;
+   prefer Perforce/config files for exact commands and source of truth.
+
+---
+
 ## Tips for Future CTK Updates
 
 * Start with current `cybind` `main`; older docs, the old standalone
