@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from .conftest import skip_if_nvml_unsupported, unsupported_before
+from .conftest import skip_if_nvml_unsupported, unsupported_before, unsupported_non_cuda
 
 pytestmark = skip_if_nvml_unsupported
 
@@ -23,6 +23,15 @@ if system.CUDA_BINDINGS_NVML_IS_COMPATIBLE:
     from cuda.bindings import nvml
     from cuda.bindings.nvml import DeviceArch
     from cuda.core.system import _device
+
+
+def _clock_event_reasons_or_skip(device, attr):
+    try:
+        return getattr(device, attr)
+    except ValueError as exc:
+        if str(exc).startswith("Unknown clock event reason bit:"):
+            pytest.skip(str(exc))
+        raise
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -318,10 +327,11 @@ def test_device_brand():
 
 def test_device_pci_bus_id():
     for device in system.Device.get_all_devices():
-        pci_bus_id = device.pci_info.bus_id
+        with unsupported_non_cuda(device):
+            pci_bus_id = device.pci_info.bus_id
         assert isinstance(pci_bus_id, str)
 
-        new_device = system.Device(pci_bus_id=device.pci_info.bus_id)
+        new_device = system.Device(pci_bus_id=pci_bus_id)
         assert new_device.index == device.index
 
 
@@ -622,11 +632,11 @@ def test_clock():
 def test_clock_event_reasons():
     for device in system.Device.get_all_devices():
         with unsupported_before(device, None):
-            reasons = device.current_clock_event_reasons
+            reasons = _clock_event_reasons_or_skip(device, "current_clock_event_reasons")
         assert all(isinstance(reason, typing.ClocksEventReasons) for reason in reasons)
 
         with unsupported_before(device, None):
-            reasons = device.supported_clock_event_reasons
+            reasons = _clock_event_reasons_or_skip(device, "supported_clock_event_reasons")
         assert all(isinstance(reason, typing.ClocksEventReasons) for reason in reasons)
 
 
@@ -750,8 +760,9 @@ def test_pstates():
 
 def test_compute_running_processes():
     for device in system.Device.get_all_devices():
-        with unsupported_before(device, "FERMI"):
-            processes = device.compute_running_processes
+        with unsupported_non_cuda(device):
+            with unsupported_before(device, "FERMI"):
+                processes = device.compute_running_processes
         assert isinstance(processes, list)
         for proc in processes:
             assert isinstance(proc, _device.ProcessInfo)
