@@ -1002,7 +1002,17 @@ class Device:
         """
         from cuda.core import system
         total = system.get_num_devices()
-        return tuple(cls(device_id) for device_id in range(total))
+        devices = []
+        for device_id in range(total):
+            try:
+                devices.append(cls(device_id))
+            except ValueError as exc:
+                if not str(exc).startswith("device_id must be within"):
+                    raise
+                # NVML/system can include non-CUDA accelerator devices, such
+                # as the DLA/NPU on N1X WoA. CUDA ordinals are compact.
+                break
+        return tuple(devices)
 
     def to_system_device(self) -> 'cuda.core.system.Device':
         """
