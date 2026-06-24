@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from .conftest import skip_if_nvml_unsupported, unsupported_before, unsupported_non_cuda
+from .conftest import skip_if_nvml_unsupported, unsupported_before
 
 pytestmark = skip_if_nvml_unsupported
 
@@ -16,7 +16,7 @@ import warnings
 import helpers
 import pytest
 
-from cuda.core import system
+from cuda.core import Device as CudaDevice, system
 from cuda.core.system import typing
 
 if system.CUDA_BINDINGS_NVML_IS_COMPATIBLE:
@@ -132,17 +132,14 @@ def test_numa_node_id():
 
 
 def test_device_cuda_compute_capability():
-    checked_devices = 0
-    for device in system.Device.get_all_devices():
-        with unsupported_non_cuda(device):
-            cuda_compute_capability = device.cuda_compute_capability
-        checked_devices += 1
+    for cuda_device in CudaDevice.get_all_devices():
+        device = cuda_device.to_system_device()
+        cuda_compute_capability = device.cuda_compute_capability
         assert isinstance(cuda_compute_capability, tuple)
         assert len(cuda_compute_capability) == 2
         assert all(isinstance(i, int) for i in cuda_compute_capability)
         assert 3 <= cuda_compute_capability[0] <= 99
         assert 0 <= cuda_compute_capability[1] <= 9
-    assert checked_devices > 0
 
 
 def test_device_memory():
@@ -313,9 +310,9 @@ def test_device_brand():
 
 
 def test_device_pci_bus_id():
-    for device in system.Device.get_all_devices():
-        with unsupported_non_cuda(device):
-            pci_bus_id = device.pci_info.bus_id
+    for cuda_device in CudaDevice.get_all_devices():
+        device = cuda_device.to_system_device()
+        pci_bus_id = device.pci_info.bus_id
         assert isinstance(pci_bus_id, str)
 
         new_device = system.Device(pci_bus_id=pci_bus_id)
@@ -746,10 +743,10 @@ def test_pstates():
 
 
 def test_compute_running_processes():
-    for device in system.Device.get_all_devices():
-        with unsupported_non_cuda(device):
-            with unsupported_before(device, "FERMI"):
-                processes = device.compute_running_processes
+    for cuda_device in CudaDevice.get_all_devices():
+        device = cuda_device.to_system_device()
+        with unsupported_before(device, "FERMI"):
+            processes = device.compute_running_processes
         assert isinstance(processes, list)
         for proc in processes:
             assert isinstance(proc, _device.ProcessInfo)

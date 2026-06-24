@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from contextlib import contextmanager
-
 import pytest
 
 from cuda.core import system
@@ -28,18 +26,3 @@ def unsupported_before(device, expected_device_arch):
     from cuda.bindings._test_helpers.arch_check import unsupported_before as nvml_unsupported_before
 
     return nvml_unsupported_before(device._handle, expected_device_arch)
-
-
-@contextmanager
-def unsupported_non_cuda(device):
-    """Skip unsupported NVML calls for devices that do not map to CUDA."""
-    from cuda.bindings import nvml
-
-    try:
-        yield
-    except nvml.NotSupportedError:
-        try:
-            device.to_cuda_device()
-        except RuntimeError:
-            pytest.skip(f"Unsupported call for non-CUDA NVML device '{device.name}'")
-        raise
