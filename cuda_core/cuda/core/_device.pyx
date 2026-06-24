@@ -1001,18 +1001,31 @@ class Device:
             A tuple containing instances of available devices.
         """
         from cuda.core import system
-        total = system.get_num_devices()
+
+        if not system.CUDA_BINDINGS_NVML_IS_COMPATIBLE:
+            return cls._get_all_devices_from_cuda_driver()
+
+        from cuda.bindings import nvml
+        from cuda.core.system._device import _NoCudaDeviceError
+
         devices = []
-        for device_id in range(total):
+        for device_id in range(system.get_num_devices()):
             try:
-                devices.append(cls(device_id))
-            except ValueError as exc:
-                if not str(exc).startswith("device_id must be within"):
-                    raise
-                # NVML/system can include non-CUDA accelerator devices, such
-                # as the DLA/NPU on N1X WoA. CUDA ordinals are compact.
-                break
-        return tuple(devices)
+                device = system.Device(index=device_id).to_cuda_device()
+            except nvml.NvmlError:
+                continue
+            except _NoCudaDeviceError:
+                # NVML/system can include devices that do not have CUDA
+                # ordinals, such as physical MIG parents or the DLA/NPU on N1X
+                # WoA.
+                continue
+            devices.append(device)
+        return tuple(sorted(devices, key=lambda device: device.device_id))
+
+    @classmethod
+    def _get_all_devices_from_cuda_driver(cls):
+        Device_ensure_cuda_initialized()
+        return tuple(Device_ensure_tls_devices(cls))
 
     def to_system_device(self) -> 'cuda.core.system.Device':
         """

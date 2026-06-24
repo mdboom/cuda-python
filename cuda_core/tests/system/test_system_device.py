@@ -25,15 +25,6 @@ if system.CUDA_BINDINGS_NVML_IS_COMPATIBLE:
     from cuda.core.system import _device
 
 
-def _clock_event_reasons_or_skip(device, attr):
-    try:
-        return getattr(device, attr)
-    except ValueError as exc:
-        if str(exc).startswith("Unknown clock event reason bit:"):
-            pytest.skip(str(exc))
-        raise
-
-
 @pytest.fixture(autouse=True, scope="module")
 def check_gpu_available():
     if not system.CUDA_BINDINGS_NVML_IS_COMPATIBLE or system.get_num_devices() == 0:
@@ -628,11 +619,11 @@ def test_clock():
 def test_clock_event_reasons():
     for device in system.Device.get_all_devices():
         with unsupported_before(device, None):
-            reasons = _clock_event_reasons_or_skip(device, "current_clock_event_reasons")
+            reasons = device.current_clock_event_reasons
         assert all(isinstance(reason, typing.ClocksEventReasons) for reason in reasons)
 
         with unsupported_before(device, None):
-            reasons = _clock_event_reasons_or_skip(device, "supported_clock_event_reasons")
+            reasons = device.supported_clock_event_reasons
         assert all(isinstance(reason, typing.ClocksEventReasons) for reason in reasons)
 
 

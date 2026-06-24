@@ -138,6 +138,10 @@ _GPU_TOPOLOGY_LEVEL_MAPPING = {
 _GPU_TOPOLOGY_LEVEL_INV_MAPPING = {v: k for k, v in _GPU_TOPOLOGY_LEVEL_MAPPING.items()}
 
 
+class _NoCudaDeviceError(RuntimeError):
+    pass
+
+
 
 cdef class Device:
     """
@@ -391,11 +395,11 @@ cdef class Device:
         # CUDA does not have an API to get a device by its UUID, so we just
         # search all the devices for one with a matching UUID.
 
-        for cuda_device in CudaDevice.get_all_devices():
+        for cuda_device in CudaDevice._get_all_devices_from_cuda_driver():
             if cuda_device.uuid == self.uuid_without_prefix:
                 return cuda_device
 
-        raise RuntimeError("No corresponding CUDA device found for this NVML device.")
+        raise _NoCudaDeviceError("No corresponding CUDA device found for this NVML device.")
 
     @classmethod
     def get_device_count(cls) -> int:
