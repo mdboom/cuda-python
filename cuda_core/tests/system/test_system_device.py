@@ -143,12 +143,8 @@ def test_numa_node_id():
 def test_device_cuda_compute_capability():
     checked_devices = 0
     for device in system.Device.get_all_devices():
-        try:
+        with unsupported_non_cuda(device):
             cuda_compute_capability = device.cuda_compute_capability
-        except nvml.NotSupportedError:
-            # N1X exposes DLA/NPU devices through NVML. They are system
-            # devices, but they do not have a CUDA compute capability.
-            continue
         checked_devices += 1
         assert isinstance(cuda_compute_capability, tuple)
         assert len(cuda_compute_capability) == 2
