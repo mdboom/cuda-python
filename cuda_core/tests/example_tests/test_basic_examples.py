@@ -12,7 +12,7 @@ import warnings
 
 import pytest
 
-from cuda.core import Device, ManagedMemoryResource, system
+from cuda.core import Device, ManagedMemoryResource
 
 try:
     from cuda.bindings._test_helpers.pep723 import has_package_requirements_or_skip
@@ -27,7 +27,7 @@ def has_compute_capability_9_or_higher() -> bool:
 
 
 def has_multiple_devices() -> bool:
-    return system.get_num_devices() >= 2
+    return len(Device.get_all_devices()) >= 2
 
 
 def has_display() -> bool:

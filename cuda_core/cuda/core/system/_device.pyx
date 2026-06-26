@@ -138,7 +138,6 @@ _GPU_TOPOLOGY_LEVEL_MAPPING = {
 _GPU_TOPOLOGY_LEVEL_INV_MAPPING = {v: k for k, v in _GPU_TOPOLOGY_LEVEL_MAPPING.items()}
 
 
-
 cdef class Device:
     """
     Representation of a device.
