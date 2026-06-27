@@ -104,6 +104,9 @@ _BRAND_TYPE_MAPPING = {
     nvml.BrandType.BRAND_NVIDIA: "NVIDIA",
     nvml.BrandType.BRAND_GEFORCE_RTX: "GeForce RTX",
     nvml.BrandType.BRAND_TITAN_RTX: "Titan RTX",
+    nvml.BrandType.BRAND_NVIDIA_DLA: "NVIDIA DLA",
+    nvml.BrandType.BRAND_NVIDIA_VGAMEDEV: "NVIDIA vGameDev",
+    nvml.BrandType.BRAND_NVIDIA_NPU: "NVIDIA NPU",
 }
 
 
