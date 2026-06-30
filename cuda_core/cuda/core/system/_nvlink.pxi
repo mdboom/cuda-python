@@ -14,6 +14,10 @@ _NVLINK_VERSION_MAPPING = {
     nvml.NvlinkVersion.VERSION_6_0: (6, 0),
 }
 
+_NVLINK_VERSION_6_0 = getattr(nvml.NvlinkVersion, "VERSION_6_0", None)
+if _NVLINK_VERSION_6_0 is not None:
+    _NVLINK_VERSION_MAPPING[_NVLINK_VERSION_6_0] = (6, 0)
+
 
 cdef class NvlinkInfo:
     """
