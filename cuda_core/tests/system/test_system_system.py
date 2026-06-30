@@ -12,7 +12,7 @@ try:
 except ImportError:
     from cuda import cuda as driver
 
-from cuda.core import Device as CudaDevice, system
+from cuda.core import system
 from cuda.core._utils.cuda_utils import handle_return
 
 from .conftest import skip_if_nvml_unsupported
@@ -62,9 +62,8 @@ def test_nvml_version():
 
 @skip_if_nvml_unsupported
 def test_get_process_name():
-    for cuda_device in CudaDevice.get_all_devices():
-        device = cuda_device.to_system_device()
-        device.compute_running_processes
+    for device in system.Device.get_all_devices():
+        x = device.compute_running_processes
 
     try:
         process_name = system.get_process_name(os.getpid())

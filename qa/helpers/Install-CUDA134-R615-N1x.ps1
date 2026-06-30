@@ -1,4 +1,7 @@
-<# 
+# SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
+
+<#
 .SYNOPSIS
 Downloads/copies the CUDA 13.4-compatible R615 N1x WoA driver, then optionally
 installs the Windows ARM64 CUDA 13.4 Toolkit.

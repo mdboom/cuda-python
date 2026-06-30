@@ -16,7 +16,8 @@ import warnings
 import helpers
 import pytest
 
-from cuda.core import Device as CudaDevice, system
+from cuda.core import Device as CudaDevice
+from cuda.core import system
 from cuda.core.system import typing
 
 if system.CUDA_BINDINGS_NVML_IS_COMPATIBLE:
