@@ -11,7 +11,6 @@ _NVLINK_VERSION_MAPPING = {
     nvml.NvlinkVersion.VERSION_3_1: (3, 1),
     nvml.NvlinkVersion.VERSION_4_0: (4, 0),
     nvml.NvlinkVersion.VERSION_5_0: (5, 0),
-    nvml.NvlinkVersion.VERSION_6_0: (6, 0),
 }
 
 _NVLINK_VERSION_6_0 = getattr(nvml.NvlinkVersion, "VERSION_6_0", None)
