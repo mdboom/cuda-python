@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Copyright (c) 2021-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 
-# This code was automatically generated with version 13.3.0, generator version 0.3.1.dev1717+g3685a988f. Do not modify it directly.
+# This code was automatically generated with version 13.4.0, generator version 0.3.1.dev1839+g5c2de97e8. Do not modify it directly.
 
 cdef extern from "vector_types.h":
 
@@ -87,6 +87,7 @@ cdef extern from "driver_types.h":
         cudaErrorUnsupportedExecAffinity = 224
         cudaErrorUnsupportedDevSideSync = 225
         cudaErrorContained = 226
+        cudaErrorInsufficientLoaderVersion = 227
         cudaErrorInvalidSource = 300
         cudaErrorFileNotFound = 301
         cudaErrorSharedObjectSymbolNotFound = 302
@@ -148,6 +149,7 @@ cdef extern from "driver_types.h":
         cudaErrorInvalidResourceConfiguration = 915
         cudaErrorStreamDetached = 917
         cudaErrorGraphRecaptureFailure = 918
+        cudaErrorFabricNotReady = 919
         cudaErrorUnknown = 999
         cudaErrorApiFailureBase = 10000
 
@@ -160,6 +162,26 @@ cdef extern from "driver_types.h":
     cdef struct cudaExecutionContext_st:
         pass
     ctypedef cudaExecutionContext_st* cudaExecutionContext_t
+
+    cdef struct CUsubgridSchedule_st:
+        pass
+    ctypedef CUsubgridSchedule_st* cudaSubgridSchedule_t
+
+    cdef struct cudaSubgridScheduleNodeParams:
+        cudaSubgridSchedule_t schedule
+        cudaExecutionContext_t ctx
+
+    cdef struct CUsubgridWorkerGrid_st:
+        pass
+    ctypedef CUsubgridWorkerGrid_st* cudaSubgridWorkerGrid_t
+
+    cdef struct CUsubgridWorkset_st:
+        pass
+    ctypedef CUsubgridWorkset_st* cudaSubgridWorkset_t
+
+    cdef struct CUsubgrid_st:
+        pass
+    ctypedef CUsubgrid_st* cudaSubgrid_t
 
     cdef struct cudaChannelFormatDesc:
         int x
@@ -278,6 +300,7 @@ cdef extern from "driver_types.h":
         cudaHostFn_t fn
         void* userData
         unsigned int syncMode
+        cudaExecutionContext_t ctx
 
     cdef struct anon_struct1:
         cudaArray_t array
@@ -327,13 +350,17 @@ cdef extern from "driver_types.h":
         cudaSharedMemoryModeDefault = 0
         cudaSharedMemoryModeRequirePortable = 1
         cudaSharedMemoryModeAllowNonPortable = 2
+        cudaSharedMemoryModeAllowOversizedSharedMemory = 3
+        cudaSharedMemoryModePreferOversizedSharedMemory = 4
 
     cdef struct cudaPointerAttributes:
         cudaMemoryType type
         int device
         void* devicePointer
         void* hostPointer
-        long reserved[8]
+        int localityDomainOrdinal
+        long unused
+        long reserved[7]
 
     cdef struct cudaFuncAttributes:
         size_t sharedSizeBytes
@@ -353,12 +380,17 @@ cdef extern from "driver_types.h":
         int clusterSchedulingPolicyPreference
         int nonPortableClusterSizeAllowed
         int deviceNodeUpdateStatus
-        int reserved1
+        cudaSharedMemoryMode sharedMemoryMode
         int reserved[14]
+
+    cdef struct anon_struct6:
+        unsigned char deviceId
+        unsigned char localityDomainId
 
     cdef struct cudaMemLocation:
         cudaMemLocationType type
         int id
+        anon_struct6 localized
 
     cdef struct cudaMemAccessDesc:
         cudaMemLocation location
@@ -404,23 +436,23 @@ cdef extern from "driver_types.h":
         size_t y
         size_t z
 
-    cdef struct anon_struct6:
+    cdef struct anon_struct7:
         void* ptr
         size_t rowLength
         size_t layerHeight
         cudaMemLocation locHint
 
-    cdef struct anon_struct7:
+    cdef struct anon_struct8:
         cudaArray_t array
         cudaOffset3D offset
 
-    cdef union anon_union2:
-        anon_struct6 ptr
-        anon_struct7 array
+    cdef union anon_union3:
+        anon_struct7 ptr
+        anon_struct8 array
 
     cdef struct cudaMemcpy3DOperand:
         cudaMemcpy3DOperandType type
-        anon_union2 op
+        anon_union3 op
 
     cdef struct cudaMemcpy3DBatchOp:
         cudaMemcpy3DOperand src
@@ -546,18 +578,18 @@ cdef extern from "driver_types.h":
 
     ctypedef cudaMemFabricHandle_st cudaMemFabricHandle_t
 
-    cdef struct anon_struct8:
+    cdef struct anon_struct9:
         void* handle
         const void* name
 
-    cdef union anon_union3:
+    cdef union anon_union4:
         int fd
-        anon_struct8 win32
+        anon_struct9 win32
         const void* nvSciBufObject
 
     cdef struct cudaExternalMemoryHandleDesc:
         cudaExternalMemoryHandleType type
-        anon_union3 handle
+        anon_union4 handle
         unsigned long long size
         unsigned int flags
         unsigned int reserved[16]
@@ -576,61 +608,61 @@ cdef extern from "driver_types.h":
         unsigned int numLevels
         unsigned int reserved[16]
 
-    cdef struct anon_struct9:
+    cdef struct anon_struct10:
         void* handle
         const void* name
 
-    cdef union anon_union4:
+    cdef union anon_union5:
         int fd
-        anon_struct9 win32
+        anon_struct10 win32
         const void* nvSciSyncObj
 
     cdef struct cudaExternalSemaphoreHandleDesc:
         cudaExternalSemaphoreHandleType type
-        anon_union4 handle
+        anon_union5 handle
         unsigned int flags
         unsigned int reserved[16]
-
-    cdef struct anon_struct10:
-        unsigned long long value
-
-    cdef union anon_union5:
-        void* fence
-        unsigned long long reserved
 
     cdef struct anon_struct11:
-        unsigned long long key
-
-    cdef struct anon_struct12:
-        anon_struct10 fence
-        anon_union5 nvSciSync
-        anon_struct11 keyedMutex
-        unsigned int reserved[12]
-
-    cdef struct cudaExternalSemaphoreSignalParams:
-        anon_struct12 params
-        unsigned int flags
-        unsigned int reserved[16]
-
-    cdef struct anon_struct13:
         unsigned long long value
 
     cdef union anon_union6:
         void* fence
         unsigned long long reserved
 
+    cdef struct anon_struct12:
+        unsigned long long key
+
+    cdef struct anon_struct13:
+        anon_struct11 fence
+        anon_union6 nvSciSync
+        anon_struct12 keyedMutex
+        unsigned int reserved[12]
+
+    cdef struct cudaExternalSemaphoreSignalParams:
+        anon_struct13 params
+        unsigned int flags
+        unsigned int reserved[16]
+
     cdef struct anon_struct14:
+        unsigned long long value
+
+    cdef union anon_union7:
+        void* fence
+        unsigned long long reserved
+
+    cdef struct anon_struct15:
         unsigned long long key
         unsigned int timeoutMs
 
-    cdef struct anon_struct15:
-        anon_struct13 fence
-        anon_union6 nvSciSync
-        anon_struct14 keyedMutex
+    cdef struct anon_struct16:
+        anon_struct14 fence
+        anon_union7 nvSciSync
+        anon_struct15 keyedMutex
         unsigned int reserved[10]
 
     cdef struct cudaExternalSemaphoreWaitParams:
-        anon_struct15 params
+        anon_struct16 params
         unsigned int flags
         unsigned int reserved[16]
 
@@ -639,6 +671,7 @@ cdef extern from "driver_types.h":
         unsigned int minSmPartitionSize
         unsigned int smCoscheduledAlignment
         unsigned int flags
+        unsigned int localityDomainId
 
     cdef struct cudaDevWorkqueueConfigResource:
         int device
@@ -653,7 +686,8 @@ cdef extern from "driver_types.h":
         unsigned int coscheduledSmCount
         unsigned int preferredCoscheduledSmCount
         unsigned int flags
-        unsigned int reserved[12]
+        unsigned int localityDomainId
+        unsigned int reserved[11]
 
     ctypedef cudaDevSmResourceGroupParams_st cudaDevSmResourceGroupParams
 
@@ -753,6 +787,7 @@ cdef extern from "driver_types.h":
         cudaExternalSemaphore_t* extSemArray
         const cudaExternalSemaphoreSignalParams* paramsArray
         unsigned int numExtSems
+        cudaExecutionContext_t ctx
 
     cdef struct cudaExternalSemaphoreWaitNodeParams:
         cudaExternalSemaphore_t* extSemArray
@@ -763,6 +798,7 @@ cdef extern from "driver_types.h":
         cudaExternalSemaphore_t* extSemArray
         const cudaExternalSemaphoreWaitParams* paramsArray
         unsigned int numExtSems
+        cudaExecutionContext_t ctx
 
     cdef struct cudaConditionalNodeParams:
         cudaGraphConditionalHandle handle
@@ -777,6 +813,7 @@ cdef extern from "driver_types.h":
 
     cdef struct cudaEventRecordNodeParams:
         cudaEvent_t event
+        cudaExecutionContext_t ctx
 
     cdef struct cudaEventWaitNodeParams:
         cudaEvent_t event
@@ -797,6 +834,7 @@ cdef extern from "driver_types.h":
         cudaMemAllocNodeParamsV2 alloc
         cudaMemFreeNodeParams free
         cudaConditionalNodeParams conditional
+        cudaSubgridScheduleNodeParams subgridSchedule
         long long reserved2
 
     cdef enum cudaGraphDependencyType_enum:
@@ -844,20 +882,20 @@ cdef extern from "driver_types.h":
         pass
     ctypedef CUgraphDeviceUpdatableNode_st* cudaGraphDeviceNode_t
 
-    cdef struct anon_struct16:
+    cdef struct anon_struct17:
         const void* pValue
         size_t offset
         size_t size
 
-    cdef union anon_union10:
+    cdef union anon_union11:
         dim3 gridDim
-        anon_struct16 param
+        anon_struct17 param
         unsigned int isEnabled
 
     cdef struct cudaGraphKernelNodeUpdate:
         cudaGraphDeviceNode_t node
         cudaGraphKernelNodeField field
-        anon_union10 updateData
+        anon_union11 updateData
 
     cdef enum cudaLaunchMemSyncDomain:
         cudaLaunchMemSyncDomainDefault = 0
@@ -894,26 +932,26 @@ cdef extern from "driver_types.h":
         cudaLaunchAttributePortableClusterSizeMode = 17
         cudaLaunchAttributeSharedMemoryMode = 18
 
-    cdef struct anon_struct17:
+    cdef struct anon_struct18:
         unsigned int x
         unsigned int y
         unsigned int z
 
-    cdef struct anon_struct18:
+    cdef struct anon_struct19:
         cudaEvent_t event
         int flags
         int triggerAtBlockStart
 
-    cdef struct anon_struct19:
+    cdef struct anon_struct20:
         unsigned int x
         unsigned int y
         unsigned int z
 
-    cdef struct anon_struct20:
+    cdef struct anon_struct21:
         cudaEvent_t event
         int flags
 
-    cdef struct anon_struct21:
+    cdef struct anon_struct22:
         int deviceUpdatable
         cudaGraphDeviceNode_t devNode
 
@@ -922,16 +960,16 @@ cdef extern from "driver_types.h":
         cudaAccessPolicyWindow accessPolicyWindow
         int cooperative
         cudaSynchronizationPolicy syncPolicy
-        anon_struct17 clusterDim
+        anon_struct18 clusterDim
         cudaClusterSchedulingPolicy clusterSchedulingPolicyPreference
         int programmaticStreamSerializationAllowed
-        anon_struct18 programmaticEvent
+        anon_struct19 programmaticEvent
         int priority
         cudaLaunchMemSyncDomainMap memSyncDomainMap
         cudaLaunchMemSyncDomain memSyncDomain
-        anon_struct19 preferredClusterDim
-        anon_struct20 launchCompletionEvent
-        anon_struct21 deviceUpdatableKernelNode
+        anon_struct20 preferredClusterDim
+        anon_struct21 launchCompletionEvent
+        anon_struct22 deviceUpdatableKernelNode
         unsigned int sharedMemCarveout
         unsigned int nvlinkUtilCentricScheduling
         cudaLaunchAttributePortableClusterMode portableClusterSizeMode
@@ -952,15 +990,15 @@ cdef extern from "driver_types.h":
 
     ctypedef cudaAsyncNotificationType_enum cudaAsyncNotificationType
 
-    cdef struct anon_struct22:
+    cdef struct anon_struct23:
         unsigned long long bytesOverBudget
 
-    cdef union anon_union11:
-        anon_struct22 overBudget
+    cdef union anon_union12:
+        anon_struct23 overBudget
 
     cdef struct cudaAsyncNotificationInfo:
         cudaAsyncNotificationType type
-        anon_union11 info
+        anon_union12 info
 
     ctypedef cudaAsyncNotificationInfo cudaAsyncNotificationInfo_t
 
@@ -1069,6 +1107,7 @@ cdef extern from "driver_types.h":
         cudaClusterSchedulingPolicyDefault = 0
         cudaClusterSchedulingPolicySpread = 1
         cudaClusterSchedulingPolicyLoadBalancing = 2
+        cudaClusterSchedulingPolicyRubinDsmemLocality = 3
 
     cdef enum cudaStreamUpdateCaptureDependenciesFlags:
         cudaStreamAddCaptureDependencies = 0
@@ -1156,7 +1195,8 @@ cdef extern from "driver_types.h":
         cudaFuncAttributeRequiredClusterDepth = 13
         cudaFuncAttributeNonPortableClusterSizeAllowed = 14
         cudaFuncAttributeClusterSchedulingPolicyPreference = 15
-        cudaFuncAttributeMax = 16
+        cudaFuncAttributeSharedMemoryMode = 16
+        cudaFuncAttributeMax = 17
 
     cdef enum cudaFuncCache:
         cudaFuncCachePreferNone = 0
@@ -1188,6 +1228,7 @@ cdef extern from "driver_types.h":
         cudaLimitDevRuntimePendingLaunchCount = 4
         cudaLimitMaxL2FetchGranularity = 5
         cudaLimitPersistingL2CacheSize = 6
+        cudaLimitPerBlockMemorySize = 10
 
     cdef enum cudaMemoryAdvise:
         cudaMemAdviseSetReadMostly = 1
@@ -1362,8 +1403,12 @@ cdef extern from "driver_types.h":
         cudaDevAttrReserved145 = 145
         cudaDevAttrOnlyPartialHostNativeAtomicSupported = 147
         cudaDevAttrAtomicReductionSupported = 148
+        cudaDevAttrLocalityDomainCount = 149
+        cudaDevAttrOversizedSharedMemoryPerBlock = 150
         cudaDevAttrCigStreamsSupported = 151
-        cudaDevAttrMax = 152
+        cudaDevAttrLocalityDomainMultiprocessorCount = 157
+        cudaDevAttrTensorMapLargeTensorMinSize = 160
+        cudaDevAttrMax = 161
 
     cdef enum cudaMemPoolAttr:
         cudaMemPoolReuseFollowEventDependencies = 1
@@ -1380,6 +1425,7 @@ cdef extern from "driver_types.h":
         cudaMemPoolAttrLocationType = 12
         cudaMemPoolAttrMaxPoolSize = 13
         cudaMemPoolAttrHwDecompressEnabled = 14
+        cudaMemPoolAttrLocalityDomainId = 15
 
     cdef enum cudaMemLocationType:
         cudaMemLocationTypeInvalid = 0
@@ -1389,6 +1435,7 @@ cdef extern from "driver_types.h":
         cudaMemLocationTypeHostNuma = 3
         cudaMemLocationTypeHostNumaCurrent = 4
         cudaMemLocationTypeInvisible = 5
+        cudaMemLocationTypeDeviceLocalityDomain = 6
 
     cdef enum cudaMemAccessFlags:
         cudaMemAccessFlagsProtNone = 0
@@ -1486,6 +1533,7 @@ cdef extern from "driver_types.h":
     cdef enum cudaDevSmResourceGroup_flags:
         cudaDevSmResourceGroupDefault = 0
         cudaDevSmResourceGroupBackfill = 1
+        cudaDevSmResourceGroupLocalityDomainId = 2
 
     cdef enum cudaDevSmResourceSplitByCount_flags:
         cudaDevSmResourceSplitIgnoreSmCoscheduling = 1
@@ -1566,7 +1614,7 @@ cdef extern from "driver_types.h":
         cudaGraphNodeTypeMemAlloc = 10
         cudaGraphNodeTypeMemFree = 11
         cudaGraphNodeTypeConditional = 13
-        cudaGraphNodeTypeReserved16 = 16
+        cudaGraphNodeTypeSubgridSchedule = 16
         cudaGraphNodeTypeCount = 17
 
     cdef enum cudaGraphChildGraphNodeOwnership:
@@ -1717,6 +1765,7 @@ cdef extern from "library_types.h":
         CUDA_R_6F_E2M3 = 31
         CUDA_R_6F_E3M2 = 32
         CUDA_R_4F_E2M1 = 33
+        CUDA_R_8F_UE5M3 = 34
 
     ctypedef cudaDataType_t cudaDataType
 
