@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 #
-# This code was automatically generated across versions from 12.9.1 to 13.3.0, generator version 0.3.1.dev1676+gc7678f804. Do not modify it directly.
+# This code was automatically generated across versions from 12.9.1 to 13.4.0, generator version 0.3.1.dev1839+g5c2de97e8. Do not modify it directly.
 
 cimport cython  # NOQA
 from libc cimport errno
@@ -62,6 +62,7 @@ cdef __getbuffer(object self, cpython.Py_buffer *buffer, void *ptr, int size, bi
     buffer.shape = &buffer.len
     buffer.strides = &buffer.itemsize
     buffer.suboffsets = NULL
+
 
 ###############################################################################
 # POD
@@ -205,7 +206,7 @@ cdef class _py_anon_pod1:
 
 
 cdef _get__py_anon_pod3_dtype_offsets():
-    cdef cuda_bindings_cufile__anon_pod3 pod = cuda_bindings_cufile__anon_pod3()
+    cdef cuda_bindings_cufile__anon_pod3 pod
     return _numpy.dtype({
         'names': ['dev_ptr_base', 'file_offset', 'dev_ptr_offset', 'size_'],
         'formats': [_numpy.intp, _numpy.int64, _numpy.int64, _numpy.uint64],
@@ -372,7 +373,7 @@ cdef class _py_anon_pod3:
 
 
 cdef _get_io_events_dtype_offsets():
-    cdef CUfileIOEvents_t pod = CUfileIOEvents_t()
+    cdef CUfileIOEvents_t pod
     return _numpy.dtype({
         'names': ['cookie', 'status', 'ret'],
         'formats': [_numpy.intp, _numpy.int32, _numpy.uint64],
@@ -537,7 +538,7 @@ cdef class IOEvents:
 
 
 cdef _get_op_counter_dtype_offsets():
-    cdef CUfileOpCounter_t pod = CUfileOpCounter_t()
+    cdef CUfileOpCounter_t pod
     return _numpy.dtype({
         'names': ['ok', 'err'],
         'formats': [_numpy.uint64, _numpy.uint64],
@@ -680,7 +681,7 @@ cdef class OpCounter:
 
 
 cdef _get_per_gpu_stats_dtype_offsets():
-    cdef CUfilePerGpuStats_t pod = CUfilePerGpuStats_t()
+    cdef CUfilePerGpuStats_t pod
     return _numpy.dtype({
         'names': ['uuid', 'read_bytes', 'read_bw_bytes_per_sec', 'read_utilization', 'read_duration_us', 'n_total_reads', 'n_p2p_reads', 'n_nvfs_reads', 'n_posix_reads', 'n_unaligned_reads', 'n_dr_reads', 'n_sparse_regions', 'n_inline_regions', 'n_reads_err', 'writes_bytes', 'write_bw_bytes_per_sec', 'write_utilization', 'write_duration_us', 'n_total_writes', 'n_p2p_writes', 'n_nvfs_writes', 'n_posix_writes', 'n_unaligned_writes', 'n_dr_writes', 'n_writes_err', 'n_mmap', 'n_mmap_ok', 'n_mmap_err', 'n_mmap_free', 'reg_bytes'],
         'formats': [(_numpy.int8, 16), _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64],
@@ -1167,7 +1168,7 @@ cdef class PerGpuStats:
 
 
 cdef _get_descr_dtype_offsets():
-    cdef CUfileDescr_t pod = CUfileDescr_t()
+    cdef CUfileDescr_t pod
     return _numpy.dtype({
         'names': ['type', 'handle', 'fs_ops'],
         'formats': [_numpy.int32, _py_anon_pod1_dtype, _numpy.intp],
@@ -1456,10 +1457,10 @@ cdef class _py_anon_pod2:
 
 
 cdef _get_stats_level1_dtype_offsets():
-    cdef CUfileStatsLevel1_t pod = CUfileStatsLevel1_t()
+    cdef CUfileStatsLevel1_t pod
     return _numpy.dtype({
-        'names': ['read_ops', 'write_ops', 'hdl_register_ops', 'hdl_deregister_ops', 'buf_register_ops', 'buf_deregister_ops', 'read_bytes', 'write_bytes', 'read_bw_bytes_per_sec', 'write_bw_bytes_per_sec', 'read_lat_avg_us', 'write_lat_avg_us', 'read_ops_per_sec', 'write_ops_per_sec', 'read_lat_sum_us', 'write_lat_sum_us', 'batch_submit_ops', 'batch_complete_ops', 'batch_setup_ops', 'batch_cancel_ops', 'batch_destroy_ops', 'batch_enqueued_ops', 'batch_posix_enqueued_ops', 'batch_processed_ops', 'batch_posix_processed_ops', 'batch_nvfs_submit_ops', 'batch_p2p_submit_ops', 'batch_aio_submit_ops', 'batch_iouring_submit_ops', 'batch_mixed_io_submit_ops', 'batch_total_submit_ops', 'batch_read_bytes', 'batch_write_bytes', 'batch_read_bw_bytes', 'batch_write_bw_bytes', 'batch_submit_lat_avg_us', 'batch_completion_lat_avg_us', 'batch_submit_ops_per_sec', 'batch_complete_ops_per_sec', 'batch_submit_lat_sum_us', 'batch_completion_lat_sum_us', 'last_batch_read_bytes', 'last_batch_write_bytes'],
-        'formats': [op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64],
+        'names': ['read_ops', 'write_ops', 'hdl_register_ops', 'hdl_deregister_ops', 'buf_register_ops', 'buf_deregister_ops', 'read_bytes', 'write_bytes', 'read_bw_bytes_per_sec', 'write_bw_bytes_per_sec', 'read_lat_avg_us', 'write_lat_avg_us', 'read_ops_per_sec', 'write_ops_per_sec', 'read_lat_sum_us', 'write_lat_sum_us', 'batch_submit_ops', 'batch_complete_ops', 'batch_setup_ops', 'batch_cancel_ops', 'batch_destroy_ops', 'batch_enqueued_ops', 'batch_posix_enqueued_ops', 'batch_processed_ops', 'batch_posix_processed_ops', 'batch_nvfs_submit_ops', 'batch_p2p_submit_ops', 'batch_aio_submit_ops', 'batch_iouring_submit_ops', 'batch_mixed_io_submit_ops', 'batch_total_submit_ops', 'batch_read_bytes', 'batch_write_bytes', 'batch_read_bw_bytes', 'batch_write_bw_bytes', 'batch_submit_lat_avg_us', 'batch_completion_lat_avg_us', 'batch_submit_ops_per_sec', 'batch_complete_ops_per_sec', 'batch_submit_lat_sum_us', 'batch_completion_lat_sum_us', 'last_batch_read_bytes', 'last_batch_write_bytes', 'readv_ops', 'writev_ops', 'readv_bytes', 'writev_bytes', 'readv_bw_bytes_per_sec', 'writev_bw_bytes_per_sec', 'readv_lat_avg_us', 'writev_lat_avg_us', 'readv_ops_per_sec', 'writev_ops_per_sec', 'readv_lat_sum_us', 'writev_lat_sum_us'],
+        'formats': [op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, op_counter_dtype, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, op_counter_dtype, op_counter_dtype, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64, _numpy.uint64],
         'offsets': [
             (<intptr_t>&(pod.read_ops)) - (<intptr_t>&pod),
             (<intptr_t>&(pod.write_ops)) - (<intptr_t>&pod),
@@ -1504,6 +1505,18 @@ cdef _get_stats_level1_dtype_offsets():
             (<intptr_t>&(pod.batch_completion_lat_sum_us)) - (<intptr_t>&pod),
             (<intptr_t>&(pod.last_batch_read_bytes)) - (<intptr_t>&pod),
             (<intptr_t>&(pod.last_batch_write_bytes)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.readv_ops)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.writev_ops)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.readv_bytes)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.writev_bytes)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.readv_bw_bytes_per_sec)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.writev_bw_bytes_per_sec)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.readv_lat_avg_us)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.writev_lat_avg_us)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.readv_ops_per_sec)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.writev_ops_per_sec)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.readv_lat_sum_us)) - (<intptr_t>&pod),
+            (<intptr_t>&(pod.writev_lat_sum_us)) - (<intptr_t>&pod),
         ],
         'itemsize': sizeof(CUfileStatsLevel1_t),
     })
@@ -1829,6 +1842,30 @@ cdef class StatsLevel1:
         memcpy(<void *>&(self._ptr[0].batch_total_submit_ops), <void *>(val_._get_ptr()), sizeof(CUfileOpCounter_t) * 1)
 
     @property
+    def readv_ops(self):
+        """OpCounter: """
+        return OpCounter.from_ptr(<intptr_t>&(self._ptr[0].readv_ops), self._readonly, self)
+
+    @readv_ops.setter
+    def readv_ops(self, val):
+        if self._readonly:
+            raise ValueError("This StatsLevel1 instance is read-only")
+        cdef OpCounter val_ = val
+        memcpy(<void *>&(self._ptr[0].readv_ops), <void *>(val_._get_ptr()), sizeof(CUfileOpCounter_t) * 1)
+
+    @property
+    def writev_ops(self):
+        """OpCounter: """
+        return OpCounter.from_ptr(<intptr_t>&(self._ptr[0].writev_ops), self._readonly, self)
+
+    @writev_ops.setter
+    def writev_ops(self, val):
+        if self._readonly:
+            raise ValueError("This StatsLevel1 instance is read-only")
+        cdef OpCounter val_ = val
+        memcpy(<void *>&(self._ptr[0].writev_ops), <void *>(val_._get_ptr()), sizeof(CUfileOpCounter_t) * 1)
+
+    @property
     def read_bytes(self):
         """int: """
         return self._ptr[0].read_bytes
@@ -2070,6 +2107,116 @@ cdef class StatsLevel1:
             raise ValueError("This StatsLevel1 instance is read-only")
         self._ptr[0].last_batch_write_bytes = val
 
+    @property
+    def readv_bytes(self):
+        """int: """
+        return self._ptr[0].readv_bytes
+
+    @readv_bytes.setter
+    def readv_bytes(self, val):
+        if self._readonly:
+            raise ValueError("This StatsLevel1 instance is read-only")
+        self._ptr[0].readv_bytes = val
+
+    @property
+    def writev_bytes(self):
+        """int: """
+        return self._ptr[0].writev_bytes
+
+    @writev_bytes.setter
+    def writev_bytes(self, val):
+        if self._readonly:
+            raise ValueError("This StatsLevel1 instance is read-only")
+        self._ptr[0].writev_bytes = val
+
+    @property
+    def readv_bw_bytes_per_sec(self):
+        """int: """
+        return self._ptr[0].readv_bw_bytes_per_sec
+
+    @readv_bw_bytes_per_sec.setter
+    def readv_bw_bytes_per_sec(self, val):
+        if self._readonly:
+            raise ValueError("This StatsLevel1 instance is read-only")
+        self._ptr[0].readv_bw_bytes_per_sec = val
+
+    @property
+    def writev_bw_bytes_per_sec(self):
+        """int: """
+        return self._ptr[0].writev_bw_bytes_per_sec
+
+    @writev_bw_bytes_per_sec.setter
+    def writev_bw_bytes_per_sec(self, val):
+        if self._readonly:
+            raise ValueError("This StatsLevel1 instance is read-only")
+        self._ptr[0].writev_bw_bytes_per_sec = val
+
+    @property
+    def readv_lat_avg_us(self):
+        """int: """
+        return self._ptr[0].readv_lat_avg_us
+
+    @readv_lat_avg_us.setter
+    def readv_lat_avg_us(self, val):
+        if self._readonly:
+            raise ValueError("This StatsLevel1 instance is read-only")
+        self._ptr[0].readv_lat_avg_us = val
+
+    @property
+    def writev_lat_avg_us(self):
+        """int: """
+        return self._ptr[0].writev_lat_avg_us
+
+    @writev_lat_avg_us.setter
+    def writev_lat_avg_us(self, val):
+        if self._readonly:
+            raise ValueError("This StatsLevel1 instance is read-only")
+        self._ptr[0].writev_lat_avg_us = val
+
+    @property
+    def readv_ops_per_sec(self):
+        """int: """
+        return self._ptr[0].readv_ops_per_sec
+
+    @readv_ops_per_sec.setter
+    def readv_ops_per_sec(self, val):
+        if self._readonly:
+            raise ValueError("This StatsLevel1 instance is read-only")
+        self._ptr[0].readv_ops_per_sec = val
+
+    @property
+    def writev_ops_per_sec(self):
+        """int: """
+        return self._ptr[0].writev_ops_per_sec
+
+    @writev_ops_per_sec.setter
+    def writev_ops_per_sec(self, val):
+        if self._readonly:
+            raise ValueError("This StatsLevel1 instance is read-only")
+        self._ptr[0].writev_ops_per_sec = val
+
+    @property
+    def readv_lat_sum_us(self):
+        """int: """
+        return self._ptr[0].readv_lat_sum_us
+
+    @readv_lat_sum_us.setter
+    def readv_lat_sum_us(self, val):
+        if self._readonly:
+            raise ValueError("This StatsLevel1 instance is read-only")
+        self._ptr[0].readv_lat_sum_us = val
+
+    @property
+    def writev_lat_sum_us(self):
+        """int: """
+        return self._ptr[0].writev_lat_sum_us
+
+    @writev_lat_sum_us.setter
+    def writev_lat_sum_us(self, val):
+        if self._readonly:
+            raise ValueError("This StatsLevel1 instance is read-only")
+        self._ptr[0].writev_lat_sum_us = val
+
     @staticmethod
     def from_buffer(buffer):
         """Create an StatsLevel1 instance with the memory from the given buffer."""
@@ -2112,7 +2259,7 @@ cdef class StatsLevel1:
 
 
 cdef _get_io_params_dtype_offsets():
-    cdef CUfileIOParams_t pod = CUfileIOParams_t()
+    cdef CUfileIOParams_t pod
     return _numpy.dtype({
         'names': ['mode', 'u', 'fh', 'opcode', 'cookie'],
         'formats': [_numpy.int32, _py_anon_pod2_dtype, _numpy.intp, _numpy.int32, _numpy.intp],
@@ -2299,7 +2446,7 @@ cdef class IOParams:
 
 
 cdef _get_stats_level2_dtype_offsets():
-    cdef CUfileStatsLevel2_t pod = CUfileStatsLevel2_t()
+    cdef CUfileStatsLevel2_t pod
     return _numpy.dtype({
         'names': ['basic', 'read_size_kb_hist', 'write_size_kb_hist'],
         'formats': [stats_level1_dtype, (_numpy.uint64, 32), (_numpy.uint64, 32)],
@@ -2467,7 +2614,7 @@ cdef class StatsLevel2:
 
 
 cdef _get_stats_level3_dtype_offsets():
-    cdef CUfileStatsLevel3_t pod = CUfileStatsLevel3_t()
+    cdef CUfileStatsLevel3_t pod
     return _numpy.dtype({
         'names': ['detailed', 'num_gpus', 'per_gpu_stats'],
         'formats': [stats_level2_dtype, _numpy.uint32, (per_gpu_stats_dtype, 16)],
@@ -2708,7 +2855,7 @@ class DriverControlFlags(_FastEnum):
     """
     USE_POLL_MODE = (CU_FILE_USE_POLL_MODE, 'use POLL mode. properties.use_poll_mode')
     ALLOW_COMPAT_MODE = (CU_FILE_ALLOW_COMPAT_MODE, 'allow COMPATIBILITY mode. properties.allow_compat_mode')
-    POSIX_IO_MODE = (CU_FILE_POSIX_IO_MODE, 'Vanilla posix io mode. properties.posix_io_mode')
+    VANILLA_POSIX_IO_MODE = (CU_FILE_VANILLA_POSIX_IO_MODE, 'Vanilla posix io mode. properties.vanilla_posix_io_mode')
     FALLBACK_IO_MODE = (CU_FILE_FALLBACK_IO_MODE, 'Fallback io mode. properties.gds_fallback_io')
 
 class FeatureFlags(_FastEnum):
@@ -2787,6 +2934,8 @@ class BoolConfigParameter(_FastEnum):
     FORCE_ODIRECT_MODE = CUFILE_PARAM_FORCE_ODIRECT_MODE
     SKIP_TOPOLOGY_DETECTION = CUFILE_PARAM_SKIP_TOPOLOGY_DETECTION
     STREAM_MEMOPS_BYPASS = CUFILE_PARAM_STREAM_MEMOPS_BYPASS
+    PROPERTIES_POSIX_IO_MODE = CUFILE_PARAM_PROPERTIES_POSIX_IO_MODE
+    GDS_FALLBACK_IO = CUFILE_PARAM_GDS_FALLBACK_IO
 
 class StringConfigParameter(_FastEnum):
     """
@@ -2795,6 +2944,7 @@ class StringConfigParameter(_FastEnum):
     LOGGING_LEVEL = CUFILE_PARAM_LOGGING_LEVEL
     ENV_LOGFILE_PATH = CUFILE_PARAM_ENV_LOGFILE_PATH
     LOG_DIR = CUFILE_PARAM_LOG_DIR
+    RDMA_TRANSPORT = CUFILE_PARAM_RDMA_TRANSPORT
 
 class ArrayConfigParameter(_FastEnum):
     """
@@ -3198,7 +3348,7 @@ cpdef get_stats_l1(intptr_t stats):
     """Get Level 1 cuFile statistics.
 
     Args:
-        stats (intptr_t): Pointer to CUfileStatsLevel1_t structure to be filled.
+        stats (intptr_t): Pointer to ``CUfileStatsLevel1_t`` structure to be filled.
 
     .. seealso:: `cuFileGetStatsL1`
     """
@@ -3211,7 +3361,7 @@ cpdef get_stats_l2(intptr_t stats):
     """Get Level 2 cuFile statistics.
 
     Args:
-        stats (intptr_t): Pointer to CUfileStatsLevel2_t structure to be filled.
+        stats (intptr_t): Pointer to ``CUfileStatsLevel2_t`` structure to be filled.
 
     .. seealso:: `cuFileGetStatsL2`
     """
@@ -3224,7 +3374,7 @@ cpdef get_stats_l3(intptr_t stats):
     """Get Level 3 cuFile statistics.
 
     Args:
-        stats (intptr_t): Pointer to CUfileStatsLevel3_t structure to be filled.
+        stats (intptr_t): Pointer to ``CUfileStatsLevel3_t`` structure to be filled.
 
     .. seealso:: `cuFileGetStatsL3`
     """

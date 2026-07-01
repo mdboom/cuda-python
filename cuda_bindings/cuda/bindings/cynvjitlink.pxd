@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 #
-# This code was automatically generated across versions from 12.0.1 to 13.3.0, generator version 0.3.1.dev1630+gadce055ea.d19800101. Do not modify it directly.
+# This code was automatically generated across versions from 12.0.1 to 13.4.0, generator version 0.3.1.dev1839+g5c2de97e8. Do not modify it directly.
 
 from libc.stdint cimport intptr_t, uint32_t
 
@@ -68,3 +68,5 @@ cdef nvJitLinkResult nvJitLinkGetErrorLog(nvJitLinkHandle handle, char* log) exc
 cdef nvJitLinkResult nvJitLinkGetInfoLogSize(nvJitLinkHandle handle, size_t* size) except?_NVJITLINKRESULT_INTERNAL_LOADING_ERROR nogil
 cdef nvJitLinkResult nvJitLinkGetInfoLog(nvJitLinkHandle handle, char* log) except?_NVJITLINKRESULT_INTERNAL_LOADING_ERROR nogil
 cdef nvJitLinkResult nvJitLinkVersion(unsigned int* major, unsigned int* minor) except?_NVJITLINKRESULT_INTERNAL_LOADING_ERROR nogil
+cdef nvJitLinkResult nvJitLinkGetLinkedLTOIRSize(nvJitLinkHandle handle, size_t* size) except?_NVJITLINKRESULT_INTERNAL_LOADING_ERROR nogil
+cdef nvJitLinkResult nvJitLinkGetLinkedLTOIR(nvJitLinkHandle handle, void* ltoir) except?_NVJITLINKRESULT_INTERNAL_LOADING_ERROR nogil

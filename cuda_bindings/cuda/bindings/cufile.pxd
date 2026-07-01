@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: LicenseRef-NVIDIA-SOFTWARE-LICENSE
 #
-# This code was automatically generated across versions from 12.9.1 to 13.3.0, generator version 0.3.1.dev1630+gadce055ea.d19800101. Do not modify it directly.
+# This code was automatically generated across versions from 12.9.1 to 13.4.0, generator version 0.3.1.dev1839+g5c2de97e8. Do not modify it directly.
 
 from libc.stdint cimport intptr_t
 
@@ -18,6 +18,7 @@ ctypedef CUfileBatchHandle_t BatchHandle
 ctypedef CUfileError_t Error
 ctypedef cufileRDMAInfo_t RDMAInfo
 ctypedef CUfileFSOps_t FSOps
+ctypedef CUfileIOVec_t IOVec
 ctypedef CUfileDrvProps_t DrvProps
 
 
