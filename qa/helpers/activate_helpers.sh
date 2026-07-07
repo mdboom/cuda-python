@@ -186,6 +186,8 @@ run_cybind_cython_gen() {
     local OUTPUT_DIR_ARG="$2"
     local CTK_TARGET_VERSION
     CTK_TARGET_VERSION="$(_require_ctk_target_version "$CTK_VERSION")" || return 1
+    # Keep only major.minor for the target version, dropping the patch component
+    CTK_TARGET_VERSION="${CTK_TARGET_VERSION%.*}"
     local CYBIND_DIR
     CYBIND_DIR="$(realpath .)"
 
